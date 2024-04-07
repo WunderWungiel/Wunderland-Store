@@ -7,6 +7,6 @@ To do:
 
  - [x] Revive web interface
  - [ ] Create and fill the apps / games / themes database
- - [ ] Create a Java / Qt client that would open / embed website.
+ - [x] Create a Java / Qt client that would open / embed website.
 
 Compatibility: Symbian S60v3 and later and Nokia S40 / Asha.
