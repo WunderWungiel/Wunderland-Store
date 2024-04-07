@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>You're banned | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon"/>
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->                    
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    <div id="faq" class="viewWrapper">
+                        <h1>You are banned, thus you can't login.
+                        {% if reason is defined and reason != None and reason != '' %}
+                        Reason: <span style="font-weight: bold; color: black;">{{ reason }}</span>
+                        {% endif %}
+                        </h1>
+                    </div>
+                    <br />
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom"></div>
+                        
+            <div id="footer">
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

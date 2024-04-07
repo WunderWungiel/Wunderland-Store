@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Rate {{ app['title'] }} | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon" />
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                            <td id="searchLink">
+                                <span><a href="/platform_chooser">Platform</a>: <b>{{ session['platformName'] }}</b></span>
+                                |
+                                {% if session['loggedIn'] is defined %}
+                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                |
+                                {% endif %}
+                                <a href="/search/">Search</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->                        
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    <div class="contentItem">
+                        <h1>Rate {{ app['title'] }}</h1>
+                        <div id="rateField">
+                            <form action="/{{ prefixes[app['content_type']] }}/{{ app['id'] }}/rate" method="post" id="rateForm">
+                                <fieldset>
+                                    <label>
+                                        <input type="radio" name="rating" value="1">
+                                        1 star
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="rating" value="2">
+                                        2 stars
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="rating" value="3">
+                                        3 stars
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="rating" value="4">
+                                        4 stars
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="rating" value="5">
+                                        5 stars
+                                    </label>
+                                    <br />
+                                    <input type="submit" class="Btn" value="Rate" />
+                                </fieldset>
+                            </form>
+                        </div> <!-- end search -->
+                    </div>
+
+                    <div class="homeLink">
+                        <a href="/home/">Home</a>
+                    </div>
+
+                    <div class="beacon"></div>
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom"></div>
+                        
+            <div id="footer">
+                {% if session['loggedIn'] is not defined %}
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                {% else %}
+                <a class="accountStatusChange" href="/logout">Log out</a> |
+                {% endif %}
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

@@ -1,0 +1,17 @@
+#loginForm label {
+    display: inline;
+}
+
+span.required, span.tip {
+    display: none;
+    color: red;
+    font-weight: bold;
+}
+
+#searchLink, #searchLink span, #searchLink span a {
+    color: #fff;
+}
+
+.buttons_small a {
+    font-size: 10px; 
+}

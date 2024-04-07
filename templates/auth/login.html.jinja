@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Login | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon" />
+
+        <script src="/static/js/script.js"></script>
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->                        
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    <div class="contentItem">
+                        <div id="loginField">
+                            <form action="/check_login/" method="POST" id="loginForm" onsubmit="return validateLoginForm()">
+                                <fieldset>
+
+                                    {% if message != None %}
+                                    <p style="{% if color != None %}color: {{ color }};{% endif %}font-weight: bold;">{{ message }}</p>
+                                    {% endif %}
+
+                                    <label for="email" id="email_label">E-mail address: <span class="required">*</span></label>
+                                    <input type="text" id="email" name="email" size="15" style="width: 63%; max-width: 300px;" title="" />
+                                    <span id="email_tip" class="tip">Wrong e-mail address.</span>
+
+                                    <br />
+
+                                    <label for="password" id="password_label">Password: <span class="required">*</span></label>
+                                    <input type="password" id="password" name="password" size="15" style="width: 63%; max-width: 300px;" title="" />
+                                    
+                                    <br /><br />
+                                    
+                                    <input type="submit" id="loginBtn" value="Login" />
+
+                                    <br /><br />
+                                    <label for="loginBtn">Don't have an account yet?&nbsp;</label>
+                                    <input type="button" class="Btn" value="Register" onclick="window.location.href='/register'"/>
+                                </fieldset>
+                            </form>
+                        </div> <!-- end login -->
+                    </div>
+
+                    <div class="beacon"></div>
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom"></div>
+                        
+            <div id="footer">
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

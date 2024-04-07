@@ -1,0 +1,142 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Search | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon" />
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                            <td id="searchLink">
+                                <span><a href="/platform_chooser">Platform</a>: <b>{{ session['platformName'] }}</b></span>
+                                |
+                                {% if session['loggedIn'] is defined %}
+                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->                        
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    {% if results is defined %}
+                    <div class="contentItem">
+                    {% else %}
+                    <div class="contentItem" style="padding: 14px 5px 0;">
+                    {% endif %}
+                        <div id="searchField">
+                            <form action="/search" method="get" id="searchForm">
+                                <fieldset>
+                                    <input type="text" id="search" name="q" size="15" style="width: 63%; max-width: 300px;" title="" value="{{ search_query }}" />
+                                    <input type="submit" id="searchBtn" value="Search" />
+                                </fieldset>
+                            </form>
+                        </div> <!-- end search -->
+                        {% if results is defined %}
+                        <h3>Search results for &apos;{{ search_query }}&apos;</h3>
+                        {% endif %}
+                    </div>
+
+                    {% if results is defined %}
+                    <!-- Content Stream     -->
+                    <!-- Search Results -->
+                    <div class="contentList">
+                        <table class="contentList" cellspacing="0" width='100%' >
+                            
+                            {% for result in results %}
+
+                            {% if loop.index % 2 == 0 %}
+                            <tr class="contentItem ">
+                            {% else %}
+                            <tr class="contentItem alt ">
+                            {% endif %}
+            
+                                <td class="thumbnail">
+                                    <img src="/static/store/{{ result['img'] }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46" />
+                                </td>
+            
+                                <td class="contentType">
+                                    <h2 class="title">
+                                        {% if result['content_type'] == 'apps' %}
+                                        <a href="/app/{{ result['id'] }}">
+                                        {% elif result['content_type'] == 'games' %}
+                                        <a href="/game/{{ result['id'] }}">
+                                        {% elif result['content_type'] == 'themes' %}
+                                        <a href="/theme/{{ result['id'] }}">
+                                        {% endif %}{{ result['title'] }}</a>
+                                    </h2>{{ result['category'] }}
+                                </td>
+            
+                                <td class="contentRatingPrice">
+                                    <div class="rating">
+                                        {% for i in range(result['rating']) %}
+                                        <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
+                                        {% endfor %}
+                                        {% if result['rating'] != 5 %}
+                                        {% for i in range(result['rating'], 5) %}
+                                        <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
+                                        {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {% endfor %}
+                        </table>
+                    </div> <!-- end contentList -->
+                    <!-- end results -->
+                
+                    {% if previous_page != None and next_page != None %}
+                    <div class="pagination">
+                        <p class="pagination">
+                    {% if previous_page != None %}
+                            <a href="/search/?q={{ search_query}}&page={{ previous_page }}">Previous</a>
+                    {% endif %}
+                    {% if next_page != None %}
+                            <a href="/search/?q={{ search_query}}&page={{ next_page }}">Next</a>
+                    {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- end results -->
+                    {% endif %}
+
+                    <div class="homeLink">
+                        <a href="/home/">Home</a>
+                    </div>
+
+                    <div class="beacon"></div>
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom"></div>
+                        
+            <div id="footer">
+                {% if session['loggedIn'] is not defined %}
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                {% else %}
+                <a class="accountStatusChange" href="/logout">Log out</a> |
+                {% endif %}
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

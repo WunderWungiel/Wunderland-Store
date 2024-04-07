@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Error | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon"/>
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                            {% if session['loggedIn'] is defined %}
+                            <td id="searchLink">
+                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                            </td>
+                            {% endif %}
+                        </tr>
+                    </table>
+                </div> <!-- end top -->                    
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    <div id="faq" class="viewWrapper">
+                        <h1>{{ message }}</h1>
+                    </div>
+                    <br />
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom"></div>
+                        
+            <div id="footer">
+                {% if session['loggedIn'] is not defined %}
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                {% else %}
+                <a class="accountStatusChange" href="/logout">Log out</a> |
+                {% endif %}
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Select platform | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon"/>
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                            <td id="searchLink">
+                                <span><a href="/platform_chooser">Platform</a>: <b>{{ session['platformName'] }}</b></span>
+                                |
+                                {% if session['loggedIn'] is defined %}
+                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    <div class="contentItem">
+	                    <h2>Platforms</h2>
+
+                        <div id="categories">
+                            <a href="{{ url_for('store._set_platform', platformId='all') }}">All platforms</a><br />
+                            {% for platform in platforms %}
+                            <a href="{{ url_for('store._set_platform', platformId=platform[0]) }}">{{ platform[1] }}</a>{% if loop.index != platforms|length %}<br />{% endif %}
+                            {% endfor %}
+                        </div> <!-- end categories -->
+
+	                </div> <!-- end content item -->
+
+                    <div class="beacon"></div>
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom"></div>
+                        
+            <div id="footer">
+                {% if session['loggedIn'] is not defined %}
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                {% else %}
+                <a class="accountStatusChange" href="/logout">Log out</a> |
+                {% endif %}
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        {% if category != None %}
+        <title>Games :: {{ category }} | Wunderland Store</title>
+        {% else %}
+        <title>Games | Wunderland Store</title>
+        {% endif %}
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon"/>
+    </head>
+
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                            <td id="searchLink">
+                                <span><a href="/platform_chooser">Platform</a>: <b>{{ session['platformName'] }}</b></span>
+                                |
+                                {% if session['loggedIn'] is defined %}
+                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                |
+                                {% endif %}
+                                <a href="/search/">Search</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->
+
+                <div id="navigation">
+                    <a class="first" href="/home/">Our picks</a> <b>|</b>
+                    <a href="/applications/">Apps</a> <b>|</b>
+                    <a href="/games/" class="selected">Games</a> <b>|</b>
+                    <a href="/themes/">Themes</a>
+                </div> <!-- end navigation -->
+                
+                {% if category is defined and category != None%}
+                <div id="crumbNav">Games&nbsp;&gt; {{ category }}&nbsp;<a href="/games/browse/">Change</a></div>
+                {% else %}
+                <div id="crumbNav">Games&nbsp;&gt; All&nbsp;<a href="/games/browse/">Change</a></div>
+                {% endif %}
+                
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    
+                    <br />
+                    <table class="contentList" cellspacing="0" width='100%' style="margin-left: 5px;">
+                        <tr class="contentItem ">
+                            <td class="contentType">
+                                <h2 class="title">No games (yet)</h2>
+                            </td>
+                        </tr>
+                    </table>
+
+                    </div><!-- end Content Stream -->
+
+                    <div class="beacon"></div>
+
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom">
+                <div id="searchContent">
+                    <form action="/search" method="get" id="searchForm">
+                        <fieldset id='searchField'>
+                            <label for="search">Search</label>
+                            <input type="text" id="search" name="q" title="" value="" /> <input type="submit" id="searchBtn" value="Search" />
+                        </fieldset>
+                    </form>
+                </div> <!-- end search -->
+
+                <div id="bottomNavigation">
+                    <h3>Browse categories</h3>
+                    <a href="/home/">Our picks</a><br />
+                    <a href="/applications/">Apps</a><br />
+                    <a href="/games/" class="selected">Games</a><br />
+                    <a href="/themes/">Themes</a><br />
+                </div> <!-- end navigation -->
+            </div>
+                        
+            <div id="footer">
+                {% if session['loggedIn'] is not defined %}
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                {% else %}
+                <a class="accountStatusChange" href="/logout">Log out</a> |
+                {% endif %}
+                <a href="/legal/terms/store">Terms</a> |
+                <a href="/legal/privacy">Privacy</a> |
+                <a href="/help/faqs">Help</a><br/>
+            © Symbian Redevelopment Project 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

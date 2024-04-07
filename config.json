@@ -1,0 +1,11 @@
+
+{
+    "DB_HOST":"localhost",
+    "DB_NAME": "ovistore",
+    "DB_USER": "postgres",
+    "DB_PASS": "",
+    "EMAIL_ADDRESS": "email@address.com",
+    "EMAIL_PASSWORD": "",
+    "SMTP_PORT": 465,
+    "SMTP_ADDRESS": ""
+}
