@@ -1,8 +1,13 @@
+"""AppList compatibility layer."""
+
 from flask import Blueprint, request
 
 from . import applist_database as db
 
 applist = Blueprint("applist", __name__, template_folder="templates")
+
+# Change abc* routes to something that will make your host with this prefix be the same lenght as applist.schumi1331.de
+# I.e. applist.schumi1331.de/applist.php [33] is the same as ovi.wunderwungiel.pl/aapplist.php [33]
 
 @applist.route("/abcapplist-download.php")
 @applist.route("/applist-download.php")

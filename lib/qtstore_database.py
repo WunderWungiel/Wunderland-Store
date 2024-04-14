@@ -1,3 +1,5 @@
+"""QtStore database backend"""
+
 from flask import request
 import psycopg2
 import psycopg2.extras
@@ -18,7 +20,7 @@ def qtstore_generator():
         # date = int(round(os.stat(os.path.join(current_app.root_path, 'static', 'files', row['file'])).st_size / (1024 * 1024), 2))
         date = 1708635534
         content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[descr.txt]\n"
-        content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[file.html]\n"
+        content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[file.sis]\n"
         content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[preview.png]\n"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -30,7 +32,7 @@ def qtstore_generator():
         # date = int(round(os.stat(os.path.join(current_app.root_path, 'static', 'files', row['file'])).st_size / (1024 * 1024), 2))
         date = 1708635534
         content += f"http://{host}/StoreData/Games/{row['title']}/{date}[descr.txt]\n"
-        content += f"http://{host}/StoreData/Games/{row['title']}/{date}[file.html]\n"
+        content += f"http://{host}/StoreData/Games/{row['title']}/{date}[file.sis]\n"
         content += f"http://{host}/StoreData/Games/{row['title']}/{date}[preview.png]\n"
 
     content += f"http://{host}/StoreData/{date}[RefreshStore.php]\n"

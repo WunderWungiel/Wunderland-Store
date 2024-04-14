@@ -1,13 +1,13 @@
+"""AppList database backend"""
+
 import os
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 from urllib.parse import quote
 
-from flask import request
 import psycopg2
 import psycopg2.extras
 
-from .config import config
 from . import conn
 
 def version():
@@ -26,82 +26,9 @@ def version():
 def changelog():
     root = Element("xml")
     message = Element("message")
-    message.text = """Changelog for AppList 1.0 Build 298:
-*Minor fixes for app changelog display and version selection
-
-
-Changelog for AppList 1.0 Build 297:
-*Added pull to refresh
-*Improved successful installation detection
-*Minor bug fixes
-
-
-Changelog for AppList 1.0 Build 293:
-*Fixed Czech language code for displaying apps/descriptions in that language
-
-
-Changelog for AppList 1.0 Build 292:
-*Added support for localized app descriptions
-
-
-Changelog for AppList 1.0 Build 291:
-*Fixed minor bugs related with updating and installing unsigned apps
-
-
-Changelog for AppList 1.0 Build 290:
-*Fixed displaying 'Now opening Nokia Store' note for apps that are not downloaded through the Nokia Store
-
-
-Changelog for AppList 1.0 Build 289:
-*Added Greek translation (thanks to Michael)
-(this is more a release to give a note, that I'm still there ;) )
-
-
-Changelog for AppList 1.0 Build 288:
-*Optimized language functions and translated categories
-*Added Education category
-*Fixed search bar in dark layout
-*Added message when search fails or no results found
-*Links open in your system's default browser
-*Fixed bug which caused AAS feed to load when it was disabled in the Settings
-*Added Spanish translation (thanks to asturcon3)
-*Updated translations
-
-
-Changelog for AppList 1.0 Build 285:
-*Improved explanation of what unsigned apps are
-*Edited installation error note when installing an unsigned app failed
-*Added Russian and Ukrainian translation (thanks to Alexey)
-*Added Portuguese translation (thanks to Dan)
-*Fixed not displaying changelog in the AppList Update page
-*Minor improvements
-
-
-Changelog for AppList 1.0 Build 281:
-*Added displaying app size to Detail Page
-*Added logic to check if enough space is available on a drive of your phone to download an app
-*Added option to view full changelog history (right bottom icon > About AppList)
-*Pressing Enter on Search page starts search
-*Fixed not loading Hungarian translation
-*Added French translation (thanks to Erwan)
-*Updated Hungarian translation
-
-
-Changelog for AppList 1.0 Build 275:
-*Added Hungarian and Italian language files (sorry, forgot :) )
-
-
-Changelog for AppList 1.0 Build 274:
-Homescreen widget:
-*Fixed launching AppList from the widget icon (thanks to huellif)
-*Fixed negative new apps count
-
-App:
-*Added Hungarian and Italian UI translation (thanks to dankoi and Bruno)
-*Fixed updating apps in the Nokia Store
-*Added unsigned flag to requests to display apps that are only released as unsigned
-*Fixed wrong update count in the bubble & widget
-*Added further languages and updated ISO codes for languages (you may need to re-check your language settings)"""
+    message.text = """Changelog for Wunderland Store 1.0 Build 1:
+* Using AppList as base app
+* Supports: apps, icons, downloading"""
     url = Element("url")
     root.append(message)
     root.append(url)
@@ -199,6 +126,22 @@ def format_results(results, content_type, widget=False):
             category.text = str(ovistore_to_applist(row['category'], "apps"))
             language = SubElement(app, "language")
             language.text = "EN"
+            # image1 = SubElement(app, "image1")
+            # image2 = SubElement(app, "image2")
+            # image3 = SubElement(app, "image3")
+            # image4 = SubElement(app, "image4")
+            # image5 = SubElement(app, "image5")
+            # if row['screenshots_count'] > 0:
+            #     image1.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_0.png"
+            # if row['screenshots_count'] > 1:
+            #     image2.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_1.png"
+            # if row['screenshots_count'] > 2:
+            #     image3.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_2.png"
+            # if row['screenshots_count'] > 3:
+            #     image4.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_3.png"
+            # if row['screenshots_count'] > 4:
+            #     image5.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_4.png"
+            
             os_el = SubElement(app, "os")
             os_el.text = "5.2,5.3,5.4,5.5"
             developer = SubElement(app, "developer")
