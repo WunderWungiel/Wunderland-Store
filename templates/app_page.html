@@ -87,7 +87,7 @@
                         </div>
                         
                         {% if app['screenshots_count'] > 0 %}
-                        <p class="morePhotos"><a href="images/">More photos ({{ app['screenshots']|length }})</a></p>
+                        <p class="morePhotos"><a href="/app/{{ app['id'] }}/images/">More photos ({{ app['screenshots']|length }})</a></p>
                         {% else %}
                         <p></p>
                         {% endif %}
