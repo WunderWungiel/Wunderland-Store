@@ -5,6 +5,7 @@ from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 from urllib.parse import quote
 
+from flask import request
 import psycopg2
 import psycopg2.extras
 
@@ -72,6 +73,8 @@ def ovistore_to_applist(categoryId, content_type):
     return categories_apps.get(categoryId)
 
 def format_results(results, content_type, widget=False):
+
+    prefix = content_type.rstrip("s")
 
     if not results:
         results = []
@@ -150,6 +153,7 @@ def format_results(results, content_type, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, "mail")
             website = SubElement(app, "website")
+            website.text = f"http://{request.host}/{prefix}/{row['id']}"
             twitter = SubElement(app, "twitter")
             facebook = SubElement(app, "facebook")
             donation = SubElement(app, "donation")
