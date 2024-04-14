@@ -37,7 +37,8 @@ CREATE TABLE public.apps (
     img character varying DEFAULT 'Store.png'::character varying,
     visible boolean DEFAULT true,
     addon_message character varying,
-    addon_file character varying
+    addon_file character varying,
+    uid character varying
 );
 
 
@@ -152,7 +153,8 @@ CREATE TABLE public.games (
     img character varying DEFAULT 'Store.png'::character varying,
     visible boolean DEFAULT true,
     addon_message character varying,
-    addon_file character varying
+    addon_file character varying,
+    uid character varying
 );
 
 

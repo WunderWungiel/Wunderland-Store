@@ -90,7 +90,8 @@ def format_results(results, content_type, widget=False):
             id = SubElement(app, "id")
             id.text = str(row['id'])
             uid = SubElement(app, "uid")
-            uid.text = "0xA1331003"
+            if row['uid']:
+                uid.text = row['uid']
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             version = SubElement(app, "version")
@@ -109,7 +110,8 @@ def format_results(results, content_type, widget=False):
             name = SubElement(app, "name")
             name.text = row['title']
             uid = SubElement(app, "uid")
-            uid.text = "0xA1331003" #
+            if row['uid']:
+                uid.text = row['uid']
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             icon = SubElement(app, "icon")
