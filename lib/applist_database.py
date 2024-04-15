@@ -38,7 +38,8 @@ def changelog():
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
-def applist_to_ovistore(categoryId):
+# !!! Replace right side with YOUR categories' IDs!
+def applist_to_wunderland(categoryId):
     categories = {
         0: ("all", "apps"),
         1: (2, "apps"),
@@ -50,27 +51,47 @@ def applist_to_ovistore(categoryId):
         8: (8, "apps"),
         10: (9, "apps"),
         12: (10, "apps"),
-        13: (1, "apps")
+        13: (1, "apps"),
+        20: ("all", "games"),
+        21: (2, "games"),
+        22: (3, "games"),
+        23: (6, "games"),
+        24: (5, "games"),
+        25: (4, "games"),
+        26: (1, "games")
+
     }
 
     return categories.get(categoryId)
 
-def ovistore_to_applist(categoryId, content_type):
-    categories_apps = {
-        "all" : 0,
-        2: 1,
-        3: 2,
-        4: 3,
-        5: 5,
-        6: 6,
-        7: 7,
-        8: 8,
-        9: 10,
-        10: 12,
-        1: 13
+# !!! Replace left side with YOUR categories' IDs!
+def wunderland_to_applist(categoryId, content_type):
+    categories = {
+        "apps": {
+            "all" : 0,
+            2: 1,
+            3: 2,
+            4: 3,
+            5: 5,
+            6: 6,
+            7: 7,
+            8: 8,
+            9: 10,
+            10: 12,
+            1: 13
+        },
+        "games": {
+            "all": 20,
+            2: 21,
+            3: 22,
+            6: 23,
+            5: 24,
+            4: 25,
+            1: 26
+        }
     }
 
-    return categories_apps.get(categoryId)
+    return categories.get(content_type).get(categoryId)
 
 def format_results(results, content_type, widget=False):
 
@@ -86,6 +107,8 @@ def format_results(results, content_type, widget=False):
 
     for row in results:
 
+        row = {k: v.strip() if isinstance(v, str) else v for (k, v) in row.items()}
+
         app = Element("app")
 
         if widget:
@@ -98,11 +121,11 @@ def format_results(results, content_type, widget=False):
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             version = SubElement(app, "version")
-            version.text = row['version'] #
+            version.text = row['version']
             versionstore = SubElement(app, "versionstore")
             versionunsigned = SubElement(app, "unsigned")
             versiondate = SubElement(app, "version")
-            versiondate.text = "2024-03-30 20:54" #
+            versiondate.text = "2024-03-30 20:54"
             versiondatestore = SubElement(app, "versiondatestore")
             versiondateunsigned = SubElement(app, "versiondateunsigned")
 
@@ -128,7 +151,7 @@ def format_results(results, content_type, widget=False):
             versiondatestore = SubElement(app, "versiondatestore")
             versiondateunsigned = SubElement(app, "versiondateunsigned")
             category = SubElement(app, "category")
-            category.text = str(ovistore_to_applist(row['category'], "apps"))
+            category.text = str(wunderland_to_applist(row['category'], content_type))
             language = SubElement(app, "language")
             language.text = "EN"
             # image1 = SubElement(app, "image1")
@@ -156,11 +179,15 @@ def format_results(results, content_type, widget=False):
             website.text = f"http://{request.host}/{prefix}/{row['id']}"
             twitter = SubElement(app, "twitter")
             facebook = SubElement(app, "facebook")
+            if row['addon_file']:
+                facebook.text = f"http://{request.host}/static/files/{row['addon_file']}"
             donation = SubElement(app, "donation")
             price = SubElement(app, "price")
             price.text = "0.00"
             description = SubElement(app, "description")
             description.text = row['description'].strip().replace("<br>", "\n").replace("<br />", "\n").replace("<br/>", "\n")
+            if row['addon_message']:
+                description.text += f"\n\nAdditional notes:\n\n{row['addon_message']}"
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
@@ -204,7 +231,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     
     if category:
         category = int(category)
-        new_category, content_type = applist_to_ovistore(category)
+        new_category, content_type = applist_to_wunderland(category)
     else:
         new_category = None
 
