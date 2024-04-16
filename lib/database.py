@@ -2,44 +2,44 @@ import os
 
 import bcrypt
 import psycopg2
+import psycopg2.extras
 
-from .config import config
 from . import conn
 
 class WrongCategoryError(Exception):
     pass
 
-def format_results(results_list, content_type):
+def format_results(results, content_type):
 
-    results = {}
-    for result_list in results_list:
-        results[result_list[0]] = {
-            "id": result_list[0],
-            "title": result_list[1],
-            "file": result_list[2],
-            "category_name": get_category_name(result_list[3], content_type),
-            "category_id": result_list[3],
-            "description": result_list[4].strip(),
-            "publisher": result_list[5],
-            "version": result_list[6],
-            "platform": result_list[7],
-            "platformName": get_platform_name(result_list[7]),
-            "screenshots_count": result_list[8],
-            "img": os.path.join(content_type, result_list[9]),
+    final_results = {}
+    for row in results:
+        final_results[row["id"]] = {
+            "id": row["id"],
+            "title": row["title"],
+            "file": row["file"],
+            "category_name": get_category_name(row["category"], content_type),
+            "category_id": row["category"],
+            "description": row["description"],
+            "publisher": row["publisher"],
+            "version": row["version"],
+            "platform": row["platform"],
+            "platformName": get_platform_name(row["platform"]),
+            "screenshots_count": row["screenshots_count"],
+            "img": os.path.join(content_type, row["img"]),
             "content_type": content_type,
-            "rating": get_rating(result_list[0], content_type),
-            "addon_message": result_list[11],
-            "addon_file": result_list[12]
+            "rating": get_rating(row["id"], content_type),
+            "addon_message": row["addon_message"],
+            "addon_file": row["addon_file"]
         }
 
-    return results
+    return final_results
 
 def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
 
     categories = get_categories(content_type)
     categories_ids = [result[0] for result in categories]
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     if id:
         id = int(id)
@@ -78,12 +78,12 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
                 query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND visible=true ORDER BY title"
                 cursor.execute(query, (int(categoryId), platformId))
     
-    results_list = cursor.fetchall()
+    results = cursor.fetchall()
     cursor.close()
-    if not results_list:
+    if not results:
         return None
 
-    results = format_results(results_list, content_type)
+    results = format_results(results, content_type)
     if id:
         return results.get(id)
     else:
@@ -91,10 +91,10 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
 
 def get_rating(content_id, content_type):
     
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     query = f"SELECT ROUND(AVG(rating)) as rating FROM {content_type}_rating WHERE content_id=%s"
     cursor.execute(query, (content_id,))
-    result = cursor.fetchone()[0]
+    result = cursor.fetchone()["rating"]
     cursor.close()
 
     return int(result) if result else 0
@@ -144,47 +144,47 @@ def get_platform_name(platformId):
     
     query = f"SELECT name FROM platforms WHERE id=%s"
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (platformId,))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
-    return result[0]
+    return result["name"]
 
 def get_platform_id(platformName):
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute(f"SELECT id FROM platforms WHERE name=%s", (platformName,))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
-    return result[0]
+    return result["id"]
 
 def get_category_name(categoryId, content_type):
     
     query = f"SELECT name FROM {content_type}_categories WHERE id=%s"
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (int(categoryId),))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
-    return result[0]
+    return result["name"]
 
 def get_category_id(categoryName, content_type):
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     cursor.execute(f"SELECT id FROM {content_type}_categories WHERE name=%s", (categoryName,))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
-    return result[0]
+    return result["id"]
 
 def search(query, databases):
 
@@ -194,12 +194,12 @@ def search(query, databases):
     results = {}
 
     for database in databases:
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(f"SELECT * FROM {database} WHERE LOWER(title) LIKE LOWER(%s) ORDER BY title", ('%' + query + '%',))
-        results_list = cursor.fetchall()
+        db_results = cursor.fetchall()
         cursor.close()
 
-        results = results | format_results(results_list, database)
+        results = results | format_results(db_results, database)
 
     return results
 
@@ -215,7 +215,7 @@ class AccountSystem:
         return hashed_password.decode('utf-8')
     
     def get_user(self, email=None, id=None):
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if email:
             cursor.execute("SELECT id, email, username, password, confirmed, banned, banned_reason FROM users WHERE email=%s AND active=true", (email,))
         elif id:
@@ -228,18 +228,8 @@ class AccountSystem:
 
         if not result:
             return None
-        
-        user = {
-            'id': result[0],
-            'email': result[1],
-            'username': result[2],
-            'password': result[3],
-            'confirmed': result[4],
-            'banned': result[5],
-            'banned_reason': result[6]
-        }
 
-        return user
+        return result
 
     def confirm_user(self, email):
         cursor = conn.cursor()
@@ -247,22 +237,22 @@ class AccountSystem:
         conn.commit()
 
     def get_emails(self):
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT email FROM users WHERE active=true")
 
         results = cursor.fetchall()
         cursor.close()
-        results = [result[0] for result in results]
+        results = [result["email"] for result in results]
         
         return results
     
     def get_usernames(self):
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT username FROM users WHERE active=true")
 
         results = cursor.fetchall()
         cursor.close()
-        results = [result[0] for result in results]
+        results = [row["username"] for row in results]
         
         return results
 
@@ -281,19 +271,19 @@ class AccountSystem:
         if email not in emails:
             return False
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute("SELECT password FROM users WHERE email=%s AND active=true", (email,))
         
         result = cursor.fetchone()
         cursor.close()
 
-        hashed_password = result[0].encode('utf-8')
+        hashed_password = result["password"].encode('utf-8')
         user_password = user_password.encode('utf-8')
 
         return bcrypt.checkpw(user_password, hashed_password)
     
     def get_user_id(self, email=None, username=None, id=None):
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if email:
             cursor.execute("SELECT id FROM users WHERE email=%s AND active=true", (email,))
         elif id:
@@ -306,6 +296,6 @@ class AccountSystem:
         result = cursor.fetchone()
         cursor.close()
 
-        return result[0] if result else None
+        return result["id"] if result else None
         
 account_system = AccountSystem()
