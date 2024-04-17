@@ -87,7 +87,7 @@
                         </div>
                         
                         {% if app['screenshots_count'] > 0 %}
-                        <p class="morePhotos"><a href="/app/{{ app['id'] }}/images/">More photos ({{ app['screenshots']|length }})</a></p>
+                        <p class="morePhotos"><a href="/app/{{ app['id'] }}/images/">Screenshots ({{ app['screenshots']|length }})</a></p>
                         {% else %}
                         <p></p>
                         {% endif %}
@@ -107,15 +107,7 @@
                         </div>
                         <br />
                         {% endif %}
-            
-                        <div class="publisher">
-                            <a href="#" onclick="return false;">See all by {{ app['publisher'] }}</a>
-                        </div>
 
-                        <div class="privacyPolicy">
-                            <a href="#" onclick="return false;">Privacy policy</a>
-                        </div>
-        
                         {% if recommended != None %}
                         <div class="related">
                             <h3>Here are the most popular items that are similar to {{ app['title'] }}:</h3>
@@ -187,10 +179,8 @@
                 {% else %}
                 <a class="accountStatusChange" href="/logout">Log out</a> |
                 {% endif %}
-                <a href="/legal/terms/store">Terms</a> |
-                <a href="/legal/privacy">Privacy</a> |
                 <a href="/help/faqs">Help</a><br/>
-            © Symbian Redevelopment Project 2024</div>
+            © Wunder Wungiel 2024</div>
         </div> <!-- end wrapper -->
     </body>
 </html>
