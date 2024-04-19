@@ -62,6 +62,13 @@ def _game_rate(id):
     else:
         return rate(id, "games")
 
+@store.route("/theme/<int:id>/rate", methods=["GET", "POST"])
+def _theme_rate(id):
+    if request.method == "GET":
+        return _rate_form(id, "themes")
+    else:
+        return rate(id, "themes")
+
 def _rate_form(id, content_type):
 
     prefixes = {
@@ -100,6 +107,9 @@ def _app(id):
 @store.route("/game/<int:id>")
 def _game(id):
     return _item_page(id, content_type="games")
+@store.route("/theme/<int:id>")
+def _theme(id):
+    return _item_page(id, content_type="themes")
 
 def _item_page(id, content_type):
 
@@ -114,10 +124,6 @@ def _item_page(id, content_type):
     if not app:
         return redirect(f"/{prefixes[content_type]}")
     
-    app['screenshots'] = [f'{id}_{i}.png' for i in range(app['screenshots_count'])]
-    
-    print(os.path.join(current_app.root_path, 'static', 'files', app['file']))
-
     try:
         app['size'] = round(os.stat(os.path.join(current_app.root_path, 'static', 'files', app['file'])).st_size / (1024 * 1024), 2)
     except FileNotFoundError:
@@ -125,6 +131,7 @@ def _item_page(id, content_type):
 
     recommended = list(db.get_content(content_type=content_type, categoryId=app['category_id']).values())
     recommended = random.choices(recommended, k=10)
+    # recommended = [dict((k, tuple(v)) if isinstance(v, list) else (k, v) for k, v in d.items()) for d in recommended] # Can convert lists to tuples automatically
     recommended = [dict(t) for t in {tuple(d.items()) for d in recommended}]
     recommended = [d for d in recommended if d['id'] != app['id']]
     if not recommended:
@@ -145,19 +152,25 @@ def _app_images(id):
 @store.route("/game/<int:id>/images")
 def _game_images(id):
     return _item_images(id, "games")
+@store.route("/theme/<int:id>/images")
+def _theme_images(id):
+    return _item_images(id, "themes")
 
 def _item_images(id, content_type):
     app = db.get_content(id=id, content_type=content_type)
 
-    if not app['screenshots_count'] > 0:
+    screenshots = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
+    if not len(screenshots) > 0:
         if type == "apps":
             url = f"/app/{id}/"
         elif content_type == "games":
             url = f"/game/{id}/"
+        elif content_type == "themes":
+            url = f"/theme/{id}/"
 
         return redirect(url)
 
-    app['screenshots'] = [f'{id}_{i}.png' for i in range(app['screenshots_count'])]
+    app['screenshots'] = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
     return render_template("app_images.html", app=app, content_type=content_type)
 
 @store.route("/applications/browse")
@@ -170,6 +183,11 @@ def _games_browse():
     categories = db.get_categories("games")
     return render_template("games_browse.html", categories=categories)
 
+@store.route("/themes/browse")
+def _themes_browse():
+    categories = db.get_categories("themes")
+    return render_template("themes_browse.html", categories=categories)
+
 @store.route("/search")
 def _search():
 
@@ -177,7 +195,7 @@ def _search():
     if not query:
         return render_template("search.html")
     
-    results = db.search(query, ("apps", "games"))
+    results = db.search(query, ("apps", "games", "themes"))
 
     pageId = request.args.get('pageId')
 
@@ -249,6 +267,10 @@ def _applications():
 @store.route("/games")
 def _games():
     return _content("games")
+
+@store.route("/themes")
+def _themes():
+    return _content("themes")
 
 def _content(content_type):
 

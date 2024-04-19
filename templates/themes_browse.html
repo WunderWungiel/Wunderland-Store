@@ -3,10 +3,10 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        <title>Screenshots | Wunderland Store</title>
+        <title>Themes | Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />    
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
         <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
     </head>
@@ -25,40 +25,28 @@
                                 |
                                 {% if session['loggedIn'] is defined %}
                                 <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
-                                |
                                 {% endif %}
-                                <a href="/search/">Search</a>
                             </td>
                         </tr>
                     </table>
                 </div> <!-- end top -->
-                                
             </div> <!-- end header -->
 
             <div id="views">
                 <div class="view">
                     <div class="contentItem">
-                        {% for screenshot in app['screenshots'] %}
-                        <div class="image">
-			                <a href="/static/screenshots/{{ content_type }}/{{ screenshot }}">
-	                            <img src="/static/screenshots/{{ content_type }}/{{ screenshot }}" width="29" height="52" alt="{{ app['title'] }}" />
-	                        </a>
-		                </div>
-                        {% endfor %}
-    
-                        <div class="options">
-                            {% if content_type == 'apps' %}
-                            <a href="/app/{{ app['id'] }}/">
-                            {% elif content_type == 'games' %}
-                            <a href="/game/{{ app['id'] }}/">
-                            {% elif content_type == 'themes' %}
-                            <a href="/theme/{{ app['id'] }}/">
-                            {% endif %}
-                            &lt; Back to {{ app['title'] }}</a>
-                        </div>
-                    </div> <!-- end content -->
-                    <div class="beacon"></div>
+	                    <h2>Categories</h2>
 
+                        <div id="categories">
+                            <a href="/themes" class="selected">All Themes</a><br />
+                            {% for category in categories %}
+                            <a href="/themes/?categoryId={{ category[0] }}">{{ category[1] }}</a>{% if loop.index != categories|length %}<br />{% endif %}
+                            {% endfor %}
+                        </div> <!-- end categories -->
+
+	                </div> <!-- end content item -->
+
+                    <div class="beacon"></div>
                 </div>
             </div> <!-- end views -->
 

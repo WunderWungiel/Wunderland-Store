@@ -9,7 +9,7 @@
         
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon1.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
     </head>
 
     <body>
@@ -84,7 +84,7 @@
                             {% endif %}
                         </div>
                         
-                        {% if app['screenshots_count'] > 0 %}
+                        {% if app['screenshots']|length > 0 %}
                         <p class="morePhotos"><a href="/game/{{ app['id'] }}/images/">Screenshots ({{ app['screenshots']|length }})</a></p>
                         {% else %}
                         <p></p>

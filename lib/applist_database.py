@@ -154,21 +154,6 @@ def format_results(results, content_type, widget=False):
             category.text = str(wunderland_to_applist(row['category'], content_type))
             language = SubElement(app, "language")
             language.text = "EN"
-            # image1 = SubElement(app, "image1")
-            # image2 = SubElement(app, "image2")
-            # image3 = SubElement(app, "image3")
-            # image4 = SubElement(app, "image4")
-            # image5 = SubElement(app, "image5")
-            # if row['screenshots_count'] > 0:
-            #     image1.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_0.png"
-            # if row['screenshots_count'] > 1:
-            #     image2.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_1.png"
-            # if row['screenshots_count'] > 2:
-            #     image3.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_2.png"
-            # if row['screenshots_count'] > 3:
-            #     image4.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_3.png"
-            # if row['screenshots_count'] > 4:
-            #     image5.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['id']}_4.png"
             
             os_el = SubElement(app, "os")
             os_el.text = "5.2,5.3,5.4,5.5"
@@ -188,6 +173,19 @@ def format_results(results, content_type, widget=False):
             description.text = row['description'].strip().replace("<br>", "\n").replace("<br />", "\n").replace("<br/>", "\n")
             if row['addon_message']:
                 description.text += f"\n\nAdditional notes:\n\n{row['addon_message']}"
+            image1 = SubElement(app, "image1")
+            image2 = SubElement(app, "image2")
+            image3 = SubElement(app, "image3")
+            image4 = SubElement(app, "image4")
+            image5 = SubElement(app, "image5")
+            if row['image1']:
+                image1.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image1']}"
+            if row['image2']:
+                image2.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image2']}"
+            if row['image3']:
+                image3.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image3']}"
+            if row['image4']:
+                image4.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image4']}"
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")

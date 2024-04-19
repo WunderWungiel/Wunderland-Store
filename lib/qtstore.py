@@ -2,7 +2,7 @@
 
 import os
 
-from flask import Blueprint, current_app, send_from_directory
+from flask import Blueprint, current_app, send_from_directory, request
 
 from . import qtstore_database as db
 
@@ -24,7 +24,23 @@ def description(content_type, app):
         return None
 
     content = db.qtstore_content(app, content_type)
-    return content['description'] if content else None
+    if not content:
+        return None
+
+    description = content['description']
+
+    if len(content['screenshots']) > 0:
+        description += "<br><br>"
+        for i, screenshot in enumerate(content['screenshots'], start=1):
+            path = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{screenshot}"
+            description += f'''<img src="{path}" alt="image{i}" width="150"><br><br>'''
+
+    if content['addon_message']:
+        description += f"<br><br>Additional notes:<br><br>{content['addon_message']}"
+    if content['addon_file']:
+        description += f'''<br><br>Extra file: http://{request.host}/static/files/{content['addon_file']}'''
+
+    return description
 
 @qtstore.route("/StoreData/<content_type>/<app>/file.sis")
 def file(content_type, app):

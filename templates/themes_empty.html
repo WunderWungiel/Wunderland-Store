@@ -4,9 +4,9 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         {% if category != None %}
-        <title>Apps :: {{ category }} | Wunderland Store</title>
+        <title>Themes :: {{ category }} | Wunderland Store</title>
         {% else %}
-        <title>Apps | Wunderland Store</title>
+        <title>Themes | Wunderland Store</title>
         {% endif %}
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 
@@ -39,15 +39,15 @@
 
                 <div id="navigation">
                     <a class="first" href="/home/">Our picks</a> <b>|</b>
-                    <a href="/applications/" class="selected">Apps</a> <b>|</b>
+                    <a href="/applications/">Apps</a> <b>|</b>
                     <a href="/games/">Games</a> <b>|</b>
-                    <a href="/themes/">Themes</a>
+                    <a href="/themes/" class="selected">Themes</a>
                 </div> <!-- end navigation -->
                 
-                {% if category != None %}
-                <div id="crumbNav">Applications&nbsp;&gt; {{ category }}&nbsp;<a href="/applications/browse/">Change</a></div>
+                {% if category is defined and category != None %}
+                <div id="crumbNav">Themes&nbsp;&gt; {{ category }}&nbsp;<a href="/themes/browse/">Change</a></div>
                 {% else %}
-                <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/applications/browse/">Change</a></div>
+                <div id="crumbNav">Themes&nbsp;&gt; All&nbsp;<a href="/themes/browse/">Change</a></div>
                 {% endif %}
                 
             </div> <!-- end header -->
@@ -55,63 +55,18 @@
             <div id="views">
                 <div class="view">
                     
-                    <table class="contentList" cellspacing="0" width='100%' >
-                        {% for app in apps %}
-                        {% if loop.index % 2 == 0 %}
+                    <br />
+                    <table class="contentList" cellspacing="0" width='100%' style="margin-left: 5px;">
                         <tr class="contentItem ">
-                        {% else %}
-                        <tr class="contentItem  alt">
-                        {% endif %}
-                        
-                            <td class="thumbnail">
-                                <img src="/static/store/{{ app['img'] }}" width="46" height="46" alt="{{ app['title'] }}" />
-                            </td>
-                        
                             <td class="contentType">
-                                <h2 class="title">
-                                    <a href="/app/{{ app['id'] }}/">{{ app['title'] }}</a>
-                                </h2>{{ app['category'] }}
+                                <h2 class="title">No themes (yet)</h2>
                             </td>
-                        
-                            <td class="contentRatingPrice">
-                                <div class="rating">
-                                    {% for i in range(app['rating']) %}
-                                    <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
-                                    {% endfor %}
-                                    {% if app['rating'] != 5 %}
-                                    {% for i in range(app['rating'], 5) %}
-                                    <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
-                                    {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </td>
-                        {% endfor %}
                         </tr>
                     </table>
 
-                </div> <!-- end Content Stream -->
+                    </div><!-- end Content Stream -->
 
-                {% if previous_page != None or next_page != None %}
-                <p class="pagination">
-                {% if previous_page != None %}
-                {% if category_id != None %}
-                    <a href="/applications/?categoryId={{ category_id }}&pageId={{ previous_page }}">Previous</a>
-                {% else %}
-                    <a href="/applications/?pageId={{ previous_page }}">Previous</a>
-                {% endif %}
-                {% endif %}
-                {% if next_page != None %}
-                {% if category_id != None %}
-                    <a href="/applications/?categoryId={{ category_id }}&pageId={{ next_page }}">Next</a>
-                {% else %}
-                <a href="/applications/?pageId={{ next_page }}">Next</a>
-                {% endif %}
-                {% endif %}
-                </p>
-                {% endif %}
-
-                <div class="beacon"></div>
-
+                    <div class="beacon"></div>
                 </div>
             </div> <!-- end views -->
 
@@ -128,9 +83,10 @@
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
                     <a href="/home/">Our picks</a><br />
-                    <a href="/applications/" class="selected">Apps</a><br />
+                    <a href="/applications/">Apps</a><br />
                     <a href="/games/">Games</a><br />
-                    <a href="/themes/">Themes</a><br />
+                    <a href="/themes/" class="selected">Themes</a><br />
+                </div> <!-- end navigation -->
             </div>
                         
             <div id="footer">

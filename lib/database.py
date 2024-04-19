@@ -24,12 +24,16 @@ def format_results(results, content_type):
             "version": row["version"],
             "platform": row["platform"],
             "platformName": get_platform_name(row["platform"]),
-            "screenshots_count": row["screenshots_count"],
+            "image1": row["image1"],
+            "image2": row["image2"],
+            "image3": row["image3"],
+            "image4": row["image4"],
             "img": os.path.join(content_type, row["img"]),
             "content_type": content_type,
             "rating": get_rating(row["id"], content_type),
             "addon_message": row["addon_message"],
-            "addon_file": row["addon_file"]
+            "addon_file": row["addon_file"],
+            "screenshots": tuple([image for image in (row['image1'], row['image2'], row['image3'], row['image4']) if image])
         }
 
     return final_results

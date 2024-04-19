@@ -43,8 +43,13 @@ def qtstore_generator():
 def qtstore_content(name, content_type):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(f"SELECT title, description, file, img FROM {content_type} WHERE title LIKE %s LIMIT 1", (name,))
-    results = cursor.fetchone()
+    cursor.execute(f"SELECT title, description, file, img, addon_message, addon_file, image1, image2, image3, image4 FROM {content_type} WHERE title LIKE %s LIMIT 1", (name,))
+    result = cursor.fetchone()
     cursor.close()
 
-    return results if results else None
+    if result:
+        result["screenshots"] = [image for image in (result['image1'], result['image2'], result['image3'], result['image4']) if image]
+        print(result)
+        return result
+    else:
+        return None
