@@ -129,7 +129,7 @@ def _item_page(id, content_type):
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = list(db.get_content(content_type=content_type, categoryId=app['category_id']).values())
+    recommended = list(db.get_content(content_type=content_type, categoryId=app['category_id'], platformId=session['platformId']).values())
     recommended = random.choices(recommended, k=10)
     # recommended = [dict((k, tuple(v)) if isinstance(v, list) else (k, v) for k, v in d.items()) for d in recommended] # Can convert lists to tuples automatically
     recommended = [dict(t) for t in {tuple(d.items()) for d in recommended}]

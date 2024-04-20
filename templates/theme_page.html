@@ -89,10 +89,6 @@
                         <p></p>
                         {% endif %}
                     
-                        <div class="description">
-                            <p>{{ app['description']|safe }}</p>
-                        </div> <!-- end description -->
-
                         {% if app['addon_message'] is not none %}
                         <div style="color: green;">
                             {{ app['addon_message'] }}
@@ -117,14 +113,12 @@
                                 {% else %}
                                 <tr class="contentItem alt " id="{{ app['id'] }}">
                                 {% endif %}
-                                    <td class="thumbnail">
-                                        <img src="/static/store/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
-                                    </td>
+                                    <td class="thumbnail" style="width: 0;"></td>
                                     
                                     <td class="contentType">
                                         <h2 class="title">
                                             <a href="/theme/{{ app['id'] }}">{{ app['title'] }}</a>
-                                        </h2>{{ app['category_name'] }}
+                                        </h2>
                                     </td>
         
                                     <td class="contentRatingPrice">

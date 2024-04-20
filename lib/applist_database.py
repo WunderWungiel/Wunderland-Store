@@ -46,7 +46,7 @@ def applist_to_wunderland(categoryId):
         2: (3, "apps"),
         3: (4, "apps"),
         5: (5, "apps"),
-        6: (6, "apps"),
+        6: (1, "themes"),
         7: (7, "apps"),
         8: (8, "apps"),
         10: (9, "apps"),
@@ -73,7 +73,6 @@ def wunderland_to_applist(categoryId, content_type):
             3: 2,
             4: 3,
             5: 5,
-            6: 6,
             7: 7,
             8: 8,
             9: 10,
@@ -88,6 +87,9 @@ def wunderland_to_applist(categoryId, content_type):
             5: 24,
             4: 25,
             1: 26
+        },
+        "themes": {
+            1: 6
         }
     }
 
@@ -170,7 +172,8 @@ def format_results(results, content_type, widget=False):
             price = SubElement(app, "price")
             price.text = "0.00"
             description = SubElement(app, "description")
-            description.text = row['description'].strip().replace("<br>", "\n").replace("<br />", "\n").replace("<br/>", "\n")
+            if row['description']:
+                description.text = row['description'].strip().replace("<br>", "\n").replace("<br />", "\n").replace("<br/>", "\n")
             if row['addon_message']:
                 description.text += f"\n\nAdditional notes:\n\n{row['addon_message']}"
             image1 = SubElement(app, "image1")
