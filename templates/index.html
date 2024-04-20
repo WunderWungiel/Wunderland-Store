@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        <title>Our picks | Wunderland Store</title>
+        <title>Home | Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
@@ -34,7 +34,7 @@
                 </div> <!-- end top -->
 
                 <div id="navigation">
-                    <a class="first selected" href="/home/">Our picks</a> <b>|</b>
+                    <a class="first selected" href="/home/">Home</a> <b>|</b>
                     <a href="/applications/">Apps</a> <b>|</b>
                     <a href="/games/">Games</a> <b>|</b>
                     <a href="/themes/">Themes</a>
@@ -44,57 +44,25 @@
 
             <div id="views">
                 <div class="view">
-                    
-
-                <!-- Content Stream -->
-                    <!-- BSO -->
-                    <!-- <div class="contentList bso">
-                        <table>
-                            <tr class="contentItem">
-                                <td class="thumbnail">
-                                    <img src="http://p.d.ovi.com/p/g/store/15725945/AFM_icon_256-46x46.png?q=qYfC8uw7D*iQ8K8Y5j219Gd9J4pa9-s1&c=ovi_store" alt="ASTRO File Manager"/>
-                                </td>
-                                <td class="contentType">
-                                    <h2 class="title"><a href="http://store.ovi.mobi/content/447014?contentArea=&amp;clickSource=bso">ASTRO File Manager</a></h2>Utilities
-                                    <p class="description"></p>
-                                </td>    
-                            </tr>
-                        </table>
-                    </div> -->
-                    <!-- end bso -->
 
                     <table class="contentList" cellspacing="0" width='100%' >
 
-                        {% for app in apps %}
+                        {% for content in news %}
 
                         {% if loop.index % 2 == 0 %}
-                        <tr class="contentItem ">
+                        <tr class="contentItem " style="height: 32px;">
                         {% else %}
-                        <tr class="contentItem  alt">
+                        <tr class="contentItem  alt" style="height: 32px;">
                         {% endif %}
         
-                            <td class="thumbnail">
-                                <img src="/static/store/{{ app['img'] }}" width="46" height="46" alt="thumbnail of {{ app['title'] }}"/>
-                            </td>
+                            <td class="thumbnail" style="width: 0;"></td>
         
                             <td class="contentType">
                                 <h2 class="title">
-                                    <a href="/app/{{ app['id'] }}">{{ app['title'] }}</a>
-                                </h2>{{ app['category'] }}
+                                    <a href="/news/{{ content['id'] }}">{{ content['title'] }}</a>
+                                </h2>
                             </td>
-        
-                            <td class="contentRatingPrice">
-                                <div class="rating">
-                                    {% for i in range(app['rating']) %}
-                                    <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
-                                    {% endfor %}
-                                    {% if app['rating'] != 5 %}
-                                    {% for i in range(app['rating'], 5) %}
-                                    <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
-                                    {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </td>
+                            <td class="contentRatingPrice"></td>
                         </tr>
 
                         {% endfor %}
@@ -133,7 +101,7 @@
 
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
-                    <a href="/home/" class="selected">Our picks</a><br />
+                    <a href="/home/" class="selected">Home</a><br />
                     <a href="/applications/">Apps</a><br />
                     <a href="/games/">Games</a><br />
                     <a href="/themes/">Themes</a><br />

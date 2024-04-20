@@ -3,16 +3,16 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        {% if category != None %}
-        <title>Apps :: {{ category }} | Wunderland Store</title>
+        {% if title is defined %}
+        <title>{{ title }} | Wunderland Store</title>
         {% else %}
-        <title>Apps | Wunderland Store</title>
+        <title>Wunderland Store</title>
         {% endif %}
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
+        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+
     </head>
 
     <body>
@@ -39,56 +39,34 @@
 
                 <div id="navigation">
                     <a class="first" href="/home/">Home</a> <b>|</b>
-                    <a href="/applications/" class="selected">Apps</a> <b>|</b>
+                    <a href="/applications/">Apps</a> <b>|</b>
                     <a href="/games/">Games</a> <b>|</b>
                     <a href="/themes/">Themes</a>
                 </div> <!-- end navigation -->
-                
-                {% if category is defined and category != None %}
-                <div id="crumbNav">Applications&nbsp;&gt; {{ category }}&nbsp;<a href="/applications/browse/">Change</a></div>
-                {% else %}
-                <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/applications/browse/">Change</a></div>
-                {% endif %}
-                
             </div> <!-- end header -->
 
             <div id="views">
-                <div class="view">
-                    
+                <div class="view">    
                     <br />
-                    <table class="contentList" cellspacing="0" width='100%' style="margin-left: 5px;">
-                        <tr class="contentItem ">
-                            <td class="contentType">
-                                <h2 class="title">No apps (yet)</h2>
-                            </td>
-                        </tr>
-                    </table>
 
-                    </div><!-- end Content Stream -->
+                    <div class="viewWrapper">
+                        <div class="noaOviTermsOfService">
+                            <h2>{{ title }}</h2>
+                            {{ content|safe }}
+                        </div>
 
-                    <div class="beacon"></div>
+                        <br />
+
+                        {% if share is defined and share != None %}
+                        <h2 class="share">Share: <a href="{{ request.url }}">{{ request.url }}</a> (link)</h2>
+                        {% endif %}    
+
+                    </div>
+
                 </div>
             </div> <!-- end views -->
 
-            <div id="bottom">
-                <div id="searchContent">
-                    <form action="/search" method="get" id="searchForm">
-                        <fieldset id='searchField'>
-                            <label for="search">Search</label>
-                            <input type="text" id="search" name="q" title="" value="" /> <input type="submit" id="searchBtn" value="Search" />
-                        </fieldset>
-                    </form>
-                </div> <!-- end search -->
-
-                <div id="bottomNavigation">
-                    <h3>Browse categories</h3>
-                    <a href="/home/">Home</a><br />
-                    <a href="/applications/" class="selected">Apps</a><br />
-                    <a href="/games/">Games</a><br />
-                    <a href="/themes/">Themes</a><br />
-                </div> <!-- end navigation -->
-            </div>
-                        
+            <div id="bottom"></div>      
             <div id="footer">
                 {% if session['loggedIn'] is not defined %}
                 <a class="accountStatusChange" href="/login">Sign in</a> |

@@ -33,12 +33,15 @@ CREATE TABLE public.apps (
     publisher character varying DEFAULT 'Publisher'::character varying,
     version character varying DEFAULT '1.00(0)'::character varying,
     platform character varying NOT NULL,
-    screenshots_count integer DEFAULT 0,
     img character varying DEFAULT 'Store.png'::character varying,
     visible boolean DEFAULT true,
     addon_message character varying,
     addon_file character varying,
-    uid character varying
+    uid character varying,
+    image1 character varying,
+    image2 character varying,
+    image3 character varying,
+    image4 character varying
 );
 
 
@@ -149,12 +152,15 @@ CREATE TABLE public.games (
     publisher character varying DEFAULT 'Publisher'::character varying,
     version character varying DEFAULT '1.00(0)'::character varying,
     platform character varying NOT NULL,
-    screenshots_count integer DEFAULT 0,
     img character varying DEFAULT 'Store.png'::character varying,
     visible boolean DEFAULT true,
     addon_message character varying,
     addon_file character varying,
-    uid character varying
+    uid character varying,
+    image1 character varying,
+    image2 character varying,
+    image3 character varying,
+    image4 character varying
 );
 
 
@@ -217,6 +223,77 @@ ALTER SEQUENCE public.games_id_seq OWNED BY public.games.id;
 
 
 --
+-- Name: games_rating; Type: TABLE; Schema: public; Owner: wunder
+--
+
+CREATE TABLE public.games_rating (
+    id integer NOT NULL,
+    content_id integer NOT NULL,
+    rating integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.games_rating OWNER TO wunder;
+
+--
+-- Name: games_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+--
+
+CREATE SEQUENCE public.games_rating_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.games_rating_id_seq OWNER TO wunder;
+
+--
+-- Name: games_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+--
+
+ALTER SEQUENCE public.games_rating_id_seq OWNED BY public.games_rating.id;
+
+
+--
+-- Name: news; Type: TABLE; Schema: public; Owner: wunder
+--
+
+CREATE TABLE public.news (
+    id integer NOT NULL,
+    title character varying NOT NULL,
+    file character varying NOT NULL
+);
+
+
+ALTER TABLE public.news OWNER TO wunder;
+
+--
+-- Name: news_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+--
+
+CREATE SEQUENCE public.news_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.news_id_seq OWNER TO wunder;
+
+--
+-- Name: news_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+--
+
+ALTER SEQUENCE public.news_id_seq OWNED BY public.news.id;
+
+
+--
 -- Name: platforms; Type: TABLE; Schema: public; Owner: wunder
 --
 
@@ -237,13 +314,19 @@ CREATE TABLE public.themes (
     title character varying DEFAULT 'Theme'::character varying,
     file character varying DEFAULT '#'::character varying,
     category integer DEFAULT 1,
-    description character varying DEFAULT 'Description'::character varying,
+    description character varying,
     publisher character varying DEFAULT 'Publisher'::character varying,
     version character varying DEFAULT '1.00(0)'::character varying,
     platform character varying NOT NULL,
-    screenshots_count integer DEFAULT 0,
     img character varying DEFAULT 'Store.png'::character varying,
-    visible boolean DEFAULT true
+    visible boolean DEFAULT true,
+    addon_message character varying,
+    addon_file character varying,
+    uid character varying,
+    image1 character varying,
+    image2 character varying,
+    image3 character varying,
+    image4 character varying
 );
 
 
@@ -303,6 +386,42 @@ ALTER SEQUENCE public.themes_id_seq OWNER TO wunder;
 --
 
 ALTER SEQUENCE public.themes_id_seq OWNED BY public.themes.id;
+
+
+--
+-- Name: themes_rating; Type: TABLE; Schema: public; Owner: wunder
+--
+
+CREATE TABLE public.themes_rating (
+    id integer NOT NULL,
+    content_id integer NOT NULL,
+    rating integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.themes_rating OWNER TO wunder;
+
+--
+-- Name: themes_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+--
+
+CREATE SEQUENCE public.themes_rating_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.themes_rating_id_seq OWNER TO wunder;
+
+--
+-- Name: themes_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+--
+
+ALTER SEQUENCE public.themes_rating_id_seq OWNED BY public.themes_rating.id;
 
 
 --
@@ -381,6 +500,20 @@ ALTER TABLE ONLY public.games_categories ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
+-- Name: games_rating id; Type: DEFAULT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.games_rating ALTER COLUMN id SET DEFAULT nextval('public.games_rating_id_seq'::regclass);
+
+
+--
+-- Name: news id; Type: DEFAULT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.news ALTER COLUMN id SET DEFAULT nextval('public.news_id_seq'::regclass);
+
+
+--
 -- Name: themes id; Type: DEFAULT; Schema: public; Owner: wunder
 --
 
@@ -395,138 +528,17 @@ ALTER TABLE ONLY public.themes_categories ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: themes_rating id; Type: DEFAULT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.themes_rating ALTER COLUMN id SET DEFAULT nextval('public.themes_rating_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: wunder
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
-
-
---
--- Data for Name: apps; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.apps (id, title, file, category, description, publisher, version, platform, screenshots_count, img, visible, addon_message, addon_file) FROM stdin;
-1	App	#	1	Description	Publisher	1.00(0)	s60	0	Store.png	t	\N	\N
-2	3D Compass	3D Compass v1.00(6).sisx	1	You will always know where you are heading,because 3D Compass shows you the magnetic north with a cool 3D effect! 3D Compass lets you also choose locations from your Nokia Maps landmarks list and a pointy arrow will guide you all the way. You can select the appearance of the compass from several theme options.	BH Production	1.00(6)	s60	0	3DCompass.png	t	Fix below:	XD
-\.
-
-
---
--- Data for Name: apps_categories; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.apps_categories (id, name) FROM stdin;
-1	Other apps
-\.
-
-
---
--- Data for Name: apps_rating; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.apps_rating (id, content_id, rating, user_id) FROM stdin;
-3	1	1	3
-2	1	5	2
-4	2	1	2
-\.
-
-
---
--- Data for Name: games; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.games (id, title, file, category, description, publisher, version, platform, screenshots_count, img, visible, addon_message, addon_file) FROM stdin;
-\.
-
-
---
--- Data for Name: games_categories; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.games_categories (id, name) FROM stdin;
-1	Other games
-\.
-
-
---
--- Data for Name: platforms; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.platforms (id, name) FROM stdin;
-s60	Symbian
-\.
-
-
---
--- Data for Name: themes; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.themes (id, title, file, category, description, publisher, version, platform, screenshots_count, img, visible) FROM stdin;
-\.
-
-
---
--- Data for Name: themes_categories; Type: TABLE DATA; Schema: public; Owner: wunder
---
-
-COPY public.themes_categories (id, name) FROM stdin;
-1	All
-\.
-
---
--- Name: apps_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.apps_categories_id_seq', 1, true);
-
-
---
--- Name: apps_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.apps_id_seq', 2, true);
-
-
---
--- Name: apps_rating_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.apps_rating_id_seq', 4, true);
-
-
---
--- Name: games_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.games_categories_id_seq', 1, true);
-
-
---
--- Name: games_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.games_id_seq', 1, false);
-
-
---
--- Name: themes_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.themes_categories_id_seq', 1, true);
-
-
---
--- Name: themes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.themes_id_seq', 1, false);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: wunder
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 3, true);
 
 
 --
@@ -546,14 +558,6 @@ ALTER TABLE ONLY public.apps
 
 
 --
--- Name: apps_rating apps_rating_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
---
-
-ALTER TABLE ONLY public.apps_rating
-    ADD CONSTRAINT apps_rating_pkey PRIMARY KEY (id);
-
-
---
 -- Name: games_categories games_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
 --
 
@@ -567,6 +571,14 @@ ALTER TABLE ONLY public.games_categories
 
 ALTER TABLE ONLY public.games
     ADD CONSTRAINT games_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: news news_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.news
+    ADD CONSTRAINT news_pkey PRIMARY KEY (id);
 
 
 --
@@ -634,11 +646,43 @@ ALTER TABLE ONLY public.games
 
 
 --
+-- Name: games_rating games_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.games_rating
+    ADD CONSTRAINT games_rating_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.games(id);
+
+
+--
+-- Name: games_rating games_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.games_rating
+    ADD CONSTRAINT games_rating_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: themes themes_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
 --
 
 ALTER TABLE ONLY public.themes
     ADD CONSTRAINT themes_category_fkey FOREIGN KEY (category) REFERENCES public.themes_categories(id);
+
+
+--
+-- Name: themes_rating themes_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.themes_rating
+    ADD CONSTRAINT themes_rating_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.themes(id);
+
+
+--
+-- Name: themes_rating themes_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+--
+
+ALTER TABLE ONLY public.themes_rating
+    ADD CONSTRAINT themes_rating_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --

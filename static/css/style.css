@@ -15,3 +15,8 @@ span.required, span.tip {
 .buttons_small a {
     font-size: 10px; 
 }
+
+.share a, .share a:visited, .share a:active, .share a:hover {
+    color: #333;
+    text-decoration: none;
+}

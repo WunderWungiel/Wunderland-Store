@@ -1,8 +1,11 @@
 import os
+from datetime import datetime
 
 import bcrypt
 import psycopg2
 import psycopg2.extras
+from markdown import markdown
+from flask import current_app
 
 from . import conn
 
@@ -303,3 +306,40 @@ class AccountSystem:
         return result["id"] if result else None
         
 account_system = AccountSystem()
+
+def get_news(news_id=None):
+    
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    if not news_id:
+        cursor.execute("SELECT * FROM news")
+    else:
+        cursor.execute("SELECT * FROM news WHERE id=%s", (news_id,))
+    results = cursor.fetchall()
+    cursor.close()
+    if not results:
+        return None
+
+    final_results = []
+
+    for row in results:
+        file_path = os.path.join(current_app.root_path, "news", row['file'])
+        f = open(file_path, "r")
+        markdown_content = f.read()
+        html_content = markdown(markdown_content)
+        f.close()
+
+        file_timestamp = os.path.getmtime(file_path)
+        file_date = datetime.fromtimestamp(file_timestamp).strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+        final_results.append(
+            {
+                'id': row['id'],
+                'title': row['title'],
+                'content': html_content,
+                'date': file_date
+            }
+        )
+
+    print(final_results)
+
+    return final_results

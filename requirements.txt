@@ -3,3 +3,4 @@
 Flask
 bcrypt
 psycopg2
+markdown
