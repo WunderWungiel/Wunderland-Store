@@ -301,7 +301,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         query += " ORDER BY id DESC LIMIT %s"
         args.append(count)
     else:
-        query += " ORDER BY title"
+        query += " ORDER BY id DESC"
 
     args = tuple(args)
     cursor.execute(query, args)

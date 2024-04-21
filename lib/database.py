@@ -54,17 +54,17 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
     if categoryId is None:
         if platformId == "all":
             if id:
-                query = f"SELECT * FROM {content_type} WHERE id=%s AND visible=true"
+                query = f"SELECT * FROM {content_type} WHERE id=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (id,))
             else:
-                query = f"SELECT * FROM {content_type} WHERE visible=true"
+                query = f"SELECT * FROM {content_type} WHERE visible=true ORDER BY id DESC"
                 cursor.execute(query)
         else:
             if id:
-                query = f"SELECT * FROM {content_type} WHERE (platform=%s or platform IS NULL) AND id=%s AND visible=true"
+                query = f"SELECT * FROM {content_type} WHERE (platform=%s or platform IS NULL) AND id=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (platformId, id))
             else:
-                query = f"SELECT * FROM {content_type} WHERE (platform=%s OR platform IS null) AND visible=true"
+                query = f"SELECT * FROM {content_type} WHERE (platform=%s OR platform IS null) AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (platformId,))
     else:
         if int(categoryId) not in categories_ids:
@@ -72,17 +72,17 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
         
         if platformId == "all":
             if id:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND id=%s AND visible=true ORDER BY title"
+                query = f"SELECT * FROM {content_type} WHERE category=%s AND id=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (int(categoryId), id))
             else:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND visible=true ORDER BY title"
+                query = f"SELECT * FROM {content_type} WHERE category=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (int(categoryId),))
         else:
             if id:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND id=%s AND visible=true ORDER BY title"
+                query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND id=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (int(categoryId), platformId, id))
             else:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND visible=true ORDER BY title"
+                query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (int(categoryId), platformId))
     
     results = cursor.fetchall()

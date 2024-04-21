@@ -12,7 +12,7 @@ def qtstore_generator():
     content = ""
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT title, file FROM apps")
+    cursor.execute("SELECT title, file FROM apps ORDER BY id DESC")
     results = cursor.fetchall()
     cursor.close()
 
@@ -24,7 +24,7 @@ def qtstore_generator():
         content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[preview.png]\n"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT title, file FROM games")
+    cursor.execute("SELECT title, file FROM games ORDER BY id DESC")
     results = cursor.fetchall()
     cursor.close()
 
