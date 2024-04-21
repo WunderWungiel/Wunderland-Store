@@ -26,7 +26,7 @@ def format_results(results, content_type):
             "publisher": row["publisher"],
             "version": row["version"],
             "platform": row["platform"],
-            "platformName": get_platform_name(row["platform"]),
+            "platformName": get_platform_name(row["platform"]) if row["platform"] is not None else None,
             "image1": row["image1"],
             "image2": row["image2"],
             "image3": row["image3"],
@@ -61,10 +61,10 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
                 cursor.execute(query)
         else:
             if id:
-                query = f"SELECT * FROM {content_type} WHERE platform=%s AND id=%s AND visible=true"
+                query = f"SELECT * FROM {content_type} WHERE (platform=%s or platform IS NULL) AND id=%s AND visible=true"
                 cursor.execute(query, (platformId, id))
             else:
-                query = f"SELECT * FROM {content_type} WHERE platform=%s AND visible=true"
+                query = f"SELECT * FROM {content_type} WHERE (platform=%s OR platform IS null) AND visible=true"
                 cursor.execute(query, (platformId,))
     else:
         if int(categoryId) not in categories_ids:

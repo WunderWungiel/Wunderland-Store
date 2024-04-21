@@ -78,7 +78,7 @@ def _check_login():
 
     if result:
         if not user['confirmed']:
-            return redirect(url_for("./_login", message="Account not confirmed."))
+            return redirect(url_for("._login", message="Account not confirmed."))
         
         if user['banned']:
             session_logout()
@@ -168,7 +168,7 @@ def _profile():
     loggedIn = session.get('loggedIn')
     if not loggedIn:
         session_logout()
-        return redirect(url_for("./login"))
+        return redirect(url_for("._login"))
     
     return render_template("auth/profile.html")
 

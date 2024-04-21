@@ -53,7 +53,9 @@
                                     <div class="title"><h2 class="fn nokia-gray">{{ app['title'] }}</h2></div>
                                     <div>
                                         <p class="type">{{ app['size'] }} MB<br />
-                                        Platform: {{ app['platformName'] }}
+                                            {% if app['platformName'] != None %}
+                                            Platform: {{ app['platformName'] }}
+                                            {% endif %}
                                         </p>
                                     </div>
                                 </td>
