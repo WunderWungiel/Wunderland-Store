@@ -296,7 +296,7 @@ def _content(content_type):
 
 
     if not all_apps:
-        return render_template(f"{content_type_prefix}_empty.html")
+        return render_template(f"{content_type_prefix}_empty.html", category=category_name)
     pageId = request.args.get('pageId')
 
     if not pageId:
@@ -311,10 +311,7 @@ def _content(content_type):
             else:
                 return redirect(f"/{content_type_prefix}/?pageId=1")
         else:
-            if categoryId:
-                return render_template(f"{content_type_prefix}_empty.html", category=category_name)
-            else:
-                return render_template(f"{content_type_prefix}_empty.html", category=None)
+            return render_template(f"{content_type_prefix}_empty.html", category=category_name)
     else:
         if ((pageId + 1) * 10) <= math.ceil(len(all_apps) / 10) * 10:
             if pageId != math.ceil(len(all_apps) / 10):
@@ -340,7 +337,4 @@ def _content(content_type):
     apps_to_show = ids[first_index:last_index]
     apps_to_show = [all_apps[id] for id in apps_to_show]
 
-    if not categoryId:
-        return render_template(f'{content_type_prefix}.html', apps=apps_to_show, category=None, category_id=categoryId, next_page=next_page, previous_page=previous_page)
-    else:
-        return render_template(f'{content_type_prefix}.html', apps=apps_to_show, category=category_name, category_id=categoryId, next_page=next_page, previous_page=previous_page)
+    return render_template(f'{content_type_prefix}.html', apps=apps_to_show, category=category_name, category_id=categoryId, next_page=next_page, previous_page=previous_page)

@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        {% if category != None %}
+        {% if category is defined and category != None %}
         <title>Apps :: {{ category }} | Wunderland Store</title>
         {% else %}
         <title>Apps | Wunderland Store</title>
