@@ -76,7 +76,7 @@
                         </table>
         
                         <div class="reviewDiv">
-                            <a href="/theme/{{ app['id'] }}/rate" class="reviews"> Rate</a>
+                            {% if session['loggedIn'] is defined %}<a href="/theme/{{ app['id'] }}/rate" class="reviews"> Rate</a>{% endif %}
                             {% for i in range(app['rating']) %}
                             <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                             {% endfor %}
