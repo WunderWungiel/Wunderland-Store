@@ -89,7 +89,7 @@ def _check_login():
         session['username'] = user['username']
         session['email'] = email
         session.permanent = True
-        return redirect(url_for("store._root"))
+        return redirect(url_for("news._root"))
     
     else:
         session_logout()

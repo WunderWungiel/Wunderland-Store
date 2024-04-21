@@ -1,11 +1,11 @@
 from datetime import datetime
 import math
 
-from flask import Blueprint, request, redirect, render_template, session
+from flask import Blueprint, request, redirect, render_template
 
 from . import database as db
 
-news = Blueprint("content", __name__, template_folder="templates")
+news = Blueprint("news", __name__, template_folder="templates")
 
 @news.route("/feed.xml")
 def _feed():

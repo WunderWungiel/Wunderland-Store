@@ -245,20 +245,20 @@ def _platform_chooser():
 def _set_platform():
     platformId = request.args.get('platformId')
     if not platformId:
-        return redirect(url_for("._root"))
+        return redirect(url_for("news._root"))
     elif platformId == "all":
         session['platformId'] = "all"
         session['platformName'] = "All"
         session.permanent = True
-        return redirect(url_for("._root"))
+        return redirect(url_for("news._root"))
     elif not db.get_platform_name(platformId):
-        return redirect(url_for("._root"))
+        return redirect(url_for("news._root"))
     
     session['platformId'] = platformId
     session['platformName'] = db.get_platform_name(platformId)
     session.permanent = True
 
-    return redirect(url_for("._root"))
+    return redirect(url_for("news._root"))
 
 @store.route("/applications")
 def _applications():
