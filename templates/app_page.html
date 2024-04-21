@@ -54,11 +54,12 @@
                                 <td class="meta item">
                                     <div class="title"><h2 class="fn nokia-gray">{{ app['title'] }}</h2></div>
                                     <div>
-                                        <p class="type">{{ app['size'] }} MB<br />
+                                        <p class="type">
+                                            <b>Size: </b>{{ app['size'] }} MB<br />
                                             {% if app['platformName'] != None %}
-                                            Platform: {{ app['platformName'] }}
+                                            <b>Platform</b>: {{ app['platformName'] }}<br />
                                             {% endif %}
-                                            Publisher: {{ app['publisher'] }}
+                                            <b>Publisher</b>: {{ app['publisher'] }}
                                         </p>
                                     </div>
                                 </td>
