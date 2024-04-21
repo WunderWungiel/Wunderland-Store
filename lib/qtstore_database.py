@@ -12,7 +12,7 @@ def qtstore_generator():
     content = ""
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT title, file FROM apps ORDER BY id DESC")
+    cursor.execute("SELECT title, file FROM apps WHERE (platform='s60' OR platform IS NULL) ORDER BY id DESC")
     results = cursor.fetchall()
     cursor.close()
 
@@ -24,7 +24,7 @@ def qtstore_generator():
         content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[preview.png]\n"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT title, file FROM games ORDER BY id DESC")
+    cursor.execute("SELECT title, file FROM games WHERE (platform='s60' OR platform IS NULL) ORDER BY id DESC")
     results = cursor.fetchall()
     cursor.close()
 
@@ -43,7 +43,7 @@ def qtstore_generator():
 def qtstore_content(name, content_type):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(f"SELECT title, description, file, img, addon_message, addon_file, image1, image2, image3, image4 FROM {content_type} WHERE title LIKE %s LIMIT 1", (name,))
+    cursor.execute(f"SELECT title, description, file, img, addon_message, addon_file, image1, image2, image3, image4 FROM {content_type} WHERE title LIKE %s AND (platform='s60' OR platform IS NULL) LIMIT 1", (name,))
     result = cursor.fetchone()
     cursor.close()
 

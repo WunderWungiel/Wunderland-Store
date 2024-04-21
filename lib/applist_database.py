@@ -255,7 +255,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
             where = True
         else:
             query += " AND"
-        query += " platform=%s"
+        query += " (platform=%s OR platform IS NULL)"
         args.append(platformId)
     if id or ids:
         if not where:

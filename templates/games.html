@@ -70,7 +70,7 @@
                             <td class="contentType">
                                 <h2 class="title">
                                     <a href="/game/{{ app['id'] }}/">{{ app['title'] }}</a>
-                                </h2>{{ app['category'] }}
+                                </h2>{% if category == None %}{{ app['category_name'] }}{% endif %}
                             </td>
 
                             <td class="contentRatingPrice">

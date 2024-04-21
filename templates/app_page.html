@@ -58,6 +58,7 @@
                                             {% if app['platformName'] != None %}
                                             Platform: {{ app['platformName'] }}
                                             {% endif %}
+                                            Publisher: {{ app['publisher'] }}
                                         </p>
                                     </div>
                                 </td>
@@ -112,7 +113,7 @@
 
                         {% if recommended != None %}
                         <div class="related">
-                            <h3>Here are the most popular items that are similar to {{ app['title'] }}:</h3>
+                            <h3>Here are items similar to {{ app['title'] }}:</h3>
 
                             <table class="contentList" cellspacing="0" width='100%' >
                 
@@ -129,7 +130,7 @@
                                     <td class="contentType">
                                         <h2 class="title">
                                             <a href="/app/{{ app['id'] }}">{{ app['title'] }}</a>
-                                        </h2>{{ app['category_name'] }}
+                                        </h2>
                                     </td>
         
                                     <td class="contentRatingPrice">
