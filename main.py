@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 
 from lib import auth_blueprint, store_blueprint, applist_blueprint, qtstore_blueprint, news_blueprint
 
@@ -12,6 +12,10 @@ app.register_blueprint(store_blueprint)
 app.register_blueprint(applist_blueprint)
 app.register_blueprint(qtstore_blueprint)
 app.register_blueprint(news_blueprint)
+
+@app.route("/robots.txt")
+def _robots():
+    return send_from_directory(app.static_folder, "robots.txt")
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=7000)
