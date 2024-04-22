@@ -141,6 +141,9 @@ def _item_page(id, content_type):
     else:
         recommended = None
 
+    app['description'] = app['description'].replace("\n", "<br>") if app['description'] else None
+    app['addon_message'] = app['addon_message'].replace("\n", "<br>") if app['addon_message'] else None
+
     if content_type == "apps":
         template = "app_page.html"
     elif content_type == "games":

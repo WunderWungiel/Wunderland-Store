@@ -8,7 +8,7 @@ from . import qtstore_database as db
 
 qtstore = Blueprint("qtstore", __name__, template_folder="templates")
 
-content_types = ("apps", "games")
+content_types = ("apps", "games", "themes")
 
 @qtstore.route("/StoreData/storeIndex.xml")
 def store_index():
@@ -21,33 +21,35 @@ def description(content_type, app):
 
     content_type = content_type.lower()
     if content_type not in content_types:
-        return None
+        return ""
 
     content = db.qtstore_content(app, content_type)
     if not content:
-        return None
+        return ""
 
     description = content['description']
+    description = ""
 
     if len(content['screenshots']) > 0:
         description += "<br><br>"
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{screenshot}"
+            path = f"http://{request.host}/static/screenshots/{content_type}/{screenshot}"
             description += f'''<img src="{path}" alt="image{i}" width="150"><br><br>'''
 
     if content['addon_message']:
-        description += f"<br><br>Additional notes:<br><br>{content['addon_message']}"
+        description += f"<br><br>Extra file: {content['addon_message']}"
     if content['addon_file']:
-        description += f'''<br><br>Extra file: http://{request.host}/static/files/{content['addon_file']}'''
+        description += f'''<br><br>Link: http://{request.host}/static/files/{content['addon_file']}'''
 
     return description
 
-@qtstore.route("/StoreData/<content_type>/<app>/file.sis")
-def file(content_type, app):
+@qtstore.route("/StoreData/<content_type>/<app>/file")
+@qtstore.route("/StoreData/<content_type>/<app>/file<ext>")
+def file(content_type, app, ext):
 
     content_type = content_type.lower()
     if content_type not in content_types:
-        return None
+        return ""
 
     content = db.qtstore_content(app, content_type)
     return send_from_directory(os.path.join(current_app.root_path, "static", "files"), content['file']) if content else None
@@ -57,7 +59,7 @@ def preview(content_type, app):
 
     content_type = content_type.lower()
     if content_type not in content_types:
-        return None
+        return ""
 
     content = db.qtstore_content(app, content_type)
     return send_from_directory(os.path.join(current_app.root_path, "static", "store", content_type), content['img']) if content else None

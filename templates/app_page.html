@@ -102,7 +102,7 @@
 
                         {% if app['addon_message'] is not none %}
                         <div style="color: green;">
-                            {{ app['addon_message'] }}
+                            Extra file: {{ app['addon_message']|safe }}
                             {% if app['addon_file'] is not none %}
                             <div class="buttons buttons_small">
                                 <a href="/static/files/{{ app['addon_file'] }}" class="lite" target="_blank">Download</a>

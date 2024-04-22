@@ -1,42 +1,49 @@
 """QtStore database backend"""
 
-from flask import request
+import os
+
+from flask import request, current_app
 import psycopg2
 import psycopg2.extras
 
 from . import conn
+
+def content_generator(database, content_name, host):
+    content = ""
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute(f"SELECT title, file FROM {database} WHERE (platform='s60' OR platform IS NULL) ORDER BY id DESC")
+    results = cursor.fetchall()
+    cursor.close()
+
+    for row in results:
+
+        path = os.path.join(current_app.root_path, "static", "files", row['file'])
+
+        try:
+            timestamp = int(os.path.getmtime(path))
+        except FileNotFoundError:
+            timestamp = 1672531200
+
+        name, ext = os.path.splitext(row['file'])
+
+        content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
+        if ext in (".sis", ".sisx"):
+            content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
+        else:
+            content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{ext}]\n"
+        content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
+
+    return content
 
 def qtstore_generator():
 
     host = request.host
     content = ""
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT title, file FROM apps WHERE (platform='s60' OR platform IS NULL) ORDER BY id DESC")
-    results = cursor.fetchall()
-    cursor.close()
-
-    for row in results:
-        # date = int(round(os.stat(os.path.join(current_app.root_path, 'static', 'files', row['file'])).st_size / (1024 * 1024), 2))
-        date = 1708635534
-        content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[descr.txt]\n"
-        content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[file.sis]\n"
-        content += f"http://{host}/StoreData/Apps/{row['title']}/{date}[preview.png]\n"
-
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute("SELECT title, file FROM games WHERE (platform='s60' OR platform IS NULL) ORDER BY id DESC")
-    results = cursor.fetchall()
-    cursor.close()
-
-    for row in results:
-        # date = int(round(os.stat(os.path.join(current_app.root_path, 'static', 'files', row['file'])).st_size / (1024 * 1024), 2))
-        date = 1708635534
-        content += f"http://{host}/StoreData/Games/{row['title']}/{date}[descr.txt]\n"
-        content += f"http://{host}/StoreData/Games/{row['title']}/{date}[file.sis]\n"
-        content += f"http://{host}/StoreData/Games/{row['title']}/{date}[preview.png]\n"
-
-    content += f"http://{host}/StoreData/{date}[RefreshStore.php]\n"
-    content += f"http://{host}/StoreData/{date}[storeIndex.xml]"
+    content += content_generator("apps", "Apps", host)
+    content += content_generator("games", "Games", host)
+    content += content_generator("themes", "Themes", host)
 
     return content
 
@@ -49,7 +56,8 @@ def qtstore_content(name, content_type):
 
     if result:
         result["screenshots"] = [image for image in (result['image1'], result['image2'], result['image3'], result['image4']) if image]
-        print(result)
+        result['description'] = result['description'].replace("\n", "<br>") if result['description'] else None
+        result['addon_message'] = result['addon_message'].replace("\n", "<br>") if result['addon_message'] else None
         return result
     else:
         return None

@@ -143,7 +143,7 @@ def format_results(results, content_type, widget=False):
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             icon = SubElement(app, "icon")
-            icon.text = "http://ovi.wunderwungiel.pl/static/store/" + os.path.join(content_type, row['img'])
+            icon.text = f"http://{request.host}/static/store/" + os.path.join(content_type, row['img'])
             version = SubElement(app, "version")
             version.text = row['version']
             versionstore = SubElement(app, "versionstore")
@@ -173,27 +173,30 @@ def format_results(results, content_type, widget=False):
             price.text = "0.00"
             description = SubElement(app, "description")
             if row['description']:
-                description.text = row['description'].strip().replace("<br>", "\n").replace("<br />", "\n").replace("<br/>", "\n")
+
+                row['description'].strip()
+                description.text = row['description']
+
             if row['addon_message']:
-                description.text += f"\n\nAdditional notes:\n\n{row['addon_message']}"
+                description.text += f"\n\nExtra file:\n\n{row['addon_message']}"
             image1 = SubElement(app, "image1")
             image2 = SubElement(app, "image2")
             image3 = SubElement(app, "image3")
             image4 = SubElement(app, "image4")
             image5 = SubElement(app, "image5")
             if row['image1']:
-                image1.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image1']}"
+                image1.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image1']}"
             if row['image2']:
-                image2.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image2']}"
+                image2.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image2']}"
             if row['image3']:
-                image3.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image3']}"
+                image3.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image3']}"
             if row['image4']:
-                image4.text = f"http://ovi.wunderwungiel.pl/static/screenshots/{content_type}/{row['image4']}"
+                image4.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image4']}"
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
             download = SubElement(app, "download")
-            download.text = "http://" + quote(f"ovi.wunderwungiel.pl/static/files/{row['file']}") #
+            download.text = "http://" + quote(f"{request.host}/static/files/{row['file']}") #
             downloadsize = SubElement(app, "downloadsize")
             downloadsize.text = "0" #
             downloadstore = SubElement(app, "downloadstore")
