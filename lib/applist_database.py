@@ -45,11 +45,13 @@ def applist_to_wunderland(categoryId):
         1: (2, "apps"),
         2: (3, "apps"),
         3: (4, "apps"),
+        4: (11, "apps"),
         5: (5, "apps"),
         6: (1, "themes"),
         7: (7, "apps"),
         8: (8, "apps"),
         10: (9, "apps"),
+        11: (12, "apps"),
         12: (10, "apps"),
         13: (1, "apps"),
         20: ("all", "games"),
@@ -77,6 +79,8 @@ def wunderland_to_applist(categoryId, content_type):
             8: 8,
             9: 10,
             10: 12,
+            11: 4,
+            12: 11,
             1: 13
         },
         "games": {
@@ -178,7 +182,7 @@ def format_results(results, content_type, widget=False):
                 description.text = row['description']
 
             if row['addon_message']:
-                description.text += f"\n\nExtra file:\n\n{row['addon_message']}"
+                description.text += f"\n\nExtra file: {row['addon_message']}"
             image1 = SubElement(app, "image1")
             image2 = SubElement(app, "image2")
             image3 = SubElement(app, "image3")
