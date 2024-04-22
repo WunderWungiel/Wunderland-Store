@@ -340,6 +340,4 @@ def get_news(news_id=None):
             }
         )
 
-    print(final_results)
-
     return final_results
