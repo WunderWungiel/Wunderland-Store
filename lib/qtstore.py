@@ -28,7 +28,8 @@ def description(content_type, app):
         return ""
 
     description = content['description']
-    description = ""
+    if not description:
+        description = ""
 
     if len(content['screenshots']) > 0:
         description += "<br><br>"
