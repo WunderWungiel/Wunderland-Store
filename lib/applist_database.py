@@ -101,8 +101,6 @@ def wunderland_to_applist(categoryId, content_type):
 
 def format_results(results, content_type, widget=False):
 
-    prefix = content_type.rstrip("s")
-
     if not results:
         results = []
 
@@ -112,6 +110,12 @@ def format_results(results, content_type, widget=False):
     root.append(minversion)
 
     for row in results:
+
+        if content_type:
+            c = content_type
+        else:
+            c = row['content_type']
+        prefix = c.rstrip("s")
 
         row = {k: v.strip() if isinstance(v, str) else v for (k, v) in row.items()}
 
@@ -147,7 +151,7 @@ def format_results(results, content_type, widget=False):
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             icon = SubElement(app, "icon")
-            icon.text = f"http://{request.host}/static/store/" + os.path.join(content_type, row['img'])
+            icon.text = f"http://{request.host}/static/store/" + os.path.join(c, row['img'])
             version = SubElement(app, "version")
             version.text = row['version']
             versionstore = SubElement(app, "versionstore")
@@ -157,7 +161,7 @@ def format_results(results, content_type, widget=False):
             versiondatestore = SubElement(app, "versiondatestore")
             versiondateunsigned = SubElement(app, "versiondateunsigned")
             category = SubElement(app, "category")
-            category.text = str(wunderland_to_applist(row['category'], content_type))
+            category.text = str(wunderland_to_applist(row['category'], c))
             language = SubElement(app, "language")
             language.text = "EN"
             
@@ -189,13 +193,13 @@ def format_results(results, content_type, widget=False):
             image4 = SubElement(app, "image4")
             image5 = SubElement(app, "image5")
             if row['image1']:
-                image1.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image1']}"
+                image1.text = f"http://{request.host}/static/screenshots/{c}/{row['image1']}"
             if row['image2']:
-                image2.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image2']}"
+                image2.text = f"http://{request.host}/static/screenshots/{c}/{row['image2']}"
             if row['image3']:
-                image3.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image3']}"
+                image3.text = f"http://{request.host}/static/screenshots/{c}/{row['image3']}"
             if row['image4']:
-                image4.text = f"http://{request.host}/static/screenshots/{content_type}/{row['image4']}"
+                image4.text = f"http://{request.host}/static/screenshots/{c}/{row['image4']}"
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
@@ -304,13 +308,49 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     else:
         query += " AND"
     query += " visible=true"
+
+    if search:
+        
+        all_results = []
+
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute(query, tuple(args))
+        results = cursor.fetchall()
+        cursor.close()
+        for i, result in enumerate(results):
+            results[i]["content_type"] = "apps"
+        all_results += results
+
+        query = query.replace("FROM apps", "FROM games", 1)
+
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute(query, tuple(args))
+        results = cursor.fetchall()
+        cursor.close()
+        for i, result in enumerate(results):
+            results[i]["content_type"] = "games"
+        all_results += results
+
+        query = query.replace("FROM games", "FROM themes", 1)
+
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute(query, tuple(args))
+        results = cursor.fetchall()
+        cursor.close()
+        for i, result in enumerate(results):
+            results[i]["content_type"] = "themes"
+        all_results += results
+
+        results_xml = format_results(all_results, None, widget)
+
+        return results_xml
+
     if latest and count:
         query += " ORDER BY id DESC LIMIT %s"
         args.append(count)
     else:
         query += " ORDER BY id DESC"
 
-    args = tuple(args)
     cursor.execute(query, args)
     results = cursor.fetchall()
     cursor.close()
