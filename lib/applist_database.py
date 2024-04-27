@@ -38,62 +38,62 @@ def changelog():
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
-# !!! Replace right side with YOUR categories' IDs!
+# !!! Replace right side and comments with YOUR categories' IDs!
 def applist_to_wunderland(categoryId):
     categories = {
-        0: ("all", "apps"),
-        1: (2, "apps"),
-        2: (3, "apps"),
-        3: (4, "apps"),
-        4: (11, "apps"),
-        5: (5, "apps"),
-        6: (1, "themes"),
-        7: (7, "apps"),
-        8: (8, "apps"),
-        10: (9, "apps"),
-        11: (12, "apps"),
-        12: (10, "apps"),
-        13: (1, "apps"),
-        20: ("all", "games"),
-        21: (2, "games"),
-        22: (3, "games"),
-        23: (6, "games"),
-        24: (5, "games"),
-        25: (4, "games"),
-        26: (1, "games")
+        0: ("all", "apps"), # All apps
+        1: (2, "apps"), # Weather & GPS
+        2: (3, "apps"), # Office
+        3: (4, "apps"), # Camera, photos, videos
+        4: (11, "apps"), # Emulator
+        5: (5, "apps"), # File manager & cloud
+        6: (1, "themes"), # Themes
+        7: (7, "apps"), # Internet
+        8: (8, "apps"), # Music
+        10: (9, "apps"), # Social
+        11: (12, "apps"), # Extras
+        12: (10, "apps"), # Tools
+        13: (1, "apps"), # Other apps
+        20: ("all", "games"), # All games
+        21: (2, "games"), # Action
+        22: (3, "games"), # Adventure
+        23: (6, "games"), # Puzzles & cards
+        24: (5, "games"), # Strategy (represented as Tactic in AppList)
+        25: (4, "games"), # Sports (represented as Extra in AppList)
+        26: (1, "games") # Other games
 
     }
 
     return categories.get(categoryId)
 
-# !!! Replace left side with YOUR categories' IDs!
+# !!! Replace left side and comments with YOUR categories' IDs!
 def wunderland_to_applist(categoryId, content_type):
     categories = {
         "apps": {
-            "all" : 0,
-            2: 1,
-            3: 2,
-            4: 3,
-            5: 5,
-            7: 7,
-            8: 8,
-            9: 10,
-            10: 12,
-            11: 4,
-            12: 11,
-            1: 13
+            "all" : 0, # All apps
+            2: 1, # Weather & GPS
+            3: 2, # Camera, photos, videos
+            4: 3, # Emulator
+            5: 5, # File manager & cloud
+            7: 7, # Internet
+            8: 8, # Music
+            9: 10, # Social
+            10: 12, # Tools
+            11: 4, # Emulator
+            12: 11, # Extras
+            1: 13 # Other apps
         },
         "games": {
-            "all": 20,
-            2: 21,
-            3: 22,
-            6: 23,
-            5: 24,
-            4: 25,
-            1: 26
+            "all": 20, # All games
+            2: 21, # Action
+            3: 22, # Adventure
+            6: 23, # Puzzles & cards
+            5: 24, # Strategy (represented as Tactic in AppList)
+            4: 25, # Sports (represented as Extra in AppList)
+            1: 26 # Other games
         },
         "themes": {
-            1: 6
+            1: 6 # Themes
         }
     }
 
