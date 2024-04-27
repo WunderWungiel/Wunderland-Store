@@ -41,7 +41,8 @@ CREATE TABLE public.apps (
     image1 character varying,
     image2 character varying,
     image3 character varying,
-    image4 character varying
+    image4 character varying,
+    visited_counter integer DEFAULT 0 NOT NULL
 );
 
 
@@ -160,7 +161,8 @@ CREATE TABLE public.games (
     image1 character varying,
     image2 character varying,
     image3 character varying,
-    image4 character varying
+    image4 character varying,
+    visited_counter integer DEFAULT 0 NOT NULL
 );
 
 
@@ -326,7 +328,8 @@ CREATE TABLE public.themes (
     image1 character varying,
     image2 character varying,
     image3 character varying,
-    image4 character varying
+    image4 character varying,
+    visited_counter integer DEFAULT 0 NOT NULL
 );
 
 
