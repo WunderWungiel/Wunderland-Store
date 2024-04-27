@@ -113,6 +113,8 @@ def _theme(id):
 
 def _item_page(id, content_type):
 
+    db.increment_counter(id, content_type)
+
     prefixes = {
         "apps": "applications",
         "games": "games",

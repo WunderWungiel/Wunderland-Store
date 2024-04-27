@@ -196,7 +196,7 @@ def get_category_id(categoryName, content_type):
 def search(query, databases):
 
     if not databases:
-        databases = ("apps", "games")
+        databases = ("apps", "games", "themes")
 
     results = {}
 
@@ -209,6 +209,21 @@ def search(query, databases):
         results = results | format_results(db_results, database)
 
     return results
+
+def increment_counter(id, content_type):
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor.execute(f"SELECT visited_counter FROM {content_type} WHERE id=%s", (id,))
+    result = cursor.fetchone()
+    cursor.close()
+
+    current_counter = result['visited_counter']
+    actual_counter = current_counter + 1
+
+    cursor = conn.cursor()
+    cursor.execute(f"UPDATE {content_type} SET visited_counter=%s WHERE id=%s", (actual_counter, id))
+    conn.commit()
+    cursor.close()
 
 class AccountSystem:
     def __init__(self):
