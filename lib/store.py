@@ -5,6 +5,7 @@ import math
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app
 
 from . import database as db
+from . import config
 from .auth import session_logout, is_logged
 
 store = Blueprint("store", __name__, template_folder="templates")
@@ -113,7 +114,8 @@ def _theme(id):
 
 def _item_page(id, content_type):
 
-    db.increment_counter(id, content_type)
+    if (is_logged() and session['username'] != config['ADMIN_USERNAME']) or not is_logged():
+        db.increment_counter(id, content_type)
 
     prefixes = {
         "apps": "applications",

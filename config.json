@@ -7,5 +7,6 @@
     "EMAIL_ADDRESS": "email@address.com",
     "EMAIL_PASSWORD": "",
     "SMTP_PORT": 465,
-    "SMTP_ADDRESS": ""
+    "SMTP_ADDRESS": "",
+    "ADMIN_USERNAME": "ADMIN_USERNAME"
 }
