@@ -55,7 +55,7 @@ function validateRegisterForm() {
         username_required.style.display = "none";
     };
 
-    if (! username_pattern.test(email)) {
+    if (! username_pattern.test(username)) {
         username_required.style.display = "none";
         username_tip.style.display = "inline";
         return false;
