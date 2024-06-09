@@ -211,17 +211,8 @@ def search(query, databases):
     return results
 
 def increment_counter(id, content_type):
-
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(f"SELECT visited_counter FROM {content_type} WHERE id=%s", (id,))
-    result = cursor.fetchone()
-    cursor.close()
-
-    current_counter = result['visited_counter']
-    actual_counter = current_counter + 1
-
     cursor = conn.cursor()
-    cursor.execute(f"UPDATE {content_type} SET visited_counter=%s WHERE id=%s", (actual_counter, id))
+    cursor.execute(f"UPDATE {content_type} SET visited_counter=visited_counter + 1 WHERE id=%s", (id,))
     conn.commit()
     cursor.close()
 
