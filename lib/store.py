@@ -114,9 +114,6 @@ def _theme(id):
 
 def _item_page(id, content_type):
 
-    if (is_logged() and session['username'] != config['ADMIN_USERNAME']) or not is_logged():
-        db.increment_counter(id, content_type)
-
     prefixes = {
         "apps": "applications",
         "games": "games",
@@ -124,6 +121,9 @@ def _item_page(id, content_type):
     }
 
     app = db.get_content(id=id, content_type=content_type)
+
+    if app and ((is_logged() and session['username'] != config['ADMIN_USERNAME']) or not is_logged()):
+        db.increment_counter(id, content_type)
 
     if not app:
         return redirect(f"/{prefixes[content_type]}")
