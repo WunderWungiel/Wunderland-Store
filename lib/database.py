@@ -12,6 +12,26 @@ from . import conn
 class WrongCategoryError(Exception):
     pass
 
+def get_content_type_ids(content_type):
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    query = f"SELECT id FROM {content_type}"
+    cursor.execute(query)
+    return [result["id"] for result in cursor.fetchall()]
+
+def get_content_number(content_type, categoryId=None):
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    query = f"SELECT COUNT(id) AS count FROM {content_type}"
+    args = []
+    if categoryId:
+        query += " WHERE category=%s"
+        args.append(categoryId)
+    
+    cursor.execute(query, args)
+    result = cursor.fetchone()["count"]
+    return result
+
 def format_results(results, content_type):
 
     final_results = {}
@@ -36,6 +56,7 @@ def format_results(results, content_type):
             "rating": get_rating(row["id"], content_type),
             "addon_message": row["addon_message"],
             "addon_file": row["addon_file"],
+            "uid": row["uid"],
             "screenshots": tuple([image for image in (row['image1'], row['image2'], row['image3'], row['image4']) if image])
         }
 
