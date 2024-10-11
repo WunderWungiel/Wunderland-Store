@@ -40,7 +40,7 @@ def _catalog():
         categories = nndb.nnhub_categories()
         if c.isnumeric():
             if c not in categories[0]: abort(400)
-            content = nndb.nnhub_many_contents(content_type="apps", categoryId=int(c))
+            content = nndb.nnhub_many_contents(content_type="apps", category_id=int(c))
         else:
             content = nndb.nnhub_many_contents(content_type=c)
 

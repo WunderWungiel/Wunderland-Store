@@ -9,8 +9,10 @@ from flask import current_app
 
 from . import conn
 
+
 class WrongCategoryError(Exception):
     pass
+
 
 def get_content_type_ids(content_type):
 
@@ -19,18 +21,20 @@ def get_content_type_ids(content_type):
     cursor.execute(query)
     return [result["id"] for result in cursor.fetchall()]
 
-def get_content_number(content_type, categoryId=None):
+
+def get_content_number(content_type, category_id=None):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     query = f"SELECT COUNT(id) AS count FROM {content_type}"
     args = []
-    if categoryId:
+    if category_id:
         query += " WHERE category=%s"
-        args.append(categoryId)
+        args.append(category_id)
     
     cursor.execute(query, args)
     result = cursor.fetchone()["count"]
     return result
+
 
 def format_results(results, content_type):
 
@@ -46,7 +50,7 @@ def format_results(results, content_type):
             "publisher": row["publisher"],
             "version": row["version"],
             "platform": row["platform"],
-            "platformName": get_platform_name(row["platform"]) if row["platform"] is not None else None,
+            "platform_name": get_platform_name(row["platform"]) if row["platform"] is not None else None,
             "image1": row["image1"],
             "image2": row["image2"],
             "image3": row["image3"],
@@ -57,12 +61,18 @@ def format_results(results, content_type):
             "addon_message": row["addon_message"],
             "addon_file": row["addon_file"],
             "uid": row["uid"],
-            "screenshots": tuple([image for image in (row['image1'], row['image2'], row['image3'], row['image4']) if image])
+            "screenshots": tuple([image for image in (
+                row['image1'],
+                row['image2'],
+                row['image3'],
+                row['image4']
+            ) if image])
         }
 
     return final_results
 
-def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
+
+def get_content(id=None, category_id=None, content_type=None, platform_id="all"):
 
     categories = get_categories(content_type)
     categories_ids = [result[0] for result in categories]
@@ -72,8 +82,8 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
     if id:
         id = int(id)
 
-    if categoryId is None:
-        if platformId == "all":
+    if category_id is None:
+        if platform_id == "all":
             if id:
                 query = f"SELECT * FROM {content_type} WHERE id=%s AND visible=true ORDER BY id DESC"
                 cursor.execute(query, (id,))
@@ -83,28 +93,28 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
         else:
             if id:
                 query = f"SELECT * FROM {content_type} WHERE (platform=%s or platform IS NULL) AND id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (platformId, id))
+                cursor.execute(query, (platform_id, id))
             else:
                 query = f"SELECT * FROM {content_type} WHERE (platform=%s OR platform IS null) AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (platformId,))
+                cursor.execute(query, (platform_id,))
     else:
-        if int(categoryId) not in categories_ids:
+        if int(category_id) not in categories_ids:
             raise WrongCategoryError
         
-        if platformId == "all":
+        if platform_id == "all":
             if id:
                 query = f"SELECT * FROM {content_type} WHERE category=%s AND id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(categoryId), id))
+                cursor.execute(query, (int(category_id), id))
             else:
                 query = f"SELECT * FROM {content_type} WHERE category=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(categoryId),))
+                cursor.execute(query, (int(category_id),))
         else:
             if id:
                 query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(categoryId), platformId, id))
+                cursor.execute(query, (int(category_id), platform_id, id))
             else:
                 query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(categoryId), platformId))
+                cursor.execute(query, (int(category_id), platform_id))
     
     results = cursor.fetchall()
     cursor.close()
@@ -117,6 +127,7 @@ def get_content(id=None, categoryId=None, content_type=None, platformId="all"):
     else:
         return results
 
+
 def get_rating(content_id, content_type):
     
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -126,6 +137,7 @@ def get_rating(content_id, content_type):
     cursor.close()
 
     return int(result) if result else 0
+
 
 def rate(rating, user_id, content_id, content_type):
 
@@ -146,6 +158,7 @@ def rate(rating, user_id, content_id, content_type):
     conn.commit()
     cursor.close()
 
+
 def get_categories(content_type):
 
     query = f"SELECT * FROM {content_type}_categories ORDER by name"
@@ -156,6 +169,7 @@ def get_categories(content_type):
     cursor.close()
 
     return results
+
 
 def get_platforms():
 
@@ -168,51 +182,56 @@ def get_platforms():
 
     return results
 
-def get_platform_name(platformId):
+
+def get_platform_name(platform_id):
     
     query = f"SELECT name FROM platforms WHERE id=%s"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(query, (platformId,))
+    cursor.execute(query, (platform_id,))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
     return result["name"]
 
-def get_platform_id(platformName):
+
+def get_platform_id(platform_name):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cursor.execute(f"SELECT id FROM platforms WHERE name=%s", (platformName,))
+    cursor.execute(f"SELECT id FROM platforms WHERE name=%s", (platform_name,))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
     return result["id"]
 
-def get_category_name(categoryId, content_type):
+
+def get_category_name(category_id, content_type):
     
     query = f"SELECT name FROM {content_type}_categories WHERE id=%s"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(query, (int(categoryId),))
+    cursor.execute(query, (int(category_id),))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
     return result["name"]
 
-def get_category_id(categoryName, content_type):
+
+def get_category_id(category_name, content_type):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cursor.execute(f"SELECT id FROM {content_type}_categories WHERE name=%s", (categoryName,))
+    cursor.execute(f"SELECT id FROM {content_type}_categories WHERE name=%s", (category_name,))
     result = cursor.fetchone()
     if not result:
         return None
     cursor.close()
     return result["id"]
+
 
 def search(query, databases):
 
@@ -231,11 +250,13 @@ def search(query, databases):
 
     return results
 
+
 def increment_counter(id, content_type):
     cursor = conn.cursor()
     cursor.execute(f"UPDATE {content_type} SET visited_counter=visited_counter + 1 WHERE id=%s", (id,))
     conn.commit()
     cursor.close()
+
 
 class AccountSystem:
     def __init__(self):
@@ -247,7 +268,7 @@ class AccountSystem:
 
         hashed_password = bcrypt.hashpw(user_password, salt)
         return hashed_password.decode('utf-8')
-    
+
     def get_user(self, email=None, id=None):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         if email:
@@ -334,6 +355,7 @@ class AccountSystem:
         
 account_system = AccountSystem()
 
+
 def get_news(news_id=None):
     
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -350,6 +372,10 @@ def get_news(news_id=None):
 
     for row in results:
         file_path = os.path.join(current_app.root_path, "news", row['file'])
+
+        if not os.path.isfile(file_path):
+            continue
+
         f = open(file_path, "r")
         markdown_content = f.read()
         html_content = markdown(markdown_content)

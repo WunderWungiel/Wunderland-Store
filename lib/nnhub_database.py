@@ -4,6 +4,7 @@ from flask import request
 
 from . import database as db
 
+
 def id_nnhub_to_wunderland(id):
 
     apps_length = db.get_content_number("apps")
@@ -25,6 +26,7 @@ def id_nnhub_to_wunderland(id):
 
     return id, content_type
 
+
 def id_wunderland_to_nnhub(id, content_type):
 
     apps_length = db.get_content_number("apps")
@@ -39,6 +41,7 @@ def id_wunderland_to_nnhub(id, content_type):
     
     return id
 
+
 def nnhub_catalog_apps():
     
     apps_ids = db.get_content_type_ids("apps")
@@ -49,6 +52,7 @@ def nnhub_catalog_apps():
     themes_ids = [str(id_wunderland_to_nnhub(id, "themes")) for id in themes_ids]
 
     return apps_ids + games_ids + themes_ids
+
 
 def nnhub_content(id):
 
@@ -82,10 +86,11 @@ def nnhub_content(id):
     body["screenshots"] = screenshots
     return body
 
-def nnhub_many_contents(content_type, categoryId=None):
+
+def nnhub_many_contents(content_type, category_id=None):
 
     new_content = []
-    content = db.get_content(content_type=content_type, categoryId=categoryId)
+    content = db.get_content(content_type=content_type, category_id=category_id)
     for app in content.values():
         app["id"] = str(id_wunderland_to_nnhub(app["id"], content_type))
 
@@ -104,6 +109,7 @@ def nnhub_many_contents(content_type, categoryId=None):
         new_content.append(body)
     
     return new_content
+
 
 def nnhub_categories():
 

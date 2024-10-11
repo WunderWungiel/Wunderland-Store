@@ -11,6 +11,7 @@ import psycopg2.extras
 
 from . import conn
 
+
 def version():
     root = Element("xml")
     message = Element("message")
@@ -23,6 +24,7 @@ def version():
     ET.indent(root)
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
+
 
 def changelog():
     root = Element("xml")
@@ -38,66 +40,69 @@ def changelog():
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
+
 # !!! Replace right side and comments with YOUR categories' IDs!
-def applist_to_wunderland(categoryId):
+def applist_to_wunderland(category_id):
     categories = {
-        0: ("all", "apps"), # All apps
-        1: (2, "apps"), # Weather & GPS
-        2: (3, "apps"), # Office
-        3: (4, "apps"), # Camera, photos, videos
-        4: (11, "apps"), # Emulator
-        5: (5, "apps"), # File manager & cloud
-        6: (1, "themes"), # Themes
-        7: (7, "apps"), # Internet
-        8: (8, "apps"), # Music
-        10: (9, "apps"), # Social
-        11: (12, "apps"), # Extras
-        12: (10, "apps"), # Tools
-        13: (1, "apps"), # Other apps
-        20: ("all", "games"), # All games
-        21: (2, "games"), # Action
-        22: (3, "games"), # Adventure
-        23: (6, "games"), # Puzzles & cards
-        24: (5, "games"), # Strategy (represented as Tactic in AppList)
-        25: (4, "games"), # Sports (represented as Extra in AppList)
-        26: (1, "games") # Other games
+        0: ("all", "apps"),  # All apps
+        1: (2, "apps"),  # Weather & GPS
+        2: (3, "apps"),  # Office
+        3: (4, "apps"),  # Camera, photos, videos
+        4: (11, "apps"),  # Emulator
+        5: (5, "apps"),  # File manager & cloud
+        6: (1, "themes"),  # Themes
+        7: (7, "apps"),  # Internet
+        8: (8, "apps"),  # Music
+        10: (9, "apps"),  # Social
+        11: (12, "apps"),  # Extras
+        12: (10, "apps"),  # Tools
+        13: (1, "apps"),  # Other apps
+        20: ("all", "games"),  # All games
+        21: (2, "games"),  # Action
+        22: (3, "games"),  # Adventure
+        23: (6, "games"),  # Puzzles & cards
+        24: (5, "games"),  # Strategy (represented as Tactic in AppList)
+        25: (4, "games"),  #  Sports (represented as Extra in AppList)
+        26: (1, "games")  # Other games
 
     }
 
-    return categories.get(categoryId)
+    return categories.get(category_id)
+
 
 # !!! Replace left side and comments with YOUR categories' IDs!
-def wunderland_to_applist(categoryId, content_type):
+def wunderland_to_applist(category_id, content_type):
     categories = {
         "apps": {
-            "all" : 0, # All apps
-            2: 1, # Weather & GPS
-            3: 2, # Camera, photos, videos
-            4: 3, # Emulator
-            5: 5, # File manager & cloud
-            7: 7, # Internet
-            8: 8, # Music
-            9: 10, # Social
-            10: 12, # Tools
-            11: 4, # Emulator
-            12: 11, # Extras
-            1: 13 # Other apps
+            "all": 0,  # All apps
+            2: 1,  # Weather & GPS
+            3: 2,  # Camera, photos, videos
+            4: 3,  # Emulator
+            5: 5,  # File manager & cloud
+            7: 7,  # Internet
+            8: 8,  # Music
+            9: 10,  # Social
+            10: 12,  # Tools
+            11: 4,  # Emulator
+            12: 11,  # Extras
+            1: 13  # Other apps
         },
         "games": {
-            "all": 20, # All games
-            2: 21, # Action
-            3: 22, # Adventure
-            6: 23, # Puzzles & cards
-            5: 24, # Strategy (represented as Tactic in AppList)
-            4: 25, # Sports (represented as Extra in AppList)
-            1: 26 # Other games
+            "all": 20,  # All games
+            2: 21,  # Action
+            3: 22,  # Adventure
+            6: 23,  # Puzzles & cards
+            5: 24,  # Strategy (represented as Tactic in AppList)
+            4: 25,  # Sports (represented as Extra in AppList)
+            1: 26  # Other games
         },
         "themes": {
             1: 6 # Themes
         }
     }
 
-    return categories.get(content_type).get(categoryId)
+    return categories.get(content_type).get(category_id)
+
 
 def format_results(results, content_type, widget=False):
 
@@ -204,9 +209,9 @@ def format_results(results, content_type, widget=False):
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
             download = SubElement(app, "download")
-            download.text = "http://" + quote(f"{request.host}/static/files/{row['file']}") #
+            download.text = "http://" + quote(f"{request.host}/static/files/{row['file']}")
             downloadsize = SubElement(app, "downloadsize")
-            downloadsize.text = "0" #
+            downloadsize.text = "0"
             downloadstore = SubElement(app, "downloadstore")
             downloadunsigned = SubElement(app, "downloadunsigned")
             downloadunsignedsize = SubElement(app, "downloadunsignedsize")
@@ -217,6 +222,7 @@ def format_results(results, content_type, widget=False):
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
+
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
 
     platformId = "s60"
@@ -224,10 +230,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
 
     if id:
         if id.isdigit():
-            try:
-                id = int(id)
-            except:
-                id = None
+            id = int(id)
             ids = None
         else:
             try:

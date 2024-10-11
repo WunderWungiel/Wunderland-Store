@@ -56,31 +56,17 @@ def _root():
     if not news:
         return render_template("index.html", news=[], next_page=None, previous_page=None)
     
-    pageId = request.args.get('pageId')
+    page_id = request.args.get('pageId', default=1, type=int)
 
-    if not pageId:
-        pageId = 1
-    else:
-        pageId = int(pageId)
+    total_pages = math.ceil(len(news) / 10)
+
+    if page_id < 1 or page_id > total_pages:
+        return redirect("/home/?pageId=1")
+
+    next_page = page_id + 1 if page_id < total_pages else None
+    previous_page = page_id - 1 if page_id > 1 else None
     
-    if (pageId * 10) > math.ceil(len(news) / 10) * 10:
-        if pageId != 1:
-            return redirect(f"/home/?pageId=1")
-    else:
-        if ((pageId + 1) * 10) < math.ceil(len(news) / 10) * 10:
-            if pageId != 1:
-                next_page = pageId + 1
-            else:
-                next_page = None
-            if pageId != math.ceil(len(news) / 10):
-                previous_page = pageId - 1
-            else:
-                previous_page = None
-        else:
-            next_page = None
-            previous_page = None
-    
-    first_index = pageId - 1
+    first_index = page_id - 1
     last_index = first_index + 10
 
     news_to_show = news[first_index:last_index]
