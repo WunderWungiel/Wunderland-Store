@@ -242,7 +242,12 @@ def search(query, databases):
 
     for database in databases:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(f"SELECT * FROM {database} WHERE LOWER(title) LIKE LOWER(%s) ORDER BY title", ('%' + query + '%',))
+
+        cursor.execute(
+            f"SELECT * FROM {database} WHERE LOWER(title) LIKE LOWER(%s) ORDER BY title",
+            ('%' + query + '%',)
+        )
+
         db_results = cursor.fetchall()
         cursor.close()
 
