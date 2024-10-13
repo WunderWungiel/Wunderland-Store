@@ -102,25 +102,44 @@ function validateRegisterForm() {
     };
 }
 
-// function updateRating(content_id, rating, review_div_name) {
+function validateChangePasswordForm() {
 
-//     rating = Number(rating)
-    
-//     content_tr = document.getElementById(content_id)
-//     rating_div = content_tr.getElementsByClassName(review_div_name)[0]
+    var current_password_input = document.getElementById("current_password");
+    var current_password_input_label = document.getElementById("current_password_label");
+    var current_password_input_required = current_password_input_label.getElementsByClassName("required")[0];
+    var new_password_input = document.getElementById("new_password");
+    var new_password_input_label = document.getElementById("new_password_label");
+    var new_password_input_required = new_password_input_label.getElementsByClassName("required")[0];
+    var new_password_confirm_input = document.getElementById("new_password_confirm");
+    var new_password_confirm_input_label = document.getElementById("new_password_confirm_label");
+    var new_password_confirm_input_required = new_password_confirm_input_label.getElementsByClassName("required")[0];
+    var passwords_tip = document.getElementById("passwords_tip");
 
-//     if (rating == 0) {
-//         rating_div.innerHTML = '<img src="/static/img/star_p.png" alt="1 star" /><img src="/static/img/star_p.png" alt="2 stars" /><img src="/static/img/star_p.png" alt="3 stars" /><img src="/static/img/star_p.png" alt="4 stars" /><img src="/static/img/star_p.png" alt="5 stars" />'
-//         return
-//     }
+    if (current_password_input.value === "") {
+        current_password_input_required.style.display = "inline";
+        return false;
+    } else {
+        current_password_input_required.style.display = "none";
+    }
 
-//     for (let i = 1; i <= rating; i++) {
-//         rating_div.innerHTML += '<img src="/static/img/star_p.png" alt="' + String(i)  + ' stars" />'
-//     }
+    if (new_password_input.value === "") {
+        new_password_input_required.style.display = "inline";
+        return false;
+    } else {
+        new_password_input_required.style.display = "none";
+    }
 
-//     if (rating != 5) {
-//         for (let i = rating + 1; i <= 5; i++) {
-//             rating_div.innerHTML += '<img src="/static/img/star_g.png" alt="' + String(i)  + ' stars" />'
-//         }
-//     }
-// }
+    if (new_password_confirm_input.value === "") {
+        new_password_confirm_input_required.style.display = "inline";
+        return false;
+    } else {
+        new_password_confirm_input_required.style.display = "none";
+    }
+
+    if (new_password_input.value !== new_password_confirm_input.value) {
+        passwords_tip.style.display = "inline";
+        return false
+    } else {
+        passwords_tip.style.display = "none";
+    }
+}

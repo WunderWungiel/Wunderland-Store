@@ -7,6 +7,7 @@ from . import database as db
 
 news = Blueprint("news", __name__, template_folder="templates")
 
+
 @news.route("/feed.xml")
 def _feed():
 
@@ -38,6 +39,7 @@ def _feed():
 
     return xml
 
+
 @news.route("/news/<int:news_id>")
 def _news(news_id):
 
@@ -45,9 +47,11 @@ def _news(news_id):
 
     return render_template("text_page.html", title=content['title'], content=content['content'], share=True)
 
+
 @news.route("/")
 def __root():
     return redirect("/home/")
+
 
 @news.route("/home")
 def _root():

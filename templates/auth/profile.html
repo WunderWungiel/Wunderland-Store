@@ -8,7 +8,10 @@
                 
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
+        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+
+        <script src="/static/js/script.js"></script>
+
     </head>
 
     <body>
@@ -31,8 +34,35 @@
             <div id="views">
                 <div class="view">
                     <div id="faq" class="viewWrapper">
+
+                        {% if message is defined and message != None %}
+                        <h1>{{ message }}</h1>
+                        {% endif %}
+
                         <h1>Username: {{ session['username'] }}</h1>
                         <h1>Email: {{ session['email'] }}</h1>
+
+                        <h1><b>Change password:</b></h1>
+
+                        <form action="/change_password/" method="POST" id="changePasswordForm" onsubmit="return validateChangePasswordForm()">
+                            <label for="current_password" id="current_password_label">Current password: <span class="required">*</span></label>
+                            <input type="password" id="current_password" name="current_password" size="15" style="width: 63%; max-width: 300px;" title="" />
+
+                            <label for="new_password" id="new_password_label">New password: <span class="required">*</span></label>
+                            <input type="password" id="new_password" name="new_password" size="15" style="width: 63%; max-width: 300px;" title="" />
+
+                            <label for="new_password_confirm" id="new_password_confirm_label">Confirm new password: <span class="required">*</span></label>
+                            <input type="password" id="new_password_confirm" size="15" style="width: 63%; max-width: 300px;" title="" />
+                            <span id="passwords_tip" class="tip">Passwords don't match!</span>
+
+                            <br><br>
+
+                            <input type="submit" class="Btn" value="Change password">
+
+                            <br><br>
+                        </form>
+                        
+
                         <input type="button" class="Btn" onclick="window.location.href='/logout'" value="Log out"></input>
                     </div>
                     <br />

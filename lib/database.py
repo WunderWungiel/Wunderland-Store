@@ -274,47 +274,93 @@ class AccountSystem:
         hashed_password = bcrypt.hashpw(user_password, salt)
         return hashed_password.decode('utf-8')
 
-    def get_user(self, email=None, id=None):
+    def get_user(self, id=None, username=None, email=None):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        query = "SELECT id, email, username, password, confirmed, banned, banned_reason FROM users WHERE active=true AND "
         if email:
-            cursor.execute("SELECT id, email, username, password, confirmed, banned, banned_reason FROM users WHERE email=%s AND active=true", (email,))
+            query += "email=%s"
+            args = (email,)
+        elif username:
+            query += "username=%s"
+            args = (username,)
         elif id:
-            cursor.execute("SELECT id, email, username, password, confirmed, banned, banned_reason FROM users WHERE id=%s AND active=true", (id,))
+            query += "id=%s"
+            args = (id,)
         else:
-            raise TypeError("Provide either id or email")
+            raise TypeError
+
+        cursor.execute(query, args)
         
         result = cursor.fetchone()
         cursor.close()
 
-        if not result:
-            return None
+        return result if result else None
+    
+    def get_user_id(self, username=None, email=None):
 
-        return result
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+        query = "SELECT id FROM users WHERE "
+        if username:
+            query += "username=%s"
+            args = (username,)
+        elif email:
+            query += "email=%s"
+            args = (email,)
+        else:
+            raise TypeError
+
+        cursor.execute(query, args)
+        result = cursor.fetchone()
+        cursor.close()
+
+        return result['id'] if result else None
+    
+    def get_user_email(self, id=None, username=None):
+
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        query = "SELECT email FROM users WHERE "
+        if id:
+            query += "id=%s"
+            args = (id,)
+        elif username:
+            query += "username=%s"
+            args = (username,)
+        else:
+            raise TypeError
+
+        cursor.execute(query, args)
+        result = cursor.fetchone()
+        cursor.close()
+
+        return result['email'] if result else None
+    
     def confirm_user(self, email):
         cursor = conn.cursor()
         cursor.execute("UPDATE users SET confirmed=true WHERE email=%s", (email,))
         conn.commit()
-
-    def get_emails(self):
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute("SELECT email FROM users WHERE active=true")
-
-        results = cursor.fetchall()
-        cursor.close()
-        results = [result["email"] for result in results]
-        
-        return results
     
-    def get_usernames(self):
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute("SELECT username FROM users WHERE active=true")
+    def email_exists(self, email):
 
-        results = cursor.fetchall()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+
+        result = cursor.fetchone()
         cursor.close()
-        results = [row["username"] for row in results]
         
-        return results
+        return True if result else False
+    
+    def username_exists(self, username):
+
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+
+        result = cursor.fetchone()
+        cursor.close()
+        
+        return True if result else False
 
     def register(self, email, user_password, username):
 
@@ -326,9 +372,18 @@ class AccountSystem:
 
         conn.commit()
 
+    def change_password(self, id, new_password):
+
+        hashed_password = self._generate_password(new_password)
+
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET password=%s WHERE id=%s", (hashed_password, id))
+
+        conn.commit()
+
+
     def check_credentials(self, email, user_password):
-        emails = self.get_emails()
-        if email not in emails:
+        if not self.email_exists(email):
             return False
 
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -341,22 +396,6 @@ class AccountSystem:
         user_password = user_password.encode('utf-8')
 
         return bcrypt.checkpw(user_password, hashed_password)
-    
-    def get_user_id(self, email=None, username=None, id=None):
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        if email:
-            cursor.execute("SELECT id FROM users WHERE email=%s AND active=true", (email,))
-        elif id:
-            cursor.execute("SELECT id FROM users WHERE id=%s AND active=true", (id,))
-        elif username:
-            cursor.execute("SELECT id FROM users WHERE username=%s AND active=true", (username,))
-        else:
-            raise TypeError("Provide either id or email")
-
-        result = cursor.fetchone()
-        cursor.close()
-
-        return result["id"] if result else None
         
 account_system = AccountSystem()
 

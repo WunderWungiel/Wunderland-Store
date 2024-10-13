@@ -130,12 +130,9 @@ def _check_register():
     if not re.match(r'^(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$', email):
         return redirect(url_for("._register", message="Wrong e-mail address."))
 
-    emails = account.get_emails()
-    usernames = account.get_usernames()
-
-    if email in emails:
+    if account.email_exists(email):
         return redirect(url_for("._register", message="Account already exists."))
-    if username in usernames:
+    if account.username_exists(username):
         return redirect(url_for("._register", message="Username already taken."))
 
     account.register(email, password, username)
@@ -162,15 +159,38 @@ Thank you.
 
     return render_template("auth/confirm_email.html", message=f"Please confirm your account using link sent to your email: {email}.")
     
+
+@auth.route("/change_password", methods=["POST"])
+def _change_password():
+
+    current_password = request.form.get("current_password")
+    new_password = request.form.get("new_password")
+
+    if not is_logged():
+        return redirect("/")
+
+    if not current_password or not new_password:
+        return redirect(url_for("._profile", message="Fill in the form!"))
+    
+    user_id = session['id']
+
+    email = account.get_user_email(id=user_id)
+    if not account.check_credentials(email, current_password):
+        return redirect(url_for("._profile", message="Wrong current password!"))
+    
+    account.change_password(user_id, new_password)
+
+    return redirect(url_for("._profile", message="Password changed!"))
+
+    
 @auth.route("/profile")
 def _profile():
 
-    loggedIn = session.get('loggedIn')
-    if not loggedIn:
+    if not is_logged():
         session_logout()
         return redirect(url_for("._login"))
     
-    return render_template("auth/profile.html")
+    return render_template("auth/profile.html", message=request.args.get('message'))
 
 @auth.route("/logout")
 def _logout():
