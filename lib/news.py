@@ -43,7 +43,7 @@ def _news(news_id):
 
     content = db.get_news(news_id=news_id)[0]
 
-    return render_template("textpage.html", title=content['title'], content=content['content'], share=True)
+    return render_template("text_page.html", title=content['title'], content=content['content'], share=True)
 
 @news.route("/")
 def __root():
