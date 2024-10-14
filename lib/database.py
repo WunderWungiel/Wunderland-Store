@@ -404,7 +404,7 @@ def get_news(news_id=None):
     
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     if not news_id:
-        cursor.execute("SELECT * FROM news")
+        cursor.execute("SELECT * FROM news ORDER BY id DESC")
     else:
         cursor.execute("SELECT * FROM news WHERE id=%s", (news_id,))
     results = cursor.fetchall()
