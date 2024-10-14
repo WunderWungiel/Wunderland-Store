@@ -10,6 +10,29 @@ from flask import current_app
 from . import conn
 
 
+def build_query(base_query, conditions={}, extras=""):
+
+    query = base_query
+    query_params = []
+
+    where_clauses = []
+
+    for column, values in conditions.items():
+
+        if isinstance(values, list):
+            or_clauses = [f"{column}=%s" for value in values]
+            where_clauses.append(f"({' OR '.join(or_clauses)})")
+            query_params.extend(values)
+        else:
+            where_clauses.append(f"{column}=%s")
+            query_params.append(values)
+
+    if len(conditions) > 0:
+        query += " WHERE " + " AND ".join(where_clauses)
+    query += " " + extras
+
+    return query, query_params
+
 class WrongCategoryError(Exception):
     pass
 
@@ -19,7 +42,10 @@ def get_content_type_ids(content_type):
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     query = f"SELECT id FROM {content_type}"
     cursor.execute(query)
-    return [result["id"] for result in cursor.fetchall()]
+    results = cursor.fetchall()
+    cursor.close()
+
+    return [result["id"] for result in results]
 
 
 def get_content_number(content_type, category_id=None):
@@ -32,8 +58,10 @@ def get_content_number(content_type, category_id=None):
         args.append(category_id)
     
     cursor.execute(query, args)
-    result = cursor.fetchone()["count"]
-    return result
+    result = cursor.fetchone()
+    cursor.close()
+    
+    return result["count"] if result else None
 
 
 def format_results(results, content_type):
@@ -74,48 +102,21 @@ def format_results(results, content_type):
 
 def get_content(id=None, category_id=None, content_type=None, platform_id="all"):
 
-    categories = get_categories(content_type)
-    categories_ids = [result[0] for result in categories]
-
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+    base_query = f"SELECT * FROM {content_type}"
+    conditions = {"visible": True}
     if id:
-        id = int(id)
+        conditions["id"] = int(id)
+    if category_id:
+        conditions["category"] = category_id
+    if platform_id != "all":
+        conditions["platform"] = [platform_id, None]
 
-    if category_id is None:
-        if platform_id == "all":
-            if id:
-                query = f"SELECT * FROM {content_type} WHERE id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (id,))
-            else:
-                query = f"SELECT * FROM {content_type} WHERE visible=true ORDER BY id DESC"
-                cursor.execute(query)
-        else:
-            if id:
-                query = f"SELECT * FROM {content_type} WHERE (platform=%s or platform IS NULL) AND id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (platform_id, id))
-            else:
-                query = f"SELECT * FROM {content_type} WHERE (platform=%s OR platform IS null) AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (platform_id,))
-    else:
-        if int(category_id) not in categories_ids:
-            raise WrongCategoryError
-        
-        if platform_id == "all":
-            if id:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(category_id), id))
-            else:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(category_id),))
-        else:
-            if id:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND id=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(category_id), platform_id, id))
-            else:
-                query = f"SELECT * FROM {content_type} WHERE category=%s AND platform=%s AND visible=true ORDER BY id DESC"
-                cursor.execute(query, (int(category_id), platform_id))
+    query, query_params = build_query(base_query, conditions, "ORDER BY id DESC")
     
+    cursor.execute(query, query_params)
+
     results = cursor.fetchall()
     cursor.close()
     if not results:
@@ -190,10 +191,9 @@ def get_platform_name(platform_id):
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (platform_id,))
     result = cursor.fetchone()
-    if not result:
-        return None
     cursor.close()
-    return result["name"]
+
+    return result["name"] if result else None
 
 
 def get_platform_id(platform_name):
@@ -202,10 +202,9 @@ def get_platform_id(platform_name):
 
     cursor.execute(f"SELECT id FROM platforms WHERE name=%s", (platform_name,))
     result = cursor.fetchone()
-    if not result:
-        return None
     cursor.close()
-    return result["id"]
+
+    return result["id"] if result else None
 
 
 def get_category_name(category_id, content_type):
@@ -215,10 +214,9 @@ def get_category_name(category_id, content_type):
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (int(category_id),))
     result = cursor.fetchone()
-    if not result:
-        return None
     cursor.close()
-    return result["name"]
+
+    return result["name"] if result else None
 
 
 def get_category_id(category_name, content_type):
@@ -227,10 +225,9 @@ def get_category_id(category_name, content_type):
 
     cursor.execute(f"SELECT id FROM {content_type}_categories WHERE name=%s", (category_name,))
     result = cursor.fetchone()
-    if not result:
-        return None
     cursor.close()
-    return result["id"]
+
+    return result["id"] if result else None
 
 
 def search(query, databases):
@@ -245,7 +242,7 @@ def search(query, databases):
 
         cursor.execute(
             f"SELECT * FROM {database} WHERE LOWER(title) LIKE LOWER(%s) ORDER BY title",
-            ('%' + query + '%',)
+            (f'%{query}%',)
         )
 
         db_results = cursor.fetchall()
@@ -277,20 +274,21 @@ class AccountSystem:
     def get_user(self, id=None, username=None, email=None):
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = "SELECT id, email, username, password, confirmed, banned, banned_reason FROM users WHERE active=true AND "
+        base_query = "SELECT * FROM users"
+        conditions = {"active": True}
+
         if email:
-            query += "email=%s"
-            args = (email,)
+            conditions["email"] = email
         elif username:
-            query += "username=%s"
-            args = (username,)
+            conditions["username"] = username
         elif id:
-            query += "id=%s"
-            args = (id,)
+            conditions["id"] = int(id)
         else:
             raise TypeError
 
-        cursor.execute(query, args)
+        query, query_params = build_query(base_query, conditions)
+
+        cursor.execute(query, query_params)
         
         result = cursor.fetchone()
         cursor.close()
@@ -301,17 +299,18 @@ class AccountSystem:
 
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = "SELECT id FROM users WHERE "
+        base_query = "SELECT id FROM users"
+        conditions = {}
         if username:
-            query += "username=%s"
-            args = (username,)
+            conditions["username"] = username
         elif email:
-            query += "email=%s"
-            args = (email,)
+            conditions["email"] = email
         else:
             raise TypeError
+        
+        query, query_params = build_query(base_query, conditions)
 
-        cursor.execute(query, args)
+        cursor.execute(query, query_params)
         result = cursor.fetchone()
         cursor.close()
 
@@ -321,17 +320,18 @@ class AccountSystem:
 
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        query = "SELECT email FROM users WHERE "
+        base_query = "SELECT email FROM users"
+        conditions = {}
         if id:
-            query += "id=%s"
-            args = (id,)
+            conditions["id"] = id
         elif username:
-            query += "username=%s"
-            args = (username,)
+            conditions["username"] = username
         else:
             raise TypeError
 
-        cursor.execute(query, args)
+        query, query_params = build_query(base_query, conditions)
+
+        cursor.execute(query, query_params)
         result = cursor.fetchone()
         cursor.close()
 

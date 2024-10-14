@@ -1,7 +1,7 @@
 from datetime import datetime
 import math
 
-from flask import Blueprint, request, redirect, render_template
+from flask import Blueprint, request, redirect, render_template, url_for
 
 from . import database as db
 
@@ -65,7 +65,7 @@ def _root():
     total_pages = math.ceil(len(news) / 10)
 
     if page_id < 1 or page_id > total_pages:
-        return redirect("/home/?pageId=1")
+        return redirect(url_for("._root", pageId=1))
 
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
