@@ -6,13 +6,22 @@ from flask import request, current_app
 import psycopg2
 import psycopg2.extras
 
-from . import conn
+from .database import build_query, conn
 
 def content_generator(database, content_name, host):
     content = ""
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(f"SELECT title, file FROM {database} WHERE (platform='s60' OR platform IS NULL) ORDER BY id DESC")
+    
+    base_query = f"SELECT title, file FROM {database}"
+    conditions = {
+        "platform": ["s60", "s60v3", None]
+    }
+    extra_query = "ORDER BY id DESC"
+
+    query, query_params = build_query(base_query, conditions, extra_query)
+
+    cursor.execute(query, query_params)
     results = cursor.fetchall()
     cursor.close()
 
@@ -50,7 +59,8 @@ def qtstore_generator():
 def qtstore_content(name, content_type):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(f"SELECT title, description, file, img, addon_message, addon_file, image1, image2, image3, image4 FROM {content_type} WHERE title LIKE %s AND (platform='s60' OR platform IS NULL) LIMIT 1", (name,))
+    
+    cursor.execute(f"SELECT * FROM {content_type} WHERE title LIKE %s AND (platform='s60' OR platform='s60v3' OR platform IS NULL) LIMIT 1", (name,))
     result = cursor.fetchone()
     cursor.close()
 
