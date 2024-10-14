@@ -10,6 +10,7 @@ email_address = config["EMAIL_ADDRESS"]
 smtp_address = config["SMTP_ADDRESS"]
 email_password = config["EMAIL_PASSWORD"]
 
+
 def send_email(text_message, html_message, receiver_email):
 
     context = ssl.create_default_context()

@@ -7,6 +7,7 @@ from . import auth_database as auth_db
 
 auth = Blueprint("auth", __name__, template_folder="templates")
 
+
 @auth.before_request
 def check_platform_id():
     usernameId = session.get('id')
@@ -19,9 +20,11 @@ def check_platform_id():
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
 
+
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     return serializer.dumps(email, salt=current_app.config['SECURITY_PASSWORD_SALT'])
+
 
 def confirm_token(token, expiration=3600):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
@@ -35,17 +38,20 @@ def confirm_token(token, expiration=3600):
         return None
     return email
 
+
 def session_logout():
     session.pop('loggedIn', None)
     session.pop('id', None)
     session.pop('username', None)
     session.permanent = True
 
+
 def is_logged():
     if session.get('loggedIn'):
         return True
     else:
         return False
+
 
 @auth.route("/login/")
 def _login():
@@ -54,12 +60,14 @@ def _login():
     
     return render_template('auth/login.html.jinja', message=request.args.get('message'), color=request.args.get('color'))
 
+
 @auth.route("/register")
 def _register():
     if session.get("loggedIn") is True:
         return redirect("/home/")
     
     return render_template('auth/register.html', message=request.args.get('message'))
+
 
 @auth.route("/check_login", methods=["GET", "POST"])
 def _check_login():
@@ -93,7 +101,8 @@ def _check_login():
     else:
         session_logout()
         return redirect(url_for("._login", message="Wrong e-mail/password!", color="red"))
-    
+
+
 @auth.route('/confirm/<token>')
 def _confirm_email(token):
     try:
@@ -110,6 +119,7 @@ def _confirm_email(token):
     else:
         auth_db.confirm_user(email)
         return render_template("auth/confirm_email.html", message='You have confirmed your account. Thanks! <br /><br /> <input type="button" class="Btn" onclick="window.location.href=\'/\'" value="Return to home page"></input>')
+
 
 @auth.route("/check_register", methods=["GET", "POST"])
 def _check_register():
@@ -190,6 +200,7 @@ def _profile():
         return redirect(url_for("._login"))
     
     return render_template("auth/profile.html", message=request.args.get('message'))
+
 
 @auth.route("/logout")
 def _logout():

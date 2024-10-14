@@ -10,6 +10,7 @@ def _generate_password(user_password):
     hashed_password = bcrypt.hashpw(user_password, salt)
     return hashed_password.decode('utf-8')
 
+
 def get_user(id=None, username=None, email=None):
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -34,6 +35,7 @@ def get_user(id=None, username=None, email=None):
 
     return result if result else None
 
+
 def get_user_id(username=None, email=None):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -54,6 +56,7 @@ def get_user_id(username=None, email=None):
     cursor.close()
 
     return result['id'] if result else None
+
 
 def get_user_email(id=None, username=None):
 
@@ -76,10 +79,12 @@ def get_user_email(id=None, username=None):
 
     return result['email'] if result else None
 
+
 def confirm_user(email):
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET confirmed=true WHERE email=%s", (email,))
     conn.commit()
+
 
 def email_exists(email):
 
@@ -91,6 +96,7 @@ def email_exists(email):
     
     return True if result else False
 
+
 def username_exists(username):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -101,6 +107,7 @@ def username_exists(username):
     
     return True if result else False
 
+
 def register(email, user_password, username):
 
     hashed_password = _generate_password(user_password)
@@ -110,6 +117,7 @@ def register(email, user_password, username):
     cursor.close()
 
     conn.commit()
+
 
 def change_password(id, new_password):
 

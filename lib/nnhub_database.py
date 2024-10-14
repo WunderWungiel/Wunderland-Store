@@ -1,5 +1,3 @@
-import json
-
 from flask import request
 
 from . import database as db

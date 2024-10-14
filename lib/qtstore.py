@@ -10,11 +10,13 @@ qtstore = Blueprint("qtstore", __name__, template_folder="templates")
 
 content_types = ("apps", "games", "themes")
 
+
 @qtstore.route("/StoreData/storeIndex.xml")
 def store_index():
 
     content = db.qtstore_generator()
     return content
+
 
 @qtstore.route("/StoreData/<content_type>/<app>/descr.txt")
 def description(content_type, app):
@@ -44,7 +46,7 @@ def description(content_type, app):
 
     return description
 
-@qtstore.route("/StoreData/<content_type>/<app>/file")
+
 @qtstore.route("/StoreData/<content_type>/<app>/file<ext>")
 def file(content_type, app, ext):
 
@@ -54,6 +56,7 @@ def file(content_type, app, ext):
 
     content = db.qtstore_content(app, content_type)
     return send_from_directory(os.path.join(current_app.root_path, "static", "files"), content['file']) if content else None
+
 
 @qtstore.route("/StoreData/<content_type>/<app>/preview.png")
 def preview(content_type, app):

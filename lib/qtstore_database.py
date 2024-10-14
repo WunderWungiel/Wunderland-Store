@@ -8,6 +8,7 @@ import psycopg2.extras
 
 from .database import build_query, conn
 
+
 def content_generator(database, content_name, host):
     content = ""
 
@@ -45,6 +46,7 @@ def content_generator(database, content_name, host):
 
     return content
 
+
 def qtstore_generator():
 
     host = request.host
@@ -55,6 +57,7 @@ def qtstore_generator():
     content += content_generator("themes", "Themes", host)
 
     return content
+
 
 def qtstore_content(name, content_type):
 

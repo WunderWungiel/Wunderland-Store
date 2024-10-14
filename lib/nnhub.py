@@ -10,6 +10,7 @@ from . import nnhub_database as nndb
 
 nnhub = Blueprint("nnhub", __name__, template_folder="templates")
 
+
 @nnhub.route("/nns/<int:id>/default.png")
 def _icon(id):
 
@@ -18,18 +19,21 @@ def _icon(id):
 
     return send_from_directory(os.path.join(current_app.static_folder, "store"), app["img"])
 
+
 @nnhub.route("/nns/categories.php")
 def _categories():
     
     response = current_app.response_class(response=json.dumps(nndb.nnhub_categories(), ensure_ascii=False), mimetype='application/json')
     return response
 
+
 @nnhub.route("/nns/catalog_apps.json")
 def _catalog_apps():
     
     response = current_app.response_class(response=json.dumps(nndb.nnhub_catalog_apps(), ensure_ascii=False), mimetype='application/json')
     return response
-    
+
+
 @nnhub.route("/nns/catalog.php")
 def _catalog():
     
@@ -68,7 +72,8 @@ def _catalog():
 def _app():
     id = request.args.get("id")
 
-    if not id: abort(400)
+    if not id:
+        abort(400)
     if "/" in id or "\\" in id or "." in id: abort(400)
 
     app = nndb.nnhub_content(id)
