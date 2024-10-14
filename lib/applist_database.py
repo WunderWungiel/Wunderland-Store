@@ -97,7 +97,7 @@ def wunderland_to_applist(category_id, content_type):
             1: 26  # Other games
         },
         "themes": {
-            1: 6 # Themes
+            1: 6  # Themes
         }
     }
 
@@ -254,6 +254,11 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         latest = True if latest == "true" else False
     if widget:
         widget = True if widget == "true" else False
+
+    # base_query = f"SELECT * FROM {content_type}"
+    # conditions = {}
+    # if new_category is not None and new_category != "all":
+        
 
     query = f"SELECT * FROM {content_type}"
     args = []

@@ -1,14 +1,14 @@
 import os
 import random
 import math
-from xml.etree import ElementTree as ET
-from xml.etree.ElementTree import Element
 import shutil
+import json
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
 from werkzeug.utils import secure_filename
 
 from . import database as db
+from . import auth_database as auth_db
 from . import config
 from .auth import session_logout, is_logged
 
@@ -30,7 +30,7 @@ def check_platform_id():
         session_logout()
         return
     else:
-        user = db.account_system.get_user(id=username_id)
+        user = auth_db.get_user(id=username_id)
         if user['banned']:
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
@@ -49,7 +49,7 @@ def _api_rate():
         if session['username'] != username:
             return {}
     
-    user_id = db.account_system.get_user_id(username=username)
+    user_id = auth_db.get_user_id(username=username)
     db.rate(int(rating), user_id, content_id, content_type)
     
     rating = db.get_rating(content_id, content_type)
