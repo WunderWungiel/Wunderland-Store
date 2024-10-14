@@ -39,12 +39,10 @@
                 <div class="view">
                     <div class="contentItem">
                         {% for screenshot in app['screenshots'] %}
-                        <div class="image">
-			                <a href="/static/screenshots/{{ content_type }}/{{ screenshot }}">
-	                            <img src="/static/screenshots/{{ content_type }}/{{ screenshot }}" width="29" height="52" alt="{{ app['title'] }}" />
-	                        </a>
-		                </div>
-                        {% endfor %}
+                        <a href="/static/screenshots/{{ content_type }}/{{ screenshot }}">
+	                        <img src="/static/screenshots/{{ content_type }}/{{ screenshot }}" alt="{{ app['title'] }}" />
+	                    </a>
+		                {% endfor %}
     
                         <div class="options">
                             {% if content_type == 'apps' %}
