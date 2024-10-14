@@ -33,9 +33,6 @@ def build_query(base_query, conditions={}, extras=""):
 
     return query, query_params
 
-class WrongCategoryError(Exception):
-    pass
-
 
 def get_content_type_ids(content_type):
 

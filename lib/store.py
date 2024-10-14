@@ -335,10 +335,10 @@ def _content(content_type):
     category_id = request.args.get('categoryId')
     category_name = db.get_category_name(category_id, content_type) if category_id else None
 
-    try:
-        all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platformId'])
-    except db.WrongCategoryError:
+    if not category_name:
         return redirect(f"/{content_type_prefix}/")
+
+    all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platformId'])        
 
     if not all_apps:
         return render_template(f"{content_type_prefix}_empty.html", category=category_name)
