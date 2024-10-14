@@ -307,6 +307,122 @@ def _set_platform():
     return redirect(url_for("news._root"))
 
 
+@store.route("/<content_type>/upload", methods=["GET", "POST"])
+def _upload(content_type):
+
+    if not is_logged():
+        return redirect("/")
+
+    image_extensions = ["png", "jpg", "jpeg"]
+    file_extensions = ["sis", "sisx", "zip", "jar"]
+
+    def clear_path():
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+
+    if content_type not in ("applications", "games", "themes"):
+        return redirect("/")
+    
+    if content_type == "applications":
+        content_type = "apps"
+
+    categories = db.get_categories(content_type)
+
+    if request.method == "GET":
+        return render_template("upload_form.html", categories=categories)
+    elif request.method == "POST":
+
+        title = request.form.get("title")
+        description = request.form.get("description")
+        category = request.form.get("category")
+        publisher = request.form.get("publisher")
+        version = request.form.get("version")
+        platform = request.form.get("platform")
+        file = request.files.get('file')
+        addonfile = request.files.get('addonfile')
+        addonmessage = request.files.get('addonmessage')
+        icon = request.files.get('icon')
+        screenshots = request.files.getlist('screenshots')
+
+        for item in (title, description, category, publisher, version, platform, file, icon, screenshots):
+            if not item:
+                clear_path()
+                return redirect(request.url)
+                        
+        if platform not in ("s60v2", "s60v3", "s60", "all" "ngage2") or category not in [str(category[0]) for category in categories]:
+            clear_path()
+            return redirect(request.url)
+        
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], secure_filename(title))
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        
+        app = {
+            "content_type": content_type,
+            "title": title,
+            "description": description,
+            "category": category,
+            "version": version,
+            "publisher": publisher,
+            "platform": platform,
+            "file": None,
+            "addonfile": None,
+            "addonmessage": addonmessage if addonmessage else None,
+            "icon": None,
+            "screenshot1": None,
+            "screenshot2": None,
+            "screenshot3": None,
+            "screenshot4": None
+        }
+        
+        file_extension = secure_filename(file.filename).rsplit('.', 1)[1].lower()
+        if file_extension not in file_extensions:
+            clear_path()
+            return redirect(request.url)
+        file.save(os.path.join(path, f"file.{file_extension}"))
+        
+        app["file"] = f"file.{file_extension}"
+
+        if addonfile:
+            addonfile_extension = secure_filename(addonfile.filename).rsplit('.', 1)
+            if len(addonfile_extension) > 0:
+                addonfile_extension = addonfile_extension[1].lower() 
+                if addonfile_extension not in file_extensions:
+                    clear_path()    
+                    return redirect(request.url)
+                addonfile.save(os.path.join(path, f"addonfile.{addonfile_extension}"))
+                app["addonfile"] = f"addonfile.{file_extension}"
+
+        icon_extension = secure_filename(icon.filename).rsplit('.', 1)[1].lower()
+        if icon_extension not in image_extensions:
+            clear_path()
+            return redirect(request.url)
+        icon.save(os.path.join(path, "icon." + icon_extension))
+        app["icon"] = "icon." + icon_extension
+
+        for i, screenshot in enumerate(screenshots, start=1):
+            screenshot_extension = secure_filename(screenshot.filename).rsplit('.', 1)[1].lower()
+            if screenshot_extension not in screenshot_extension:
+                return redirect(request.url)
+            screenshot.save(os.path.join(path, f"screenshot{i}.{screenshot_extension}"))
+            if i == 1:
+                app["screenshot1"] = f"screenshot1.{screenshot_extension}"
+            elif i == 2:
+                app["screenshot2"] = f"screenshot2.{screenshot_extension}"
+            elif i == 3:
+                app["screenshot3"] = f"screenshot3.{screenshot_extension}"
+            elif i == 4:
+                app["screenshot4"] = f"screenshot4.{screenshot_extension}"
+
+            if i > 4:
+                break
+
+        with open(os.path.join(path, "app.json"), "w") as f:
+            json.dump(app, f)
+
+        return "Uploaded"
+
+
 @store.route("/applications")
 def _applications():
     return _content("apps")
