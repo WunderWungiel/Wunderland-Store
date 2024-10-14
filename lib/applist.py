@@ -10,13 +10,13 @@ applist = Blueprint("applist", __name__, template_folder="templates")
 # I.e. applist.schumi1331.de/applist.php [33] is the same as ovi.wunderwungiel.pl/aapplist.php [33]
 
 
-@applist.route("/abcapplist-download.php")
+@applist.route("/aapplist-download.php")
 @applist.route("/applist-download.php")
 def _applist_download():
     return "0"
 
 
-@applist.route("/abcapplist.php")
+@applist.route("/aapplist.php")
 @applist.route("/applist.php")
 def _applist():
     id = request.args.get("id")
@@ -31,12 +31,12 @@ def _applist():
 
 
 @applist.route("/version.xml")
-@applist.route("/abcversion.xml")
+@applist.route("/aversion.xml")
 def _version_xml():
     return db.version()
 
 
 @applist.route("/changelog.xml")
-@applist.route("/abcchangelog.xml")
+@applist.route("/achangelog.xml")
 def _changelog_xml():
     return db.changelog()
