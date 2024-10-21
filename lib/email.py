@@ -11,7 +11,7 @@ smtp_address = config["SMTP_ADDRESS"]
 email_password = config["EMAIL_PASSWORD"]
 
 
-def send_email(text_message, html_message, receiver_email):
+def send_email(subject, text_message, html_message, receiver_email):
 
     context = ssl.create_default_context()
 
@@ -19,7 +19,7 @@ def send_email(text_message, html_message, receiver_email):
     server.login(email_address, email_password)
 
     message = MIMEMultipart("alternative")
-    message["Subject"] = "Confirm your account"
+    message["Subject"] = subject
     message["From"] = email_address
     message["To"] = receiver_email
 

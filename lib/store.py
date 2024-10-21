@@ -11,6 +11,7 @@ from . import database as db
 from . import auth_database as auth_db
 from . import config
 from .auth import session_logout, is_logged
+from .email import send_email
 
 store = Blueprint("store", __name__, template_folder="templates")
 
@@ -420,6 +421,9 @@ def _upload(content_type):
         with open(os.path.join(path, "app.json"), "w") as f:
             json.dump(app, f)
 
+        text_message = f"New content! Title: \"{title}\""
+        send_email("New content", text_message, text_message, "me@wunderwungiel.pl")
+
         return "Uploaded"
 
 
@@ -449,6 +453,7 @@ def _content(content_type):
     content_type_prefix = prefixes.get(content_type)
 
     category_id = request.args.get('categoryId')
+    category_id = int(category_id) if category_id else None
     category_name = db.get_category_name(category_id, content_type) if category_id else None
 
     if category_id and not category_name:
