@@ -249,15 +249,16 @@ def _search():
     
     results = db.search(query, ("apps", "games", "themes"))
 
+    if len(results) == 0:
+        return render_template("applications_empty.html", category=None)
+
+    
     page_id = request.args.get('pageId', default=1, type=int)
 
     total_pages = math.ceil(len(results) / 10)
 
     if page_id < 1 or page_id > total_pages:
         return redirect(url_for("._search", q=query, pageId=1))
-
-    if len(results) == 0:
-        return render_template("applications_empty.html", category=None)
 
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
