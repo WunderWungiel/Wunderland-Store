@@ -20,12 +20,13 @@ def build_query(base_query, conditions={}, extras=""):
     for column, values in conditions.items():
 
         if isinstance(values, list):
-            or_clauses = [f"{column}=%s" for value in values]
+            or_clauses = [f"{column}=%s" if value is not None else f"{column} IS NULL" for value in values]
             where_clauses.append(f"({' OR '.join(or_clauses)})")
-            query_params.extend(values)
+            query_params.extend(value for value in values if value is not None)
         else:
-            where_clauses.append(f"{column}=%s")
-            query_params.append(values)
+            where_clauses.append(f"{column}=%s" if values is not None else f"{column} IS NULL")
+            if values is not None:
+                query_params.append(values)
 
     if len(conditions) > 0:
         query += " WHERE " + " AND ".join(where_clauses)
@@ -106,7 +107,7 @@ def get_content(id=None, category_id=None, content_type=None, platform_id="all")
     if id:
         conditions["id"] = int(id)
     if category_id:
-        conditions["category"] = category_id
+        conditions["category"] = int(category_id)
     if platform_id != "all":
         conditions["platform"] = [platform_id, None]
 
