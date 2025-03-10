@@ -1,12 +1,13 @@
 from flask import Flask, send_from_directory
 
-from lib import auth_blueprint, store_blueprint, applist_blueprint, qtstore_blueprint, news_blueprint, nnhub_blueprint
+from lib import api_blueprint, auth_blueprint, store_blueprint, applist_blueprint, qtstore_blueprint, news_blueprint, nnhub_blueprint
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SECRET_KEY'] = "m5g0450yjbn409j4054yj5"
 app.config['SECURITY_PASSWORD_SALT'] = app.config['SECRET_KEY']
 
+app.register_blueprint(api_blueprint)
 app.register_blueprint(auth_blueprint)
 app.register_blueprint(store_blueprint)
 app.register_blueprint(applist_blueprint)

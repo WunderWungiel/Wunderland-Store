@@ -8,6 +8,7 @@ conn = psycopg2.connect(database=config["DB_NAME"],
     password=config["DB_PASS"]
 )
 
+from .api import api as api_blueprint
 from .store import store as store_blueprint
 from .auth import auth as auth_blueprint
 from .applist import applist as applist_blueprint
