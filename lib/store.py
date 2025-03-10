@@ -139,7 +139,7 @@ def _item_page(id, content_type):
 
     app = db.get_content(id=id, content_type=content_type)
 
-    if app and ((is_logged() and session['username'] != config['ADMIN_USERNAME']) or not is_logged()):
+    if app and ((is_logged() and session['username'] not in config['ADMIN_USERNAMES']) or not is_logged()):
         db.increment_counter(id, content_type)
 
     if not app:
@@ -247,7 +247,7 @@ def _search():
     if not query:
         return render_template("search.html")
     
-    results = db.search(query, ("apps", "games", "themes"))
+    results = db.search(query)
 
     if len(results) == 0:
         return render_template("applications_empty.html", category=None)
@@ -324,41 +324,45 @@ def _upload(content_type):
 
     if content_type not in ("applications", "games", "themes"):
         return redirect("/")
-    
+
     if content_type == "applications":
         content_type = "apps"
 
     categories = db.get_categories(content_type)
+    platforms = db.get_platforms()
 
     if request.method == "GET":
-        return render_template("upload_form.html", categories=categories)
+        return render_template("upload_form.html", content_type=content_type, categories=categories, platforms=platforms)
     elif request.method == "POST":
 
         title = request.form.get("title")
+        print(title)
         description = request.form.get("description")
-        category = request.form.get("category")
+        category = request.form.get("category") if content_type != 'themes' else 1
         publisher = request.form.get("publisher")
         version = request.form.get("version")
         platform = request.form.get("platform")
         file = request.files.get('file')
         addonfile = request.files.get('addonfile')
-        addonmessage = request.files.get('addonmessage')
+        addonmessage = request.form.get('addonmessage')
         icon = request.files.get('icon')
+        uid = request.form.get('uid')
         screenshots = request.files.getlist('screenshots')
+
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], secure_filename(title))
+        if not os.path.isdir(path):
+            os.makedirs(path)
 
         for item in (title, description, category, publisher, version, platform, file, icon, screenshots):
             if not item:
                 clear_path()
                 return redirect(request.url)
-                        
-        if platform not in ("s60v2", "s60v3", "s60", "all" "ngage2") or category not in [str(category[0]) for category in categories]:
+
+        if platform not in [x[0] for x in platforms] + ["all"] or category not in [str(category[0]) for category in categories]:
+            print("XDDD")
             clear_path()
             return redirect(request.url)
-        
-        path = os.path.join(current_app.config["UPLOAD_FOLDER"], secure_filename(title))
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        
+
         app = {
             "content_type": content_type,
             "title": title,
@@ -369,28 +373,29 @@ def _upload(content_type):
             "platform": platform,
             "file": None,
             "addonfile": None,
-            "addonmessage": addonmessage if addonmessage else None,
+            "addonmessage": addonmessage,
+            "uid": uid if uid else None,
             "icon": None,
             "screenshot1": None,
             "screenshot2": None,
             "screenshot3": None,
             "screenshot4": None
         }
-        
+
         file_extension = secure_filename(file.filename).rsplit('.', 1)[1].lower()
         if file_extension not in file_extensions:
             clear_path()
             return redirect(request.url)
         file.save(os.path.join(path, f"file.{file_extension}"))
-        
+
         app["file"] = f"file.{file_extension}"
 
         if addonfile:
             addonfile_extension = secure_filename(addonfile.filename).rsplit('.', 1)
             if len(addonfile_extension) > 0:
-                addonfile_extension = addonfile_extension[1].lower() 
+                addonfile_extension = addonfile_extension[1].lower()
                 if addonfile_extension not in file_extensions:
-                    clear_path()    
+                    clear_path()
                     return redirect(request.url)
                 addonfile.save(os.path.join(path, f"addonfile.{addonfile_extension}"))
                 app["addonfile"] = f"addonfile.{file_extension}"
@@ -418,6 +423,25 @@ def _upload(content_type):
 
             if i > 4:
                 break
+
+        db.insert_submission(
+            content_type,
+            title,
+            f"file.{file_extension}",
+            category,
+            description,
+            publisher,
+            version,
+            platform,
+            "icon." + icon_extension if icon_extension else "Store.png",
+            addonmessage,
+            addonfile,
+            uid,
+            app["screenshot1"],
+            app["screenshot2"],
+            app["screenshot3"],
+            app["screenshot4"]
+        )
 
         with open(os.path.join(path, "app.json"), "w") as f:
             json.dump(app, f)

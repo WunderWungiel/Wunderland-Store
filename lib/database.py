@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import bcrypt
 import psycopg2
 import psycopg2.extras
 from markdown import markdown
@@ -19,7 +18,7 @@ def build_query(base_query, conditions={}, extras=""):
 
     for column, values in conditions.items():
 
-        if isinstance(values, list):
+        if isinstance(values, list) and values:
             or_clauses = [f"{column}=%s" if value is not None else f"{column} IS NULL" for value in values]
             where_clauses.append(f"({' OR '.join(or_clauses)})")
             query_params.extend(value for value in values if value is not None)
@@ -228,7 +227,7 @@ def get_category_id(category_name, content_type):
     return result["id"] if result else None
 
 
-def search(query, databases):
+def search(query, databases=None):
 
     if not databases:
         databases = ("apps", "games", "themes")
@@ -295,3 +294,63 @@ def get_news(news_id=None):
         )
 
     return final_results
+
+def get_submissions(id=None):
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    base_query = f"SELECT * FROM submissions"
+    conditions = {"visible": True}
+    if id:
+        conditions["id"] = int(id)
+
+    query, query_params = build_query(base_query, conditions, "ORDER BY id DESC")
+    
+    cursor.execute(query, query_params)
+
+    results = cursor.fetchall()
+    cursor.close()
+    
+    if not results:
+        return None
+
+    if id:
+        return results[0]
+    else:
+        final_results = {}
+        for result in results:
+            final_results[result['id']] = result
+        return final_results
+
+def insert_submission(
+    content_type,
+    title,
+    file,
+    category,
+    description,
+    publisher,
+    version,
+    platform,
+    img,
+    addon_message,
+    addon_file,
+    uid,
+    image1,
+    image2,
+    image3,
+    image4
+    ):
+    pass
+
+
+def delete_submission(id):
+
+    cursor = conn.cursor()
+
+    base_query = "DELETE FROM submissions"
+    conditions = {"id": id}
+
+    query, query_params = build_query(base_query, conditions)
+    cursor.execute(query, query_params)
+
+    conn.commit()
