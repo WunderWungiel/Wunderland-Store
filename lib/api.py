@@ -1,4 +1,4 @@
-from flask import current_app, Blueprint, request
+from flask import Blueprint, request
 
 from . import database as db
 

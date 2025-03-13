@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Submitted: {{ app['title'] }} | Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="description" content="{{ app['description'] }}" />
+        
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
+        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+
+        <script src="/static/js/script.js"></script>
+    </head>
+
+    <body>   
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                            </td>
+                            <td id="searchLink">
+                                <span><a href="/platform_chooser">Platform</a>: <b>{{ session['platformName'] }}</b></span>
+                                |
+                                {% if session['loggedIn'] is defined %}
+                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                |
+                                {% endif %}
+                                <a href="/search/">Search</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->
+                                
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">   
+                    <div class="contentItem" id="{{ app['id'] }}">
+                        <table class="contentInfo hreview-aggregate">
+                            <tr>
+                                <td class="feature">
+                                    <img src="/static/store/{{ app['img'] }}" alt="{{ app['title'] }}" width="66" height="66" />
+                                </td>
+                                <td class="meta item">
+                                    <div class="title"><h2 class="fn nokia-gray">{{ app['title'] }}</h2></div>
+                                    <div>
+                                        <p class="type">
+                                            <b>Size: </b>{{ app['size'] }} MB<br />
+                                            {% if app['platform_name'] != None %}
+                                            <b>Platform</b>: {{ app['platform_name'] }}<br />
+                                            {% endif %}
+                                            <b>Publisher</b>: {{ app['publisher'] }}<br />
+                                            <b>Version</b>: {{ app['version'] }}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        {% if app['screenshots']|length > 0 %}
+                        <p class="morePhotos"><a href="/app/{{ app['id'] }}/images/">Screenshots ({{ app['screenshots']|length }})</a></p>
+                        {% endif %}
+                    
+                        <div class="description">
+                            <p>{{ app['description']|safe }}</p>
+                        </div> <!-- end description -->
+
+                        {% if app['addon_message'] is not none %}
+                        <div style="color: green;">
+                            Extra file: {{ app['addon_message']|safe }}
+                            {% if app['addon_file'] is not none %}
+                            <div class="buttons buttons_small">
+                                <a href="/static/files/{{ app['addon_file'] }}" class="lite" target="_blank">Download</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <br />
+                        {% endif %}
+              
+                        <table width='100%'>
+                            <tr>
+                                <td align='left'>
+                                    <div class="buy">
+                                        <div class="buttons">
+                                            <a href="/static/files/{{ app['file'] }}" class="lite" target="_blank">Download</a>
+                                            <a class="lite" target="_blank" onclick="window.location.reload();">Refresh</a>
+                                            <a class="lite" target="_blank" onclick="delete_submission()">Delete</a>
+                                        </div> <!-- end buttons -->
+                                    </div> <!-- end buy info -->
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div> <!-- end content item -->
+
+                    <div class="beacon"></div>
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom">
+                <div id="searchContent">
+                    <form action="/search" method="get" id="searchForm">
+                        <fieldset id='searchField'>
+                            <label for="search">Search</label>
+                            <input type="text" id="search" name="q" title="" value="" />
+                            <input type="submit" id="searchBtn" value="Search" />
+                        </fieldset>
+                    </form>
+                </div> <!-- end search -->
+
+                <div id="bottomNavigation">
+                    <h3>Browse categories</h3>
+                    <a href="/home/">Home</a><br />
+                    <a href="/applications/">Apps</a><br />
+                    <a href="/games/">Games</a><br />
+                    <a href="/themes/">Themes</a><br />
+                </div> <!-- end navigation -->
+            </div>
+                        
+            <div id="footer">
+                {% if session['loggedIn'] is not defined %}
+                <a class="accountStatusChange" href="/login">Sign in</a> |
+                {% else %}
+                <a class="accountStatusChange" href="/logout">Log out</a> |
+                {% endif %}
+                <a href="/help/faqs">Help</a><br/>
+            © Wunder Wungiel 2024</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

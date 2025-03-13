@@ -36,27 +36,6 @@ def check_platform_id():
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
 
-
-@store.route("/api/rate")
-def _api_rate():
-    username = request.args.get("username")
-    rating = request.args.get("rating")
-    content_id = request.args.get("content_id")
-    content_type = request.args.get("content_type")
-
-    if not username or not rating or not content_id or not content_type:
-        return {}
-    else:
-        if session['username'] != username:
-            return {}
-    
-    user_id = auth_db.get_user_id(username=username)
-    db.rate(int(rating), user_id, content_id, content_type)
-    
-    rating = db.get_rating(content_id, content_type)
-    return {'rating': rating}
-
-
 @store.route("/app/<int:id>/rate", methods=["GET", "POST"])
 def _app_rate(id):
     if request.method == "GET":
@@ -89,6 +68,9 @@ def _rate_form(id, content_type):
         "themes": "theme"
     }
 
+    if not db.get_content(id=id, content_type=content_type):
+        return redirect(url_for(f"._{prefixes[content_type]}", id=id))
+
     if not is_logged():
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
     
@@ -103,6 +85,9 @@ def rate(id, content_type):
         "games": "game",
         "themes": "theme"
     }
+
+    if not db.get_content(id=id, content_type=content_type):
+        return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
 
     if not is_logged():
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
@@ -162,9 +147,6 @@ def _item_page(id, content_type):
     if recommended:
         recommended = list(recommended.values())
         recommended = random.choices(recommended, k=10)
-
-        # recommended = [dict((k, tuple(v)) if isinstance(v, list) else (k, v) for k, v in d.items()) for d in recommended] # Can convert lists to tuples automatically
-
         recommended = [dict(t) for t in {tuple(d.items()) for d in recommended}]
         recommended = [d for d in recommended if d['id'] != app['id']]
         if not recommended:
@@ -182,7 +164,7 @@ def _item_page(id, content_type):
     elif content_type == "themes":
         template = "theme_page.html"
     else:
-        abort(400)
+        return redirect("news._root")
 
     return render_template(template, app=app, recommended=recommended)
 
@@ -324,7 +306,7 @@ def _upload(content_type):
 
     if content_type not in ("applications", "games", "themes"):
         return redirect("/")
-
+    
     if content_type == "applications":
         content_type = "apps"
 
@@ -336,7 +318,6 @@ def _upload(content_type):
     elif request.method == "POST":
 
         title = request.form.get("title")
-        print(title)
         description = request.form.get("description")
         category = request.form.get("category") if content_type != 'themes' else 1
         publisher = request.form.get("publisher")
@@ -348,7 +329,7 @@ def _upload(content_type):
         icon = request.files.get('icon')
         uid = request.form.get('uid')
         screenshots = request.files.getlist('screenshots')
-
+                
         path = os.path.join(current_app.config["UPLOAD_FOLDER"], secure_filename(title))
         if not os.path.isdir(path):
             os.makedirs(path)
@@ -357,12 +338,11 @@ def _upload(content_type):
             if not item:
                 clear_path()
                 return redirect(request.url)
-
+                        
         if platform not in [x[0] for x in platforms] + ["all"] or category not in [str(category[0]) for category in categories]:
-            print("XDDD")
             clear_path()
             return redirect(request.url)
-
+        
         app = {
             "content_type": content_type,
             "title": title,
@@ -381,21 +361,21 @@ def _upload(content_type):
             "screenshot3": None,
             "screenshot4": None
         }
-
+        
         file_extension = secure_filename(file.filename).rsplit('.', 1)[1].lower()
         if file_extension not in file_extensions:
             clear_path()
             return redirect(request.url)
         file.save(os.path.join(path, f"file.{file_extension}"))
-
+        
         app["file"] = f"file.{file_extension}"
 
         if addonfile:
             addonfile_extension = secure_filename(addonfile.filename).rsplit('.', 1)
             if len(addonfile_extension) > 0:
-                addonfile_extension = addonfile_extension[1].lower()
+                addonfile_extension = addonfile_extension[1].lower() 
                 if addonfile_extension not in file_extensions:
-                    clear_path()
+                    clear_path()    
                     return redirect(request.url)
                 addonfile.save(os.path.join(path, f"addonfile.{addonfile_extension}"))
                 app["addonfile"] = f"addonfile.{file_extension}"
