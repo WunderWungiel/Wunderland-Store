@@ -162,7 +162,7 @@ Thank you.
     '''
 
     try:
-        email_system.send_email(text_message, html_message, email)
+        email_system.send_email("Confirm your account", text_message, html_message, email)
     except:
         return redirect(url_for("._register", message="Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username."))
 

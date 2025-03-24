@@ -36,27 +36,6 @@ def check_platform_id():
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
 
-
-@store.route("/api/rate")
-def _api_rate():
-    username = request.args.get("username")
-    rating = request.args.get("rating")
-    content_id = request.args.get("content_id")
-    content_type = request.args.get("content_type")
-
-    if not username or not rating or not content_id or not content_type:
-        return {}
-    else:
-        if session['username'] != username:
-            return {}
-    
-    user_id = auth_db.get_user_id(username=username)
-    db.rate(int(rating), user_id, content_id, content_type)
-    
-    rating = db.get_rating(content_id, content_type)
-    return {'rating': rating}
-
-
 @store.route("/app/<int:id>/rate", methods=["GET", "POST"])
 def _app_rate(id):
     if request.method == "GET":
@@ -89,6 +68,9 @@ def _rate_form(id, content_type):
         "themes": "theme"
     }
 
+    if not db.get_content(id=id, content_type=content_type):
+        return redirect(url_for(f"._{prefixes[content_type]}", id=id))
+
     if not is_logged():
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
     
@@ -103,6 +85,9 @@ def rate(id, content_type):
         "games": "game",
         "themes": "theme"
     }
+
+    if not db.get_content(id=id, content_type=content_type):
+        return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
 
     if not is_logged():
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
@@ -139,7 +124,7 @@ def _item_page(id, content_type):
 
     app = db.get_content(id=id, content_type=content_type)
 
-    if app and ((is_logged() and session['username'] != config['ADMIN_USERNAME']) or not is_logged()):
+    if app and ((is_logged() and session['username'] not in config['ADMIN_USERNAMES']) or not is_logged()):
         db.increment_counter(id, content_type)
 
     if not app:
@@ -162,9 +147,6 @@ def _item_page(id, content_type):
     if recommended:
         recommended = list(recommended.values())
         recommended = random.choices(recommended, k=10)
-
-        # recommended = [dict((k, tuple(v)) if isinstance(v, list) else (k, v) for k, v in d.items()) for d in recommended] # Can convert lists to tuples automatically
-
         recommended = [dict(t) for t in {tuple(d.items()) for d in recommended}]
         recommended = [d for d in recommended if d['id'] != app['id']]
         if not recommended:
@@ -182,7 +164,7 @@ def _item_page(id, content_type):
     elif content_type == "themes":
         template = "theme_page.html"
     else:
-        abort(400)
+        return redirect("news._root")
 
     return render_template(template, app=app, recommended=recommended)
 
@@ -247,7 +229,7 @@ def _search():
     if not query:
         return render_template("search.html")
     
-    results = db.search(query, ("apps", "games", "themes"))
+    results = db.search(query)
 
     if len(results) == 0:
         return render_template("applications_empty.html", category=None)
@@ -329,35 +311,37 @@ def _upload(content_type):
         content_type = "apps"
 
     categories = db.get_categories(content_type)
+    platforms = db.get_platforms()
 
     if request.method == "GET":
-        return render_template("upload_form.html", categories=categories)
+        return render_template("upload_form.html", content_type=content_type, categories=categories, platforms=platforms)
     elif request.method == "POST":
 
         title = request.form.get("title")
         description = request.form.get("description")
-        category = request.form.get("category")
+        category = request.form.get("category") if content_type != 'themes' else 1
         publisher = request.form.get("publisher")
         version = request.form.get("version")
         platform = request.form.get("platform")
         file = request.files.get('file')
         addonfile = request.files.get('addonfile')
-        addonmessage = request.files.get('addonmessage')
+        addonmessage = request.form.get('addonmessage')
         icon = request.files.get('icon')
+        uid = request.form.get('uid')
         screenshots = request.files.getlist('screenshots')
+                
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], secure_filename(title))
+        if not os.path.isdir(path):
+            os.makedirs(path)
 
         for item in (title, description, category, publisher, version, platform, file, icon, screenshots):
             if not item:
                 clear_path()
                 return redirect(request.url)
                         
-        if platform not in ("s60v2", "s60v3", "s60", "all" "ngage2") or category not in [str(category[0]) for category in categories]:
+        if platform not in [x[0] for x in platforms] + ["all"] or category not in [str(category[0]) for category in categories]:
             clear_path()
             return redirect(request.url)
-        
-        path = os.path.join(current_app.config["UPLOAD_FOLDER"], secure_filename(title))
-        if not os.path.isdir(path):
-            os.makedirs(path)
         
         app = {
             "content_type": content_type,
@@ -369,7 +353,8 @@ def _upload(content_type):
             "platform": platform,
             "file": None,
             "addonfile": None,
-            "addonmessage": addonmessage if addonmessage else None,
+            "addonmessage": addonmessage,
+            "uid": uid if uid else None,
             "icon": None,
             "screenshot1": None,
             "screenshot2": None,
@@ -418,6 +403,25 @@ def _upload(content_type):
 
             if i > 4:
                 break
+
+        db.insert_submission(
+            content_type,
+            title,
+            f"file.{file_extension}",
+            category,
+            description,
+            publisher,
+            version,
+            platform,
+            "icon." + icon_extension if icon_extension else "Store.png",
+            addonmessage,
+            addonfile,
+            uid,
+            app["screenshot1"],
+            app["screenshot2"],
+            app["screenshot3"],
+            app["screenshot4"]
+        )
 
         with open(os.path.join(path, "app.json"), "w") as f:
             json.dump(app, f)
