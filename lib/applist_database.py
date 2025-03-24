@@ -362,8 +362,6 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     else:
         query += " ORDER BY id DESC"
 
-    print(query)
-
     cursor.execute(query, args)
     results = cursor.fetchall()
     cursor.close()
