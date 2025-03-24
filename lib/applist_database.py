@@ -225,7 +225,7 @@ def format_results(results, content_type, widget=False):
 
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
 
-    platformId = "s60"
+    platformIds = ("s60", "symbian3")
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     if id:
@@ -268,14 +268,17 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         query += " WHERE category=%s"
         args.append(new_category)
         where = True
-    if platformId != "all":
+    if platformIds:
         if not where:
             query += " WHERE"
             where = True
         else:
             query += " AND"
-        query += " (platform=%s OR platform IS NULL)"
-        args.append(platformId)
+        query += " ("
+        for platformId in platformIds:
+            query += "platform=%s OR "
+            args.append(platformId)
+        query += "platform IS NULL)"
     if id or ids:
         if not where:
             query += " WHERE"
@@ -358,6 +361,8 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         args.append(count)
     else:
         query += " ORDER BY id DESC"
+
+    print(query)
 
     cursor.execute(query, args)
     results = cursor.fetchall()
