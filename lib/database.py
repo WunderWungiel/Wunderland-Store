@@ -104,9 +104,11 @@ def get_content(id=None, category_id=None, content_type=None, platform_id="all")
     base_query = f"SELECT * FROM {content_type}"
     conditions = {"visible": True}
     if id:
-        conditions["id"] = int(id)
+        id = int(id)
+        conditions["id"] = id
     if category_id:
-        conditions["category"] = int(category_id)
+        category_id = int(category_id)
+        conditions["category"] = category_id
     if platform_id != "all":
         conditions["platform"] = [platform_id, None]
 
@@ -116,10 +118,12 @@ def get_content(id=None, category_id=None, content_type=None, platform_id="all")
 
     results = cursor.fetchall()
     cursor.close()
+
     if not results:
         return None
 
     results = format_results(results, content_type)
+
     if id:
         return results.get(id)
     else:

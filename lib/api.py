@@ -1,25 +1,10 @@
-from flask import Blueprint, request
+from flask import Blueprint,request
 
 from . import database as db
 
 api = Blueprint("api", __name__, template_folder="templates")
 
 content_types = ["applications", "games", "themes"]
-
-@api.route("/api/v1/<content_type>/get_content/<int:id>")
-def _get_content_by_id(content_type, id):
-
-    if content_type not in content_types:
-        return {
-            "error": "Wrong content type"
-        }
-    
-    if content_type == "applications":
-        content_type = "apps"
-
-    result = db.get_content(id=id, content_type=content_type)
-
-    return result
 
 @api.route("/api/v1/<content_type>/get_content")
 def _get_content(content_type):
@@ -32,9 +17,24 @@ def _get_content(content_type):
     if content_type == "applications":
         content_type = "apps"
 
-    results = db.get_content(content_type=content_type)
-    return sorted(results.values(), key=lambda x: x["id"])
+    id = request.args.get("id")
+    platform_id = request.args.get("platformId")
+    category_id = request.args.get("categoryId")
 
+    arguments = {}
+
+    arguments["content_type"] = content_type
+
+    if id and id.isnumeric():
+        arguments["id"] = id
+    if platform_id:
+        arguments["platform_id"] = platform_id
+    if category_id:
+        arguments["category_id"] = category_id
+    
+    results = db.get_content(**arguments)
+
+    return sorted(results.values(), key=lambda x: x["id"]) if not "id" in arguments else [results,]
 
 @api.route("/api/v1/<content_type>/get_categories")
 def _get_categories(content_type):
