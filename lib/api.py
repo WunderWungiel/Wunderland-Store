@@ -1,4 +1,5 @@
 from flask import Blueprint,request
+from icecream import ic
 
 from . import database as db
 
@@ -19,6 +20,7 @@ def _get_content(content_type):
 
     id = request.args.get("id")
     platform_id = request.args.get("platformId")
+    platforms = platform_id.split(",") if platform_id else None
     category_id = request.args.get("categoryId")
 
     arguments = {}
@@ -27,14 +29,19 @@ def _get_content(content_type):
 
     if id and id.isnumeric():
         arguments["id"] = id
-    if platform_id:
-        arguments["platform_id"] = platform_id
     if category_id:
         arguments["category_id"] = category_id
-    
-    results = db.get_content(**arguments)
 
-    return sorted(results.values(), key=lambda x: x["id"]) if not "id" in arguments else [results,]
+    if platforms:
+        results = []
+        for platform in platforms:
+            arguments["platform_id"] = platform
+            results += db.get_content(**arguments).values()
+        results = [dict(t) for t in {tuple(d.items()) for d in results}]
+    else:
+        results = db.get_content(**arguments).values()
+
+    return sorted(results, key=lambda x: x["id"]) if not "id" in arguments else [results,]
 
 @api.route("/api/v1/<content_type>/get_categories")
 def _get_categories(content_type):
@@ -73,6 +80,10 @@ def _content_type_search(content_type):
 @api.route("/api/v1/get_content_types")
 def _get_content_types():
     return content_types
+
+@api.route("/api/v1/get_platforms")
+def _get_platforms():
+    return [{"id": platform[0], "name": platform[1]} for platform in db.get_platforms()]
 
 @api.route("/api/v1/search")
 def _search():
