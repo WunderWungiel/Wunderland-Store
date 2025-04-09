@@ -9,5 +9,6 @@
     "SMTP_PORT": 465,
     "SMTP_ADDRESS": "",
     "ADMIN_USERNAME": "ADMIN_USERNAME",
-    "PROXY": false
+    "PROXY": false,
+    "API_PREFIX": "/api/v1"
 }
