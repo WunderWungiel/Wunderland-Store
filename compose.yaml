@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    container_name: wunderland
     restart: unless-stopped
     volumes:
       - ./Ovi/files:/app/static/files # Replace
@@ -9,9 +10,12 @@ services:
       - ./Ovi/news:/app/news # Replace
     networks:
       - server
+    depends_on:
+      - db
 
-  postgres:
+  db:
     image: postgres
+    container_name: wunderland-db
     networks:
       - server
     environment:
