@@ -2,12 +2,13 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 16.2 (Debian 16.2-1.pgdg120+2)
--- Dumped by pg_dump version 16.2 (Debian 16.2-1.pgdg120+2)
+-- Dumped from database version 17.4 (Debian 17.4-1.pgdg120+2)
+-- Dumped by pg_dump version 17.4 (Debian 17.4-1.pgdg120+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -21,7 +22,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: apps; Type: TABLE; Schema: public; Owner: wunder
+-- Name: apps; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.apps (
@@ -46,10 +47,8 @@ CREATE TABLE public.apps (
 );
 
 
-ALTER TABLE public.apps OWNER TO wunder;
-
 --
--- Name: apps_categories; Type: TABLE; Schema: public; Owner: wunder
+-- Name: apps_categories; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.apps_categories (
@@ -58,10 +57,8 @@ CREATE TABLE public.apps_categories (
 );
 
 
-ALTER TABLE public.apps_categories OWNER TO wunder;
-
 --
--- Name: apps_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: apps_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.apps_categories_id_seq
@@ -73,17 +70,15 @@ CREATE SEQUENCE public.apps_categories_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.apps_categories_id_seq OWNER TO wunder;
-
 --
--- Name: apps_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: apps_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.apps_categories_id_seq OWNED BY public.apps_categories.id;
 
 
 --
--- Name: apps_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: apps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.apps_id_seq
@@ -95,17 +90,15 @@ CREATE SEQUENCE public.apps_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.apps_id_seq OWNER TO wunder;
-
 --
--- Name: apps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: apps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.apps_id_seq OWNED BY public.apps.id;
 
 
 --
--- Name: apps_rating; Type: TABLE; Schema: public; Owner: wunder
+-- Name: apps_rating; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.apps_rating (
@@ -116,10 +109,8 @@ CREATE TABLE public.apps_rating (
 );
 
 
-ALTER TABLE public.apps_rating OWNER TO wunder;
-
 --
--- Name: apps_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: apps_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.apps_rating_id_seq
@@ -131,17 +122,15 @@ CREATE SEQUENCE public.apps_rating_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.apps_rating_id_seq OWNER TO wunder;
-
 --
--- Name: apps_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: apps_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.apps_rating_id_seq OWNED BY public.apps_rating.id;
 
 
 --
--- Name: games; Type: TABLE; Schema: public; Owner: wunder
+-- Name: games; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.games (
@@ -166,10 +155,8 @@ CREATE TABLE public.games (
 );
 
 
-ALTER TABLE public.games OWNER TO wunder;
-
 --
--- Name: games_categories; Type: TABLE; Schema: public; Owner: wunder
+-- Name: games_categories; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.games_categories (
@@ -178,10 +165,8 @@ CREATE TABLE public.games_categories (
 );
 
 
-ALTER TABLE public.games_categories OWNER TO wunder;
-
 --
--- Name: games_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: games_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.games_categories_id_seq
@@ -193,17 +178,15 @@ CREATE SEQUENCE public.games_categories_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.games_categories_id_seq OWNER TO wunder;
-
 --
--- Name: games_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: games_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.games_categories_id_seq OWNED BY public.games_categories.id;
 
 
 --
--- Name: games_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: games_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.games_id_seq
@@ -215,17 +198,15 @@ CREATE SEQUENCE public.games_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.games_id_seq OWNER TO wunder;
-
 --
--- Name: games_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: games_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.games_id_seq OWNED BY public.games.id;
 
 
 --
--- Name: games_rating; Type: TABLE; Schema: public; Owner: wunder
+-- Name: games_rating; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.games_rating (
@@ -236,10 +217,8 @@ CREATE TABLE public.games_rating (
 );
 
 
-ALTER TABLE public.games_rating OWNER TO wunder;
-
 --
--- Name: games_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: games_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.games_rating_id_seq
@@ -251,17 +230,15 @@ CREATE SEQUENCE public.games_rating_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.games_rating_id_seq OWNER TO wunder;
-
 --
--- Name: games_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: games_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.games_rating_id_seq OWNED BY public.games_rating.id;
 
 
 --
--- Name: news; Type: TABLE; Schema: public; Owner: wunder
+-- Name: news; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.news (
@@ -271,10 +248,8 @@ CREATE TABLE public.news (
 );
 
 
-ALTER TABLE public.news OWNER TO wunder;
-
 --
--- Name: news_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: news_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.news_id_seq
@@ -286,17 +261,15 @@ CREATE SEQUENCE public.news_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.news_id_seq OWNER TO wunder;
-
 --
--- Name: news_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: news_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.news_id_seq OWNED BY public.news.id;
 
 
 --
--- Name: platforms; Type: TABLE; Schema: public; Owner: wunder
+-- Name: platforms; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.platforms (
@@ -305,10 +278,8 @@ CREATE TABLE public.platforms (
 );
 
 
-ALTER TABLE public.platforms OWNER TO wunder;
-
 --
--- Name: themes; Type: TABLE; Schema: public; Owner: wunder
+-- Name: themes; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.themes (
@@ -333,10 +304,8 @@ CREATE TABLE public.themes (
 );
 
 
-ALTER TABLE public.themes OWNER TO wunder;
-
 --
--- Name: themes_categories; Type: TABLE; Schema: public; Owner: wunder
+-- Name: themes_categories; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.themes_categories (
@@ -345,10 +314,8 @@ CREATE TABLE public.themes_categories (
 );
 
 
-ALTER TABLE public.themes_categories OWNER TO wunder;
-
 --
--- Name: themes_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: themes_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.themes_categories_id_seq
@@ -360,17 +327,15 @@ CREATE SEQUENCE public.themes_categories_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.themes_categories_id_seq OWNER TO wunder;
-
 --
--- Name: themes_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: themes_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.themes_categories_id_seq OWNED BY public.themes_categories.id;
 
 
 --
--- Name: themes_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: themes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.themes_id_seq
@@ -382,17 +347,15 @@ CREATE SEQUENCE public.themes_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.themes_id_seq OWNER TO wunder;
-
 --
--- Name: themes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: themes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.themes_id_seq OWNED BY public.themes.id;
 
 
 --
--- Name: themes_rating; Type: TABLE; Schema: public; Owner: wunder
+-- Name: themes_rating; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.themes_rating (
@@ -403,10 +366,8 @@ CREATE TABLE public.themes_rating (
 );
 
 
-ALTER TABLE public.themes_rating OWNER TO wunder;
-
 --
--- Name: themes_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: themes_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.themes_rating_id_seq
@@ -418,17 +379,15 @@ CREATE SEQUENCE public.themes_rating_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.themes_rating_id_seq OWNER TO wunder;
-
 --
--- Name: themes_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: themes_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.themes_rating_id_seq OWNED BY public.themes_rating.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: wunder
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.users (
@@ -443,10 +402,8 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO wunder;
-
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: wunder
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -458,94 +415,92 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.users_id_seq OWNER TO wunder;
-
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: wunder
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: apps id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: apps id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps ALTER COLUMN id SET DEFAULT nextval('public.apps_id_seq'::regclass);
 
 
 --
--- Name: apps_categories id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: apps_categories id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps_categories ALTER COLUMN id SET DEFAULT nextval('public.apps_categories_id_seq'::regclass);
 
 
 --
--- Name: apps_rating id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: apps_rating id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps_rating ALTER COLUMN id SET DEFAULT nextval('public.apps_rating_id_seq'::regclass);
 
 
 --
--- Name: games id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: games id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games ALTER COLUMN id SET DEFAULT nextval('public.games_id_seq'::regclass);
 
 
 --
--- Name: games_categories id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: games_categories id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games_categories ALTER COLUMN id SET DEFAULT nextval('public.games_categories_id_seq'::regclass);
 
 
 --
--- Name: games_rating id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: games_rating id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games_rating ALTER COLUMN id SET DEFAULT nextval('public.games_rating_id_seq'::regclass);
 
 
 --
--- Name: news id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: news id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.news ALTER COLUMN id SET DEFAULT nextval('public.news_id_seq'::regclass);
 
 
 --
--- Name: themes id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: themes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes ALTER COLUMN id SET DEFAULT nextval('public.themes_id_seq'::regclass);
 
 
 --
--- Name: themes_categories id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: themes_categories id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes_categories ALTER COLUMN id SET DEFAULT nextval('public.themes_categories_id_seq'::regclass);
 
 
 --
--- Name: themes_rating id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: themes_rating id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes_rating ALTER COLUMN id SET DEFAULT nextval('public.themes_rating_id_seq'::regclass);
 
 
 --
--- Name: users id; Type: DEFAULT; Schema: public; Owner: wunder
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
--- Name: apps_categories apps_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: apps_categories apps_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps_categories
@@ -553,7 +508,7 @@ ALTER TABLE ONLY public.apps_categories
 
 
 --
--- Name: apps apps_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: apps apps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps
@@ -561,7 +516,7 @@ ALTER TABLE ONLY public.apps
 
 
 --
--- Name: games_categories games_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: games_categories games_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games_categories
@@ -569,7 +524,7 @@ ALTER TABLE ONLY public.games_categories
 
 
 --
--- Name: games games_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: games games_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games
@@ -577,7 +532,7 @@ ALTER TABLE ONLY public.games
 
 
 --
--- Name: news news_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: news news_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.news
@@ -585,7 +540,7 @@ ALTER TABLE ONLY public.news
 
 
 --
--- Name: platforms platforms_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: platforms platforms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.platforms
@@ -593,7 +548,7 @@ ALTER TABLE ONLY public.platforms
 
 
 --
--- Name: themes_categories themes_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: themes_categories themes_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes_categories
@@ -601,7 +556,7 @@ ALTER TABLE ONLY public.themes_categories
 
 
 --
--- Name: themes themes_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: themes themes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes
@@ -609,7 +564,7 @@ ALTER TABLE ONLY public.themes
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: wunder
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -617,7 +572,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: apps apps_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: apps apps_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps
@@ -625,7 +580,7 @@ ALTER TABLE ONLY public.apps
 
 
 --
--- Name: apps_rating apps_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: apps_rating apps_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps_rating
@@ -633,7 +588,7 @@ ALTER TABLE ONLY public.apps_rating
 
 
 --
--- Name: apps_rating apps_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: apps_rating apps_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.apps_rating
@@ -641,7 +596,7 @@ ALTER TABLE ONLY public.apps_rating
 
 
 --
--- Name: games games_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: games games_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games
@@ -649,7 +604,7 @@ ALTER TABLE ONLY public.games
 
 
 --
--- Name: games_rating games_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: games_rating games_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games_rating
@@ -657,7 +612,7 @@ ALTER TABLE ONLY public.games_rating
 
 
 --
--- Name: games_rating games_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: games_rating games_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.games_rating
@@ -665,7 +620,7 @@ ALTER TABLE ONLY public.games_rating
 
 
 --
--- Name: themes themes_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: themes themes_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes
@@ -673,7 +628,7 @@ ALTER TABLE ONLY public.themes
 
 
 --
--- Name: themes_rating themes_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: themes_rating themes_rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes_rating
@@ -681,7 +636,7 @@ ALTER TABLE ONLY public.themes_rating
 
 
 --
--- Name: themes_rating themes_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: wunder
+-- Name: themes_rating themes_rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.themes_rating

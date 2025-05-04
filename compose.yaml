@@ -1,0 +1,32 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    volumes:
+      - ./Ovi/files:/app/static/files # Replace
+      - ./Ovi/store:/app/static/store # Replace
+      - ./Ovi/screenshots:/app/static/screenshots # Replace
+      - ./Ovi/news:/app/news # Replace
+    networks:
+      - server
+
+  postgres:
+    image: postgres
+    networks:
+      - server
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./db/database.psql:/docker-entrypoint-initdb.d/database.psql
+
+volumes:
+  pgdata:
+
+networks:
+  server:
+    external: true
+
