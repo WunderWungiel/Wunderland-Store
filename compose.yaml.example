@@ -20,7 +20,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     restart: unless-stopped
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./postgres-config:/var/lib/postgresql/data
       - ./db/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - ./db/database.psql:/docker-entrypoint-initdb.d/database.psql
 
