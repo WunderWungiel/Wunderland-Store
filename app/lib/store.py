@@ -129,11 +129,11 @@ def _item_page(id, content_type):
 
     if not app:
         return redirect(f"/{prefixes[content_type]}")
-    
+
     try:
         app['size'] = round(
             os.stat(
-                os.path.join(current_app.static_folder, 'content', 'files', app['file'])
+                os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])
             ).st_size / (1024 * 1024), 2)
     except FileNotFoundError:
         app['size'] = 0
