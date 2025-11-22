@@ -49,7 +49,7 @@
                         <table class="contentInfo hreview-aggregate">
                             <tr>
                                 <td class="feature">
-                                    <img src="/static/store/{{ app['img'] }}" alt="{{ app['title'] }}" width="66" height="66" />
+                                    <img src="/static/content/icons/{{ app['img'] }}" alt="{{ app['title'] }}" width="66" height="66" />
                                 </td>
                                 <td class="meta item">
                                     <div class="title"><h2 class="fn nokia-gray">{{ app['title'] }}</h2></div>
@@ -72,7 +72,7 @@
                                 <td align='right'>
                                     <div class="buy">
                                         <div class="buttons">
-                                            <a href="/static/files/{{ app['file'] }}" class="lite" target="_blank">Download</a>
+                                            <a href="/static/content/files/{{ app['file'] }}" class="lite" target="_blank">Download</a>
                                         </div> <!-- end buttons -->
                                     </div> <!-- end buy info -->
                                 </td>
@@ -106,7 +106,7 @@
                             Extra file: {{ app['addon_message']|safe }}
                             {% if app['addon_file'] is not none %}
                             <div class="buttons buttons_small">
-                                <a href="/static/files/{{ app['addon_file'] }}" class="lite" target="_blank">Download</a>
+                                <a href="/static/content/files/{{ app['addon_file'] }}" class="lite" target="_blank">Download</a>
                             </div>
                             {% endif %}
                         </div>
@@ -126,7 +126,7 @@
                                 <tr class="contentItem alt " id="{{ app['id'] }}">
                                 {% endif %}
                                     <td class="thumbnail">
-                                        <img src="/static/store/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
+                                        <img src="/static/content/icons/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
                                     </td>
                                     
                                     <td class="contentType">

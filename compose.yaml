@@ -4,10 +4,7 @@ services:
     container_name: wunderland
     restart: unless-stopped
     volumes:
-      - ./Ovi/files:/app/static/files # Replace
-      - ./Ovi/store:/app/static/store # Replace
-      - ./Ovi/screenshots:/app/static/screenshots # Replace
-      - ./Ovi/news:/app/news # Replace
+      - ./Ovi:/app/static/content # Replace
     networks:
       - server
     depends_on:

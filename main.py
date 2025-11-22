@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SECRET_KEY'] = config["SECRET_KEY"]
 app.config['SECURITY_PASSWORD_SALT'] = app.config['SECRET_KEY']
-app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, "uploads")
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, "content", "uploads")
 
 if config["PROXY"]:
     from werkzeug.middleware.proxy_fix import ProxyFix

@@ -275,7 +275,7 @@ def get_news(news_id=None):
     final_results = []
 
     for row in results:
-        file_path = os.path.join(current_app.root_path, "news", row['file'])
+        file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
 
         if not os.path.isfile(file_path):
             continue

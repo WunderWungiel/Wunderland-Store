@@ -156,7 +156,7 @@ def format_results(results, content_type, widget=False):
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             icon = SubElement(app, "icon")
-            icon.text = f"http://{request.host}/static/store/" + os.path.join(c, row['img'])
+            icon.text = f"http://{request.host}/static/content/icons/" + os.path.join(c, row['img'])
             version = SubElement(app, "version")
             version.text = row['version']
             versionstore = SubElement(app, "versionstore")
@@ -180,7 +180,7 @@ def format_results(results, content_type, widget=False):
             twitter = SubElement(app, "twitter")
             facebook = SubElement(app, "facebook")
             if row['addon_file']:
-                facebook.text = f"http://{request.host}/static/files/{row['addon_file']}"
+                facebook.text = f"http://{request.host}/static/content/files/{row['addon_file']}"
             donation = SubElement(app, "donation")
             price = SubElement(app, "price")
             price.text = "0.00"
@@ -198,18 +198,18 @@ def format_results(results, content_type, widget=False):
             image4 = SubElement(app, "image4")
             image5 = SubElement(app, "image5")
             if row['image1']:
-                image1.text = f"http://{request.host}/static/screenshots/{c}/{row['image1']}"
+                image1.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image1']}"
             if row['image2']:
-                image2.text = f"http://{request.host}/static/screenshots/{c}/{row['image2']}"
+                image2.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image2']}"
             if row['image3']:
-                image3.text = f"http://{request.host}/static/screenshots/{c}/{row['image3']}"
+                image3.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image3']}"
             if row['image4']:
-                image4.text = f"http://{request.host}/static/screenshots/{c}/{row['image4']}"
+                image4.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image4']}"
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
             download = SubElement(app, "download")
-            download.text = "http://" + quote(f"{request.host}/static/files/{row['file']}")
+            download.text = "http://" + quote(f"{request.host}/static/content/files/{row['file']}")
             downloadsize = SubElement(app, "downloadsize")
             downloadsize.text = "0"
             downloadstore = SubElement(app, "downloadstore")
