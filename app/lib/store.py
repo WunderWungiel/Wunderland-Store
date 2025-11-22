@@ -133,7 +133,7 @@ def _item_page(id, content_type):
     try:
         app['size'] = round(
             os.stat(
-                os.path.join(current_app.root_path, 'static', 'files', app['file'])
+                os.path.join(current_app.static_folder, 'files', app['file'])
             ).st_size / (1024 * 1024), 2)
     except FileNotFoundError:
         app['size'] = 0
