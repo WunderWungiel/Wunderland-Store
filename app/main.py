@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from flask import Flask, send_from_directory
 
@@ -22,7 +23,11 @@ app.register_blueprint(store_blueprint)
 app.register_blueprint(applist_blueprint)
 app.register_blueprint(qtstore_blueprint)
 app.register_blueprint(news_blueprint)
-\
+
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now()}
+
 @app.route("/robots.txt")
 def _robots():
     return send_from_directory(app.static_folder, "robots.txt")
