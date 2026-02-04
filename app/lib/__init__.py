@@ -15,4 +15,3 @@ from .applist import applist as applist_blueprint
 from .qtstore import qtstore as qtstore_blueprint
 from .news import news as news_blueprint
 from .nnhub import nnhub as nnhub_blueprint
-from .submissions import submissions_bp as submissions_blueprint

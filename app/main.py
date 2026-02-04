@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, send_from_directory
 
-from lib import config, api_blueprint, auth_blueprint, store_blueprint, applist_blueprint, qtstore_blueprint, news_blueprint, nnhub_blueprint, submissions_blueprint
+from lib import config, api_blueprint, auth_blueprint, store_blueprint, applist_blueprint, qtstore_blueprint, news_blueprint, nnhub_blueprint
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -23,8 +23,7 @@ app.register_blueprint(applist_blueprint)
 app.register_blueprint(qtstore_blueprint)
 app.register_blueprint(news_blueprint)
 app.register_blueprint(nnhub_blueprint)
-app.register_blueprint(submissions_blueprint)
-
+\
 @app.route("/robots.txt")
 def _robots():
     return send_from_directory(app.static_folder, "robots.txt")
