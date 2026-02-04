@@ -1,5 +1,3 @@
-"""QtStore compatibility layer"""
-
 import os
 
 from flask import Blueprint, current_app, send_from_directory, request

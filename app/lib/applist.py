@@ -1,5 +1,3 @@
-"""AppList compatibility layer."""
-
 from flask import Blueprint, request
 
 from . import applist_database as db

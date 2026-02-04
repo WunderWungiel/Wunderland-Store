@@ -1,5 +1,3 @@
-"""AppList database backend"""
-
 import os
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement

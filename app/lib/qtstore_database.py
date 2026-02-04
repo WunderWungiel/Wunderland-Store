@@ -1,5 +1,3 @@
-"""QtStore database backend"""
-
 import os
 
 from flask import request, current_app

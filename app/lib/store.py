@@ -3,7 +3,6 @@ import random
 import math
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
-from werkzeug.utils import secure_filename
 
 from . import database as db
 from . import auth_database as auth_db
