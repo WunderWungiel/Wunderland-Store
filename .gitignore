@@ -173,5 +173,10 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
+# VS Code
+.vscode
+
+# Project-specific
+
 config.json
 postgres-config

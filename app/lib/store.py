@@ -1,8 +1,6 @@
 import os
 import random
 import math
-import shutil
-import json
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
 from werkzeug.utils import secure_filename
@@ -11,7 +9,6 @@ from . import database as db
 from . import auth_database as auth_db
 from . import config
 from .auth import session_logout, is_logged
-from .email import send_email
 
 store = Blueprint("store", __name__, template_folder="templates")
 
