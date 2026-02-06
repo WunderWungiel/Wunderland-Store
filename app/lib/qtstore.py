@@ -34,13 +34,13 @@ def description(content_type, app):
     if len(content['screenshots']) > 0:
         description += "<br><br>"
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = f"http://{request.host}/static/screenshots/{content_type}/{screenshot}"
+            path = f"http://{request.host}/static/content/screenshots/{content_type}/{screenshot}"
             description += f'''<img src="{path}" alt="image{i}" width="150"><br><br>'''
 
     if content['addon_message']:
         description += f"<br><br>Extra file: {content['addon_message']}"
     if content['addon_file']:
-        description += f'''<br><br>Link: http://{request.host}/static/files/{content['addon_file']}'''
+        description += f'''<br><br>Link: http://{request.host}/static/content/files/{content['addon_file']}'''
 
     return description
 
@@ -53,7 +53,7 @@ def file(content_type, app, ext):
         return ""
 
     content = db.qtstore_content(app, content_type)
-    return send_from_directory(os.path.join(current_app.root_path, "static", "files"), content['file']) if content else None
+    return send_from_directory(os.path.join(current_app.root_path, "static", "content", "files"), content['file']) if content else None
 
 
 @qtstore.route("/StoreData/<content_type>/<app>/preview.png")
@@ -64,4 +64,4 @@ def preview(content_type, app):
         return ""
 
     content = db.qtstore_content(app, content_type)
-    return send_from_directory(os.path.join(current_app.root_path, "static", "store", content_type), content['img']) if content else None
+    return send_from_directory(os.path.join(current_app.root_path, "static", "content", "store", content_type), content['img']) if content else None

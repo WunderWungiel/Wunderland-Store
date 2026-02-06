@@ -19,12 +19,27 @@ def build_query(base_query, conditions={}, extras=""):
     for column, values in conditions.items():
 
         if isinstance(values, list) and values:
-            or_clauses = [f"{column}=%s" if value is not None else f"{column} IS NULL" for value in values]
+            or_clauses = []
+            for value in values:
+                if value is None:
+                    or_clauses.append(f"{column} IS NULL")
+                elif isinstance(value, str):
+                    or_clauses.append(f"{column} LIKE %s")
+                    query_params.append(value)
+                else:
+                    or_clauses.append(f"{column}=%s")
+                    query_params.append(value)
+
             where_clauses.append(f"({' OR '.join(or_clauses)})")
-            query_params.extend(value for value in values if value is not None)
+
         else:
-            where_clauses.append(f"{column}=%s" if values is not None else f"{column} IS NULL")
-            if values is not None:
+            if values is None:
+                where_clauses.append(f"{column} IS NULL")
+            elif isinstance(values, str):
+                where_clauses.append(f"{column} LIKE %s")
+                query_params.append(values)
+            else:
+                where_clauses.append(f"{column}=%s")
                 query_params.append(values)
 
     if len(conditions) > 0:
@@ -231,7 +246,7 @@ def get_category_id(category_name, content_type):
     return result["id"] if result else None
 
 
-def search(query, databases=None):
+def search(search_query, databases=None, platform_id="all"):
 
     if not databases:
         databases = ("apps", "games", "themes")
@@ -241,10 +256,20 @@ def search(query, databases=None):
     for database in databases:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-        cursor.execute(
-            f"SELECT * FROM {database} WHERE LOWER(title) LIKE LOWER(%s) ORDER BY title",
-            (f'%{query}%',)
-        )
+        base_query = f"SELECT * FROM {database}"
+
+        conditions = {
+            "LOWER(title)": f"%{search_query.lower()}%",
+            "visible": True
+        }
+        if platform_id != "all":
+            conditions["platform"] = [platform_id, None]
+
+        query, query_params = build_query(base_query, conditions, "ORDER BY title")
+        print(query)
+        print(query_params)
+        
+        cursor.execute(query, query_params)
 
         db_results = cursor.fetchall()
         cursor.close()

@@ -225,7 +225,7 @@ def _search():
     if not query:
         return render_template("search.html")
     
-    results = db.search(query)
+    results = db.search(query, platform_id=session['platformId'])
 
     if len(results) == 0:
         return render_template("applications_empty.html", category=None)

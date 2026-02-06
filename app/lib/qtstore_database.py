@@ -11,7 +11,7 @@ def content_generator(database, content_name, host):
     content = ""
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    
+
     base_query = f"SELECT title, file FROM {database}"
     conditions = {
         "platform": ["s60", "s60v3", None]
@@ -26,7 +26,7 @@ def content_generator(database, content_name, host):
 
     for row in results:
 
-        path = os.path.join(current_app.root_path, "static", "files", row['file'])
+        path = os.path.join(current_app.root_path, "static", "content", "files", row['file'])
 
         try:
             timestamp = int(os.path.getmtime(path))
