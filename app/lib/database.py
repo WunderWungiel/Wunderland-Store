@@ -6,7 +6,7 @@ import psycopg2.extras
 from markdown import markdown
 from flask import current_app
 
-from . import conn
+from . import connection
 
 
 def build_query(base_query, conditions={}, extras=""):
@@ -87,7 +87,7 @@ def format_results(results, content_type):
 
 def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     base_query = f"SELECT * FROM {content_type}"
     conditions = {"visible": True}
@@ -120,7 +120,7 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
 def get_rating(content_id, content_type):
     
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     query = f"SELECT ROUND(AVG(rating)) as rating FROM {content_type}_rating WHERE content_id=%s"
     cursor.execute(query, (content_id,))
     result = cursor.fetchone()["rating"]
@@ -131,13 +131,13 @@ def get_rating(content_id, content_type):
 
 def rate(rating, user_id, content_id, content_type):
 
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     query = f"SELECT * FROM {content_type}_rating WHERE content_id=%s AND user_id=%s"
     cursor.execute(query, (content_id, user_id))
     results = cursor.fetchall()
     cursor.close()
 
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     if results:
         query = f"UPDATE {content_type}_rating SET rating=%s WHERE content_id=%s AND user_id=%s"
         cursor.execute(query, (rating, content_id, user_id))
@@ -145,7 +145,7 @@ def rate(rating, user_id, content_id, content_type):
         query = f"INSERT INTO {content_type}_rating (content_id, rating, user_id) VALUES (%s, %s, %s)"
         cursor.execute(query, (content_id, rating, user_id))
 
-    conn.commit()
+    connection.commit()
     cursor.close()
 
 
@@ -153,7 +153,7 @@ def get_categories(content_type):
 
     query = f"SELECT * FROM {content_type}_categories ORDER by name"
 
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     cursor.execute(query)
     results = cursor.fetchall()
     cursor.close()
@@ -165,7 +165,7 @@ def get_platforms():
 
     query = f"SELECT * FROM platforms ORDER by name"
 
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     cursor.execute(query)
     results = cursor.fetchall()
     cursor.close()
@@ -177,7 +177,7 @@ def get_platform(platform_id):
     
     query = f"SELECT * FROM platforms WHERE id=%s"
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (platform_id,))
     result = cursor.fetchone()
     cursor.close()
@@ -189,7 +189,7 @@ def get_category(category_id, content_type):
     
     query = f"SELECT * FROM {content_type}_categories WHERE id=%s"
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (int(category_id),))
     result = cursor.fetchone()
     cursor.close()
@@ -205,7 +205,7 @@ def search(search_query, databases=None, platform_id=None):
     results = {}
 
     for database in databases:
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         base_query = f"SELECT * FROM {database}"
 
@@ -231,14 +231,14 @@ def search(search_query, databases=None, platform_id=None):
 
 
 def increment_counter(id, content_type):
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     cursor.execute(f"UPDATE {content_type} SET visited_counter=visited_counter + 1 WHERE id=%s", (id,))
-    conn.commit()
+    connection.commit()
     cursor.close()
 
 def get_news(news_id=None):
     
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     if not news_id:
         cursor.execute("SELECT * FROM news ORDER BY id DESC")
     else:

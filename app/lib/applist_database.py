@@ -7,7 +7,7 @@ from flask import request
 import psycopg2
 import psycopg2.extras
 
-from . import conn
+from . import connection
 
 
 def version():
@@ -224,7 +224,7 @@ def format_results(results, content_type, widget=False):
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
 
     platforms = ("s60", "symbian3")
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     if id:
         if id.isdigit():
@@ -317,7 +317,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         
         all_results = []
 
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(query, tuple(args))
         results = cursor.fetchall()
         cursor.close()
@@ -327,7 +327,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
 
         query = query.replace("FROM apps", "FROM games", 1)
 
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(query, tuple(args))
         results = cursor.fetchall()
         cursor.close()
@@ -337,7 +337,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
 
         query = query.replace("FROM games", "FROM themes", 1)
 
-        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cursor.execute(query, tuple(args))
         results = cursor.fetchall()
         cursor.close()

@@ -1,7 +1,7 @@
 import bcrypt
 import psycopg2.extras
 
-from .database import conn, build_query
+from .database import connection, build_query
 
 def _generate_password(user_password):
     user_password = user_password.encode('utf-8')
@@ -12,7 +12,7 @@ def _generate_password(user_password):
 
 
 def get_user(id=None, username=None, email=None):
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     base_query = "SELECT * FROM users"
     conditions = {"active": True}
@@ -38,7 +38,7 @@ def get_user(id=None, username=None, email=None):
 
 def get_user_id(username=None, email=None):
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     base_query = "SELECT id FROM users"
     conditions = {}
@@ -60,7 +60,7 @@ def get_user_id(username=None, email=None):
 
 def get_user_email(id=None, username=None):
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     base_query = "SELECT email FROM users"
     conditions = {}
@@ -81,14 +81,14 @@ def get_user_email(id=None, username=None):
 
 
 def confirm_user(email):
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     cursor.execute("UPDATE users SET confirmed=true WHERE email=%s", (email,))
-    conn.commit()
+    connection.commit()
 
 
 def email_exists(email):
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
 
     result = cursor.fetchone()
@@ -99,7 +99,7 @@ def email_exists(email):
 
 def username_exists(username):
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
 
     result = cursor.fetchone()
@@ -112,28 +112,28 @@ def register(email, user_password, username):
 
     hashed_password = _generate_password(user_password)
 
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     cursor.execute("INSERT INTO users (email, password, username, confirmed) VALUES (%s, %s, %s, false)", (email, hashed_password, username))
     cursor.close()
 
-    conn.commit()
+    connection.commit()
 
 
 def change_password(id, new_password):
 
     hashed_password = _generate_password(new_password)
 
-    cursor = conn.cursor()
+    cursor = connection.cursor()
     cursor.execute("UPDATE users SET password=%s WHERE id=%s", (hashed_password, id))
 
-    conn.commit()
+    connection.commit()
 
 
 def check_credentials(email, user_password):
     if not email_exists(email):
         return False
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("SELECT password FROM users WHERE email=%s AND active=true", (email,))
     
     result = cursor.fetchone()

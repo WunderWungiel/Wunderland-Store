@@ -2,7 +2,7 @@ import psycopg2
 
 from .config import config
 
-conn = psycopg2.connect(database=config["database"]['name'],
+connection = psycopg2.connect(database=config["database"]['name'],
     host=config["database"]['host'],
     user=config["database"]['user'],
     password=config["database"]['password']

@@ -4,13 +4,13 @@ from flask import request, current_app
 import psycopg2
 import psycopg2.extras
 
-from .database import build_query, conn
+from .database import build_query, connection
 
 
 def content_generator(database, content_name, host):
     content = ""
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     base_query = f"SELECT title, file FROM {database}"
     conditions = {
@@ -59,7 +59,7 @@ def qtstore_generator():
 
 def qtstore_content(name, content_type):
 
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
     cursor.execute(f"SELECT * FROM {content_type} WHERE title LIKE %s AND (platform='s60' OR platform='s60v3' OR platform IS NULL) LIMIT 1", (name,))
     result = cursor.fetchone()
