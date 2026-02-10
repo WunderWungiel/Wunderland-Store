@@ -14,20 +14,18 @@ store = Blueprint("store", __name__, template_folder="templates")
 
 @store.before_request
 def check_platform_id():
-    platform_id = session.get('platformId')
-    platform_name = session.get('platformName')
+    session.permanent = True
 
-    if not platform_id or not platform_name:
-        session['platformId'] = "all"
-        session['platformName'] = "All"
-        session.permanent = True
+    platform_id = session.get('platform')
+    if not platform_id:
+        session['platform'] = None
+    user_id = session.get('user_id')
 
-    username_id = session.get('id')
-    if not username_id:
+    if not user_id:
         session_logout()
         return
     else:
-        user = auth_db.get_user(id=username_id)
+        user = auth_db.get_user(id=user_id)
         if user['banned']:
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
@@ -120,7 +118,7 @@ def _item_page(id, content_type):
 
     app = db.get_content(id=id, content_type=content_type)
 
-    if app and ((is_logged() and session['username'] not in config['ADMIN_USERNAMES']) or not is_logged()):
+    if app and ((is_logged() and session['username'] not in config['admin_usernames']) or not is_logged()):
         db.increment_counter(id, content_type)
 
     if not app:
@@ -137,7 +135,7 @@ def _item_page(id, content_type):
     recommended = db.get_content(
         content_type=content_type,
         category_id=app['category_id'],
-        platform_id=session['platformId']
+        platform_id=session['platform']
     )
 
     if recommended:
@@ -225,7 +223,7 @@ def _search():
     if not query:
         return render_template("search.html")
     
-    results = db.search(query, platform_id=session['platformId'])
+    results = db.search(query, platform_id=session['platform'])
 
     if len(results) == 0:
         return render_template("applications_empty.html", category=None)
@@ -260,28 +258,26 @@ def _search():
         )
 
 
-@store.route("/platform_chooser")
-def _platform_chooser():
+@store.route("/platform")
+def _platform():
 
     platforms = db.get_platforms()
-    return render_template("platform_chooser.html", platforms=platforms)
+    return render_template("platform.html", platforms=platforms)
 
 
 @store.route("/set_platform")
 def _set_platform():
-    platform_id = request.args.get('platformId')
-    if not platform_id:
+    platform = request.args.get('platform')
+    if not platform:
         return redirect(url_for("news._root"))
-    elif platform_id == "all":
-        session['platformId'] = "all"
-        session['platformName'] = "All"
+    elif platform is None:
+        session['platform'] = None
         session.permanent = True
         return redirect(url_for("news._root"))
-    elif not db.get_platform_name(platform_id):
+    elif not db.get_platform(platform):
         return redirect(url_for("news._root"))
     
-    session['platformId'] = platform_id
-    session['platformName'] = db.get_platform_name(platform_id)
+    session['platform'] = platform
     session.permanent = True
 
     return redirect(url_for("news._root"))
@@ -313,12 +309,12 @@ def _content(content_type):
 
     category_id = request.args.get('categoryId')
     category_id = int(category_id) if category_id else None
-    category_name = db.get_category_name(category_id, content_type) if category_id else None
+    category_name = db.get_category(category_id, content_type)['name'] if category_id else None
 
     if category_id and not category_name:
         return redirect(f"/{content_type_prefix}/")
 
-    all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platformId'])        
+    all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])        
 
     if not all_apps:
         return render_template(f"{content_type_prefix}_empty.html", category=category_name)

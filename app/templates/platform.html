@@ -21,9 +21,14 @@
                                 <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
-                                <span><a href="/platform_chooser">Platform</a>: <b>{{ session['platformName'] }}</b></span>
-                                |
+                                {% if session['platform'] is none %}
+                                {% set platform_name = "All" %}
+                                {% else %}
+                                {% set platform_name = get_platform(session['platform'])['name'] %}
+                                {% endif %}
+                                <span><a href="/platform">Platform</a>: <b>{{ platform_name }}</b></span>
                                 {% if session['loggedIn'] is defined %}
+                                |
                                 <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
                                 {% endif %}
                             </td>
@@ -38,9 +43,9 @@
 	                    <h2>Platforms</h2>
 
                         <div id="categories">
-                            <a href="{{ url_for('store._set_platform', platformId='all') }}">All platforms</a><br />
+                            <a href="{{ url_for('store._set_platform', platform=None) }}">All platforms</a><br />
                             {% for platform in platforms %}
-                            <a href="{{ url_for('store._set_platform', platformId=platform[0]) }}">{{ platform[1] }}</a>{% if loop.index != platforms|length %}<br />{% endif %}
+                            <a href="{{ url_for('store._set_platform', platform=platform[0]) }}">{{ platform[1] }}</a>{% if loop.index != platforms|length %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
 

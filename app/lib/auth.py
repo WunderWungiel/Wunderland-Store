@@ -9,13 +9,13 @@ auth = Blueprint("auth", __name__, template_folder="templates")
 
 
 @auth.before_request
-def check_platform_id():
-    usernameId = session.get('id')
-    if not usernameId:
+def check_platform():
+    user_id = session.get('id')
+    if not user_id:
         session_logout()
         return
     else:
-        user = auth_db.get_user(id=usernameId)
+        user = auth_db.get_user(id=user_id)
         if user['banned']:
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
@@ -42,7 +42,6 @@ def confirm_token(token, expiration=3600):
 def session_logout():
     session.pop('loggedIn', None)
     session.pop('id', None)
-    session.pop('username', None)
     session.permanent = True
 
 
@@ -93,8 +92,6 @@ def _check_login():
 
         session['loggedIn'] = True
         session['id'] = auth_db.get_user_id(email=email)
-        session['username'] = user['username']
-        session['email'] = email
         session.permanent = True
         return redirect(url_for("news._root"))
     

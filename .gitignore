@@ -178,5 +178,5 @@ cython_debug/
 
 # Project-specific
 
-config.json
+config.yaml
 postgres-config

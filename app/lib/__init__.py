@@ -2,10 +2,10 @@ import psycopg2
 
 from .config import config
 
-conn = psycopg2.connect(database=config["DB_NAME"],
-    host=config["DB_HOST"],
-    user=config["DB_USER"],
-    password=config["DB_PASS"]
+conn = psycopg2.connect(database=config["database"]['name'],
+    host=config["database"]['host'],
+    user=config["database"]['user'],
+    password=config["database"]['password']
 )
 
 from .api import api as api_blueprint

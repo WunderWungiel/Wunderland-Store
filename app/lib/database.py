@@ -49,33 +49,6 @@ def build_query(base_query, conditions={}, extras=""):
     return query, query_params
 
 
-def get_content_type_ids(content_type):
-
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    query = f"SELECT id FROM {content_type}"
-    cursor.execute(query)
-    results = cursor.fetchall()
-    cursor.close()
-
-    return [result["id"] for result in results]
-
-
-def get_content_number(content_type, category_id=None):
-
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    query = f"SELECT COUNT(id) AS count FROM {content_type}"
-    args = []
-    if category_id:
-        query += " WHERE category=%s"
-        args.append(category_id)
-    
-    cursor.execute(query, args)
-    result = cursor.fetchone()
-    cursor.close()
-    
-    return result["count"] if result else None
-
-
 def format_results(results, content_type):
 
     final_results = {}
@@ -84,13 +57,13 @@ def format_results(results, content_type):
             "id": row["id"],
             "title": row["title"],
             "file": row["file"],
-            "category_name": get_category_name(row["category"], content_type),
+            "category_name": get_category(row["category"], content_type)['name'],
             "category_id": row["category"],
             "description": row["description"],
             "publisher": row["publisher"],
             "version": row["version"],
             "platform": row["platform"],
-            "platform_name": get_platform_name(row["platform"]) if row["platform"] is not None else None,
+            "platform_name": get_platform(row["platform"])['name'] if row['platform'] is not None else None,
             "image1": row["image1"],
             "image2": row["image2"],
             "image3": row["image3"],
@@ -112,7 +85,7 @@ def format_results(results, content_type):
     return final_results
 
 
-def get_content(id=None, category_id=None, content_type=None, platform_id="all"):
+def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
@@ -124,7 +97,7 @@ def get_content(id=None, category_id=None, content_type=None, platform_id="all")
     if category_id:
         category_id = int(category_id)
         conditions["category"] = category_id
-    if platform_id != "all":
+    if platform_id:
         conditions["platform"] = [platform_id, None]
 
     query, query_params = build_query(base_query, conditions, "ORDER BY id DESC")
@@ -200,53 +173,31 @@ def get_platforms():
     return results
 
 
-def get_platform_name(platform_id):
+def get_platform(platform_id):
     
-    query = f"SELECT name FROM platforms WHERE id=%s"
+    query = f"SELECT * FROM platforms WHERE id=%s"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (platform_id,))
     result = cursor.fetchone()
     cursor.close()
 
-    return result["name"] if result else None
+    return result
 
 
-def get_platform_id(platform_name):
-
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-    cursor.execute(f"SELECT id FROM platforms WHERE name=%s", (platform_name,))
-    result = cursor.fetchone()
-    cursor.close()
-
-    return result["id"] if result else None
-
-
-def get_category_name(category_id, content_type):
+def get_category(category_id, content_type):
     
-    query = f"SELECT name FROM {content_type}_categories WHERE id=%s"
+    query = f"SELECT * FROM {content_type}_categories WHERE id=%s"
 
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute(query, (int(category_id),))
     result = cursor.fetchone()
     cursor.close()
 
-    return result["name"] if result else None
+    return result
 
 
-def get_category_id(category_name, content_type):
-
-    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
-    cursor.execute(f"SELECT id FROM {content_type}_categories WHERE name=%s", (category_name,))
-    result = cursor.fetchone()
-    cursor.close()
-
-    return result["id"] if result else None
-
-
-def search(search_query, databases=None, platform_id="all"):
+def search(search_query, databases=None, platform_id=None):
 
     if not databases:
         databases = ("apps", "games", "themes")
@@ -262,7 +213,7 @@ def search(search_query, databases=None, platform_id="all"):
             "LOWER(title)": f"%{search_query.lower()}%",
             "visible": True
         }
-        if platform_id != "all":
+        if platform_id:
             conditions["platform"] = [platform_id, None]
 
         query, query_params = build_query(base_query, conditions, "ORDER BY title")

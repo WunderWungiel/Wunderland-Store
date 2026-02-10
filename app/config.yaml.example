@@ -1,0 +1,16 @@
+secret_key: ''
+database:
+  host: "localhost"
+  name: "ovistore"
+  user: "postgres"
+  password: "1234"
+email:
+  address: "email@address.com"
+  password: ""
+  smtp:
+    port: 465
+    address: ""
+admin_usernames:
+  - ADMIN_USERNAME
+proxy: false
+api_prefix: "/api/v1"

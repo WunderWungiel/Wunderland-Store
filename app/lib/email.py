@@ -5,10 +5,10 @@ from email.mime.multipart import MIMEMultipart
 
 from .config import config
 
-smtp_port = config["SMTP_PORT"]
-email_address = config["EMAIL_ADDRESS"]
-smtp_address = config["SMTP_ADDRESS"]
-email_password = config["EMAIL_PASSWORD"]
+smtp_address = config["email"]["smtp"]["address"]
+smtp_port = config["email"]["smtp"]["port"]
+email_address = config["email"]["address"]
+email_password = config["email"]["password"]
 
 
 def send_email(subject, text_message, html_message, receiver_email):

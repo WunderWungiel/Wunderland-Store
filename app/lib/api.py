@@ -3,7 +3,7 @@ from flask import Blueprint,request
 from . import database as db
 from . import config
 
-api = Blueprint("api", __name__, template_folder="templates", url_prefix=config["API_PREFIX"])
+api = Blueprint("api", __name__, template_folder="templates", url_prefix=config["api_prefix"])
 
 content_types = ["applications", "games", "themes"]
 
@@ -19,8 +19,8 @@ def _get_content(content_type):
         content_type = "apps"
 
     id = request.args.get("id")
-    platform_id = request.args.get("platformId")
-    platforms = platform_id.split(",") if platform_id else None
+    platform = request.args.get("platform")
+    platforms = platform.split(",") if platform else None
     category_id = request.args.get("categoryId")
 
     arguments = {}
@@ -35,7 +35,7 @@ def _get_content(content_type):
     if platforms:
         results = []
         for platform in platforms:
-            arguments["platform_id"] = platform
+            arguments["platform"] = platform
             results += db.get_content(**arguments).values()
         results = [dict(t) for t in {tuple(d.items()) for d in results}]
     else:
