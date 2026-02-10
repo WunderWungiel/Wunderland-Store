@@ -1,52 +1,12 @@
 import os
 from datetime import datetime
 
-import psycopg2
-import psycopg2.extras
+from psycopg2 import sql
+from psycopg2.extras import RealDictCursor
 from markdown import markdown
 from flask import current_app
 
 from . import connection
-
-
-def build_query(base_query, conditions={}, extras=""):
-
-    query = base_query
-    query_params = []
-
-    where_clauses = []
-
-    for column, values in conditions.items():
-
-        if isinstance(values, list) and values:
-            or_clauses = []
-            for value in values:
-                if value is None:
-                    or_clauses.append(f"{column} IS NULL")
-                elif isinstance(value, str):
-                    or_clauses.append(f"{column} LIKE %s")
-                    query_params.append(value)
-                else:
-                    or_clauses.append(f"{column}=%s")
-                    query_params.append(value)
-
-            where_clauses.append(f"({' OR '.join(or_clauses)})")
-
-        else:
-            if values is None:
-                where_clauses.append(f"{column} IS NULL")
-            elif isinstance(values, str):
-                where_clauses.append(f"{column} LIKE %s")
-                query_params.append(values)
-            else:
-                where_clauses.append(f"{column}=%s")
-                query_params.append(values)
-
-    if len(conditions) > 0:
-        query += " WHERE " + " AND ".join(where_clauses)
-    query += " " + extras
-
-    return query, query_params
 
 
 def format_results(results, content_type):
@@ -87,23 +47,25 @@ def format_results(results, content_type):
 
 def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    query = sql.SQL("SELECT * FROM {}".format(sql.Identifier(content_type)))
+    where_clauses = [sql.SQL("visible = TRUE")]
+    params = []
 
-    base_query = f"SELECT * FROM {content_type}"
-    conditions = {"visible": True}
-    if id:
-        id = int(id)
-        conditions["id"] = id
-    if category_id:
-        category_id = int(category_id)
-        conditions["category"] = category_id
-    if platform_id:
-        conditions["platform"] = [platform_id, None]
+    if id is not None:
+        where_clauses.append(sql.SQL("id = %s"))
+        params.append(id)
+    if category_id is not None:
+        where_clauses.append(sql.SQL("category = %s"))
+        params.append(category_id)
+    if platform_id is not None:
+        where_clauses.append(sql.SQL("(platform = %s OR platform IS NULL]"))
+        params.append(platform_id)
 
-    query, query_params = build_query(base_query, conditions, "ORDER BY id DESC")
-    
-    cursor.execute(query, query_params)
+    if where_clauses:
+        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor.execute(query, params)
     results = cursor.fetchall()
     cursor.close()
 
@@ -120,38 +82,38 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
 def get_rating(content_id, content_type):
     
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    query = f"SELECT ROUND(AVG(rating)) as rating FROM {content_type}_rating WHERE content_id=%s"
+    table = f"{content_type}_rating"
+    query = sql.SQL("SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM {} WHERE content_id=%s").format(sql.Identifier(table))
+
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query, (content_id,))
-    result = cursor.fetchone()["rating"]
+    result = cursor.fetchone()
     cursor.close()
 
-    return int(result) if result else 0
+    return int(result["rating"])
 
 
 def rate(rating, user_id, content_id, content_type):
 
-    cursor = connection.cursor()
-    query = f"SELECT * FROM {content_type}_rating WHERE content_id=%s AND user_id=%s"
-    cursor.execute(query, (content_id, user_id))
-    results = cursor.fetchall()
-    cursor.close()
+    table = f"{content_type}_rating"
+    query = sql.SQL("""
+        INSERT INTO {} (content_id, user_id, rating)
+        VALUES (%s, %s, %s)
+        ON CONFLICT (content_id, user_id)
+        DO UPDATE SET rating = EXCLUDED.rating
+    """).format(sql.Identifier(table))
+    params = (content_id, user_id, rating)
 
     cursor = connection.cursor()
-    if results:
-        query = f"UPDATE {content_type}_rating SET rating=%s WHERE content_id=%s AND user_id=%s"
-        cursor.execute(query, (rating, content_id, user_id))
-    else:
-        query = f"INSERT INTO {content_type}_rating (content_id, rating, user_id) VALUES (%s, %s, %s)"
-        cursor.execute(query, (content_id, rating, user_id))
-
+    cursor.execute(query, params)
     connection.commit()
     cursor.close()
 
 
 def get_categories(content_type):
 
-    query = f"SELECT * FROM {content_type}_categories ORDER by name"
+    table = f"{content_type}_categories"
+    query = sql.SQL("SELECT * FROM {} ORDER by name").format(sql.Identifier(table))
 
     cursor = connection.cursor()
     cursor.execute(query)
@@ -163,7 +125,7 @@ def get_categories(content_type):
 
 def get_platforms():
 
-    query = f"SELECT * FROM platforms ORDER by name"
+    query = sql.SQL("SELECT * FROM platforms ORDER by name")
 
     cursor = connection.cursor()
     cursor.execute(query)
@@ -175,10 +137,12 @@ def get_platforms():
 
 def get_platform(platform_id):
     
-    query = f"SELECT * FROM platforms WHERE id=%s"
+    query = sql.SQL("SELECT * FROM platforms WHERE id=%s")
 
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(query, (platform_id,))
+    params = (platform_id,)
+
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor.execute(query, params)
     result = cursor.fetchone()
     cursor.close()
 
@@ -187,10 +151,12 @@ def get_platform(platform_id):
 
 def get_category(category_id, content_type):
     
-    query = f"SELECT * FROM {content_type}_categories WHERE id=%s"
+    table = f"{content_type}_categories"
+    query = sql.SQL("SELECT * FROM {} WHERE id=%s").format(sql.Identifier(table))
+    params = (category_id,)
 
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cursor.execute(query, (int(category_id),))
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor.execute(query, params)
     result = cursor.fetchone()
     cursor.close()
 
@@ -205,44 +171,49 @@ def search(search_query, databases=None, platform_id=None):
     results = {}
 
     for database in databases:
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
+        where_clauses = [
+            sql.SQL("visible = TRUE"),
+            sql.SQL("LOWER(title) LIKE %s")
+        ]
+        params = [f"%{search_query.lower()}%"]
 
-        base_query = f"SELECT * FROM {database}"
+        if platform_id is not None:
+            where_clauses.append(sql.SQL("(platform = %s OR platform IS NULL)"))
+            params.append(platform_id)
 
-        conditions = {
-            "LOWER(title)": f"%{search_query.lower()}%",
-            "visible": True
-        }
-        if platform_id:
-            conditions["platform"] = [platform_id, None]
+        if where_clauses:
+            query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-        query, query_params = build_query(base_query, conditions, "ORDER BY title")
-        print(query)
-        print(query_params)
+        query += sql.SQL(" ORDER BY title")
         
-        cursor.execute(query, query_params)
-
-        db_results = cursor.fetchall()
+        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor.execute(query, params)
+        database_results = cursor.fetchall()
         cursor.close()
 
-        results = results | format_results(db_results, database)
+        results = results | format_results(database_results, database)
 
     return results
 
 
 def increment_counter(id, content_type):
+
+    query = sql.SQL("UPDATE {} SET visited_counter=visited_counter + 1 WHERE id=%s").format(sql.Identifier(content_type))
+    params = (id,)
+
     cursor = connection.cursor()
-    cursor.execute(f"UPDATE {content_type} SET visited_counter=visited_counter + 1 WHERE id=%s", (id,))
+    cursor.execute(query, params)
     connection.commit()
     cursor.close()
 
 def get_news(news_id=None):
     
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
     if not news_id:
-        cursor.execute("SELECT * FROM news ORDER BY id DESC")
+        cursor.execute(sql.SQL("SELECT * FROM news ORDER BY id DESC"))
     else:
-        cursor.execute("SELECT * FROM news WHERE id=%s", (news_id,))
+        cursor.execute(sql.SQL("SELECT * FROM news WHERE id=%s"), (news_id,))
     results = cursor.fetchall()
     cursor.close()
     if not results:

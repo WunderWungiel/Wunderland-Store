@@ -2,8 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 17.4 (Debian 17.4-1.pgdg120+2)
--- Dumped by pg_dump version 17.4 (Debian 17.4-1.pgdg120+2)
+\restrict hfNtRkg6piz3fe85OaN6vAWG3RS3aASE0gxcHBAeddtNgT87yG7cNzd86NL9Ili
+
+-- Dumped from database version 18.1
+-- Dumped by pg_dump version 18.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -516,6 +518,22 @@ ALTER TABLE ONLY public.apps
 
 
 --
+-- Name: apps_rating apps_rating_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.apps_rating
+    ADD CONSTRAINT apps_rating_content_id_user_id_key UNIQUE (content_id, user_id);
+
+
+--
+-- Name: apps_rating apps_rating_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.apps_rating
+    ADD CONSTRAINT apps_rating_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: games_categories games_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -529,6 +547,14 @@ ALTER TABLE ONLY public.games_categories
 
 ALTER TABLE ONLY public.games
     ADD CONSTRAINT games_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: games_rating games_rating_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.games_rating
+    ADD CONSTRAINT games_rating_content_id_user_id_key UNIQUE (content_id, user_id);
 
 
 --
@@ -561,6 +587,14 @@ ALTER TABLE ONLY public.themes_categories
 
 ALTER TABLE ONLY public.themes
     ADD CONSTRAINT themes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: themes_rating themes_rating_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.themes_rating
+    ADD CONSTRAINT themes_rating_content_id_user_id_key UNIQUE (content_id, user_id);
 
 
 --
@@ -646,4 +680,6 @@ ALTER TABLE ONLY public.themes_rating
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict hfNtRkg6piz3fe85OaN6vAWG3RS3aASE0gxcHBAeddtNgT87yG7cNzd86NL9Ili
 
