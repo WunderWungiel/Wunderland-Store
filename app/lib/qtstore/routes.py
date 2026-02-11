@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, current_app, send_from_directory, request, abort
+from flask import Blueprint, current_app, send_file, request, abort
 
 from .. import config
 from . import database as db
@@ -48,10 +48,10 @@ def file(content_type, app, ext):
         abort(404)
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "files")
+    path = os.path.join(current_app.root_path, "static", "content", "files", content_type, content['file'])
 
-    if content and os.path.isfile(os.path.join(path, content['file'])):
-        return send_from_directory(path, content['file'])
+    if content and os.path.isfile(path):
+        return send_file(path)
     else:
         abort(404)
 
@@ -63,9 +63,9 @@ def preview(content_type, app):
         return ""
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "store", content_type)
+    path = os.path.join(current_app.root_path, "static", "content", "icons", content_type, content['img'])
 
-    if content and os.path.isfile(os.path.join(path, content['img'])):
-        return send_from_directory(path, content['img'])
+    if content and os.path.isfile(path):
+        return send_file(path)
     else:
         abort(404)
