@@ -8,7 +8,7 @@ from .. import connection
 
 def generate_content(database, content_name, host):
 
-    platforms = ("s60", "s60v3")
+    platforms = ["s60", "s60v3"]
 
     content = ""
 
