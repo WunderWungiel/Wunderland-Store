@@ -10,83 +10,53 @@ from . import config
 
 store = Blueprint("store", __name__, template_folder="templates")
 
-@store.route("/app/<int:id>/rate", methods=["GET", "POST"])
-def _app_rate(id):
+@store.route("/<prefix>/<int:id>/rate", methods=["GET", "POST"])
+def _item_rate(prefix, id):
+
+    found = False
+    for content_type, content_type_properties in config['content_types'].items():
+        if content_type_properties['prefix'] == prefix:
+            found = True
+            break # Keep found content_type
+
+    if not found:
+        return redirect(url_for("news._root"))
+    
     if request.method == "GET":
-        return _rate_form(id, "apps")
+        return _rate_form(id, content_type)
     else:
-        return rate(id, "apps")
-
-
-@store.route("/game/<int:id>/rate", methods=["GET", "POST"])
-def _game_rate(id):
-    if request.method == "GET":
-        return _rate_form(id, "games")
-    else:
-        return rate(id, "games")
-
-
-@store.route("/theme/<int:id>/rate", methods=["GET", "POST"])
-def _theme_rate(id):
-    if request.method == "GET":
-        return _rate_form(id, "themes")
-    else:
-        return rate(id, "themes")
-
+        return rate(id, content_type)
 
 def _rate_form(id, content_type):
 
-    prefixes = {
-        "apps": "app",
-        "games": "game",
-        "themes": "theme"
-    }
+    prefix = config['content_types'][content_type]['prefix']
 
-    if not db.get_content(id=id, content_type=content_type):
-        return redirect(url_for(f"._{prefixes[content_type]}", id=id))
-
-    if not session.get('logged_in'):
-        return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
+    if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
+        return redirect(url_for("._item", prefix=prefix, id=id))
     
     app = db.get_content(id=id, content_type=content_type)
-    return render_template("rate.html", app=app, prefixes=prefixes)
-
+    return render_template("rate.html", app=app, prefix=prefix)
 
 def rate(id, content_type):
 
-    prefixes = {
-        "apps": "app",
-        "games": "game",
-        "themes": "theme"
-    }
+    if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
+        return redirect(url_for("._item", prefix=config['content_types'][content_type]['prefix'], id=id))
 
-    if not db.get_content(id=id, content_type=content_type):
-        return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
-
-    if not session.get('logged_in'):
-        return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
     rating = request.form.get("rating")
     if not rating:
-        return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
+        return redirect(url_for("._item", prefix=config['content_types'][content_type]['prefix'], id=id))
     
     db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type)
-    return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
+    return redirect(url_for("._item", prefix=config['content_types'][content_type]['prefix'], id=id))
 
+@store.route("/<prefix>/<int:id>")
+def _item(prefix, id):
 
-@store.route("/app/<int:id>")
-def _app(id):
-    return _item_page(id, content_type="apps")
-
-
-@store.route("/game/<int:id>")
-def _game(id):
-    return _item_page(id, content_type="games")
-
-
-@store.route("/theme/<int:id>")
-def _theme(id):
-    return _item_page(id, content_type="themes")
-
+    for content_type, content_type_properties in config['content_types'].items():
+        if content_type_properties['prefix'] == prefix:
+            return _item_page(id, content_type)
+        
+    return redirect(url_for("news._root"))
 
 def _item_page(id, content_type):
 
@@ -96,7 +66,7 @@ def _item_page(id, content_type):
         db.increment_counter(id, content_type)
 
     if not app:
-        return redirect(f"/{content_type}")
+        return redirect(url_for("._content_type", content_type=content_type))
 
     try:
         app['size'] = round(
@@ -132,27 +102,17 @@ def _item_page(id, content_type):
     elif content_type == "themes":
         template = "theme_page.html"
     else:
-        return redirect("news._root")
+        return redirect(url_for("news._root"))
 
     return render_template(template, app=app, recommended=recommended)
 
+@store.route("/<prefix>/<int:id>/images")
+def _item_images(prefix, id):
+    for content_type, content_type_properties in config['content_types'].items():
+        if content_type_properties['prefix'] == prefix:
+            return _item_images_page(id, content_type)
 
-@store.route("/app/<int:id>/images")
-def _app_images(id):
-    return _item_images(id, "apps")
-
-
-@store.route("/game/<int:id>/images")
-def _game_images(id):
-    return _item_images(id, "games")
-
-
-@store.route("/theme/<int:id>/images")
-def _theme_images(id):
-    return _item_images(id, "themes")
-
-
-def _item_images(id, content_type):
+def _item_images_page(id, content_type):
     app = db.get_content(id=id, content_type=content_type)
 
     screenshots = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
@@ -171,24 +131,10 @@ def _item_images(id, content_type):
     app['screenshots'] = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
     return render_template("app_images.html", app=app, content_type=content_type)
 
-
-@store.route("/apps/browse")
-def _apps_browse():
-    categories = db.get_categories("apps")
-    return render_template("apps_browse.html", categories=categories)
-
-
-@store.route("/games/browse")
-def _games_browse():
-    categories = db.get_categories("games")
-    return render_template("games_browse.html", categories=categories)
-
-
-@store.route("/themes/browse")
-def _themes_browse():
-    categories = db.get_categories("themes")
-    return render_template("themes_browse.html", categories=categories)
-
+@store.route("/<content_type>/browse")
+def _content_type_browse(content_type):
+    categories = db.get_categories(content_type)
+    return render_template(f"{content_type}_browse.html", categories=categories)
 
 @store.route("/search")
 def _search():
@@ -227,12 +173,10 @@ def _search():
         previous_page=previous_page
     )
 
-
 @store.route("/platform")
 def _platform():
     platforms = db.get_platforms()
     return render_template("platform.html", platforms=platforms)
-
 
 @store.route("/set_platform")
 def _set_platform():
@@ -255,6 +199,8 @@ def _set_platform():
 def _content_type(content_type):
     if content_type in config['content_types']:
         return _content(content_type)
+    else:
+        return redirect(url_for("news._root"))
 
 def _content(content_type):
 

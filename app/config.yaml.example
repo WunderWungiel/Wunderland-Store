@@ -15,6 +15,9 @@ admin_usernames:
 proxy: false
 api_prefix: "/api/v1"
 content_types:
-  - "apps"
-  - "games"
-  - "themes"
+  apps:
+    prefix: "app"
+  games:
+    prefix: "game"
+  themes:
+    prefix: "theme

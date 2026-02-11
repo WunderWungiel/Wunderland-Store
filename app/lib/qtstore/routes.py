@@ -60,7 +60,7 @@ def preview(content_type, app):
 
     content_type = content_type.lower()
     if content_type not in config['content_types']:
-        return ""
+        return abort(404)
 
     content = db.get_content(app, content_type)
     path = os.path.join(current_app.root_path, "static", "content", "icons", content_type, content['img'])

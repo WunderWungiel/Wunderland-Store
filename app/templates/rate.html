@@ -45,7 +45,7 @@
                     <div class="contentItem">
                         <h1>Rate {{ app['title'] }}</h1>
                         <div id="rateField">
-                            <form action="/{{ prefixes[app['content_type']] }}/{{ app['id'] }}/rate" method="post" id="rateForm">
+                            <form action="/{{ prefix }}/{{ app['id'] }}/rate" method="post" id="rateForm">
                                 <fieldset>
                                     <label>
                                         <input type="radio" name="rating" value="1">

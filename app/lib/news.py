@@ -47,7 +47,8 @@ def _news(news_id):
 
 @news.route("/")
 def __root():
-    return redirect("/home/")
+
+    return redirect(url_for("._root"))
 
 @news.route("/home")
 def _root():
@@ -57,17 +58,17 @@ def _root():
         return render_template("index.html", news=[], next_page=None, previous_page=None)
     
     page_id = request.args.get('page', default=1, type=int)
-
-    total_pages = math.ceil(len(news) / 10)
+    per_page = 10
+    total_pages = max(1, math.ceil(len(news) / per_page))
 
     if page_id < 1 or page_id > total_pages:
         return redirect(url_for("._root", page=1))
 
+    first_index = (page_id - 1) * per_page
+    last_index = first_index + per_page
+
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
-    
-    first_index = page_id - 1
-    last_index = first_index + 10
 
     news_to_show = news[first_index:last_index]
     
