@@ -48,10 +48,10 @@ def file(content_type, app, ext):
         abort(404)
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
+    path = os.path.join(current_app.root_path, "static", "content", "files")
 
-    if content and os.path.isfile(path):
-        return send_from_directory(path)
+    if content and os.path.isfile(os.path.join(path, content['file'])):
+        return send_from_directory(path, content['file'])
     else:
         abort(404)
 
@@ -63,9 +63,9 @@ def preview(content_type, app):
         return ""
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "store", content_type, content['img'])
+    path = os.path.join(current_app.root_path, "static", "content", "store", content_type)
 
-    if content and os.path.isfile(path):
-        return send_from_directory(path)
+    if content and os.path.isfile(os.path.join(path, content['img'])):
+        return send_from_directory(path, content['img'])
     else:
         abort(404)
