@@ -1,6 +1,6 @@
 import os
 
-from flask import Blueprint, current_app, send_from_directory, request
+from flask import Blueprint, current_app, send_from_directory, request, abort
 
 from .. import config
 from . import database as db
@@ -16,11 +16,11 @@ def description(content_type, app):
 
     content_type = content_type.lower()
     if content_type not in config['content_types']:
-        return ""
+        abort(404)
 
     content = db.get_content(app, content_type)
     if not content:
-        return ""
+        return abort(404)
 
     description = content['description']
     if not description:
@@ -45,12 +45,15 @@ def file(content_type, app, ext):
 
     content_type = content_type.lower()
     if content_type not in config['content_types']:
-        return ""
+        abort(404)
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "files"), content['file']
+    path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
 
-    return send_from_directory(path) if content else None
+    if content and os.path.isfile(path):
+        return send_from_directory(path)
+    else:
+        abort(404)
 
 @qtstore.route("/StoreData/<content_type>/<app>/preview.png")
 def preview(content_type, app):
@@ -60,6 +63,9 @@ def preview(content_type, app):
         return ""
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "store", content_type), content['img']
+    path = os.path.join(current_app.root_path, "static", "content", "store", content_type, content['img'])
 
-    return send_from_directory(path) if content else None
+    if content and os.path.isfile(path):
+        return send_from_directory(path)
+    else:
+        abort(404)
