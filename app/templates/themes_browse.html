@@ -43,7 +43,7 @@
 	                    <h2>Categories</h2>
 
                         <div id="categories">
-                            <a href="/themes" class="selected">All Themes</a><br />
+                            <a href="/themes" class="selected">All themes</a><br />
                             {% for category in categories %}
                             <a href="/themes/?categoryId={{ category[0] }}">{{ category[1] }}</a>{% if loop.index != categories|length %}<br />{% endif %}
                             {% endfor %}

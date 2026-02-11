@@ -110,19 +110,13 @@ def _theme(id):
 
 def _item_page(id, content_type):
 
-    prefixes = {
-        "apps": "applications",
-        "games": "games",
-        "themes": "themes"
-    }
-
     app = db.get_content(id=id, content_type=content_type)
 
     if app and ((is_logged() and session['username'] not in config['admin_usernames']) or not is_logged()):
         db.increment_counter(id, content_type)
 
     if not app:
-        return redirect(f"/{prefixes[content_type]}")
+        return redirect(f"/{content_type}")
 
     try:
         app['size'] = round(
@@ -198,10 +192,10 @@ def _item_images(id, content_type):
     return render_template("app_images.html", app=app, content_type=content_type)
 
 
-@store.route("/applications/browse")
-def _applications_browse():
+@store.route("/apps/browse")
+def _apps_browse():
     categories = db.get_categories("apps")
-    return render_template("applications_browse.html", categories=categories)
+    return render_template("apps_browse.html", categories=categories)
 
 
 @store.route("/games/browse")
@@ -226,7 +220,7 @@ def _search():
     results = db.search(query, platform_id=session['platform'])
 
     if len(results) == 0:
-        return render_template("applications_empty.html", category=None)
+        return render_template("apps_empty.html", category=None)
 
     
     page_id = request.args.get('pageId', default=1, type=int)
@@ -282,8 +276,8 @@ def _set_platform():
 
     return redirect(url_for("news._root"))
 
-@store.route("/applications")
-def _applications():
+@store.route("/apps")
+def _apps():
     return _content("apps")
 
 
@@ -299,31 +293,23 @@ def _themes():
 
 def _content(content_type):
 
-    prefixes = {
-        "apps": "applications",
-        "games": "games",
-        "themes": "themes"
-    }
-    
-    content_type_prefix = prefixes.get(content_type)
-
     category_id = request.args.get('categoryId')
     category_id = int(category_id) if category_id else None
     category_name = db.get_category(category_id, content_type)['name'] if category_id else None
 
     if category_id and not category_name:
-        return redirect(f"/{content_type_prefix}/")
+        return redirect(f"/{content_type}/")
 
     all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])        
 
     if not all_apps:
-        return render_template(f"{content_type_prefix}_empty.html", category=category_name)
+        return render_template(f"{content_type}_empty.html", category=category_name)
     page_id = request.args.get('pageId', default=1, type=int)
 
     total_pages = math.ceil(len(all_apps) / 10)
 
     if page_id < 1 or page_id > total_pages:
-        redirect_url = f"/{content_type_prefix}/?pageId=1"
+        redirect_url = f"/{content_type}/?pageId=1"
         if category_id:
             redirect_url += f"&categoryId={category_id}"
         return redirect(redirect_url)

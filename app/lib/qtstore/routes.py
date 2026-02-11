@@ -6,8 +6,6 @@ from . import database as db
 
 qtstore = Blueprint("qtstore", __name__, template_folder="templates")
 
-content_types = ("apps", "games", "themes")
-
 @qtstore.route("/StoreData/storeIndex.xml")
 def index():
 

@@ -44,15 +44,15 @@
 
                 <div id="navigation">
                     <a class="first" href="/home/">Home</a> <b>|</b>
-                    <a href="/applications/" class="selected">Apps</a> <b>|</b>
+                    <a href="/apps/" class="selected">Apps</a> <b>|</b>
                     <a href="/games/">Games</a> <b>|</b>
                     <a href="/themes/">Themes</a>
                 </div> <!-- end navigation -->
                 
-                {% if category is defined and category != None %}
-                <div id="crumbNav">Applications&nbsp;&gt; {{ category }}&nbsp;<a href="/applications/browse/">Change</a></div>
+                {% if category != None %}
+                <div id="crumbNav">Applications&nbsp;&gt; {{ category }}&nbsp;<a href="/apps/browse/">Change</a></div>
                 {% else %}
-                <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/applications/browse/">Change</a></div>
+                <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/apps/browse/">Change</a></div>
                 {% endif %}
                 
             </div> <!-- end header -->
@@ -60,18 +60,63 @@
             <div id="views">
                 <div class="view">
                     
-                    <br />
-                    <table class="contentList" cellspacing="0" width='100%' style="margin-left: 5px;">
+                    <table class="contentList" cellspacing="0" width='100%' >
+                        {% for app in apps %}
+                        {% if loop.index % 2 == 0 %}
                         <tr class="contentItem ">
-                            <td class="contentType">
-                                <h2 class="title">No apps (yet)</h2>
+                        {% else %}
+                        <tr class="contentItem  alt">
+                        {% endif %}
+                        
+                            <td class="thumbnail">
+                                <img src="/static/content/icons/{{ app['img'] }}" width="46" height="46" alt="{{ app['title'] }}" />
                             </td>
+                        
+                            <td class="contentType">
+                                <h2 class="title">
+                                    <a href="/app/{{ app['id'] }}/">{{ app['title'] }}</a>
+                                </h2>{% if category == None %}{{ app['category_name'] }}{% endif %}
+                            </td>
+                        
+                            <td class="contentRatingPrice">
+                                <div class="rating">
+                                    {% for i in range(app['rating']) %}
+                                    <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
+                                    {% endfor %}
+                                    {% if app['rating'] != 5 %}
+                                    {% for i in range(app['rating'], 5) %}
+                                    <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        {% endfor %}
                         </tr>
                     </table>
 
-                    </div><!-- end Content Stream -->
+                </div> <!-- end Content Stream -->
 
-                    <div class="beacon"></div>
+                {% if previous_page != None or next_page != None %}
+                <p class="pagination">
+                {% if previous_page != None %}
+                {% if category_id != None %}
+                    <a href="/apps/?categoryId={{ category_id }}&pageId={{ previous_page }}">Previous</a>
+                {% else %}
+                    <a href="/apps/?pageId={{ previous_page }}">Previous</a>
+                {% endif %}
+                {% endif %}
+                {% if next_page != None %}
+                {% if category_id != None %}
+                    <a href="/apps/?categoryId={{ category_id }}&pageId={{ next_page }}">Next</a>
+                {% else %}
+                <a href="/apps/?pageId={{ next_page }}">Next</a>
+                {% endif %}
+                {% endif %}
+                </p>
+                {% endif %}
+
+                <div class="beacon"></div>
+
                 </div>
             </div> <!-- end views -->
 
@@ -88,10 +133,9 @@
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
                     <a href="/home/">Home</a><br />
-                    <a href="/applications/" class="selected">Apps</a><br />
+                    <a href="/apps/" class="selected">Apps</a><br />
                     <a href="/games/">Games</a><br />
                     <a href="/themes/">Themes</a><br />
-                </div> <!-- end navigation -->
             </div>
                         
             <div id="footer">
