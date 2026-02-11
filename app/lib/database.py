@@ -127,7 +127,7 @@ def get_platforms():
 
     query = sql.SQL("SELECT * FROM platforms ORDER by name")
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query)
     results = cursor.fetchall()
     cursor.close()

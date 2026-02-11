@@ -66,7 +66,7 @@ def _get_content_types():
 
 @api.route("/get_platforms")
 def _get_platforms():
-    return [{"id": platform[0], "name": platform[1]} for platform in db.get_platforms()]
+    return db.get_platforms()
 
 @api.route("/<content_type>/content_visit")
 def _content_visit(content_type):

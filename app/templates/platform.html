@@ -43,9 +43,17 @@
 	                    <h2>Platforms</h2>
 
                         <div id="categories">
-                            <a href="{{ url_for('store._set_platform', platform=None) }}">All platforms</a><br />
+                            <a href="{{ url_for('store._set_platform', platform=None) }}">
+                                {% if session['platform'] is none %}
+                                <b>All platforms</b>
+                                {% else %}
+                                All platforms
+                                {% endif %}
+                            </a><br />
                             {% for platform in platforms %}
-                            <a href="{{ url_for('store._set_platform', platform=platform[0]) }}">{{ platform[1] }}</a>{% if loop.index != platforms|length %}<br />{% endif %}
+                                <a href="{{ url_for('store._set_platform', platform=platform['id']) }}">
+                                    {% if session['platform'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
+                                </a>{% if not loop.last %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
 
