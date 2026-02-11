@@ -2,11 +2,10 @@ from flask import Blueprint, render_template, request, redirect, session, url_fo
 from itsdangerous import URLSafeTimedSerializer
 import re
 
-from . import email as email_system
-from . import auth_database as auth_db
+from .. import email as email_system
+from . import database as db
 
 auth = Blueprint("auth", __name__, template_folder="templates")
-
 
 @auth.before_request
 def check_platform():
@@ -15,7 +14,7 @@ def check_platform():
         session_logout()
         return
     else:
-        user = auth_db.get_user(id=user_id)
+        user = db.get_user(id=user_id)
         if user['banned']:
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
@@ -79,8 +78,8 @@ def _check_login():
     if not email or not password:
         return redirect("/login")
     
-    result = auth_db.check_credentials(email, password)
-    user = auth_db.get_user(email=email)
+    result = db.check_credentials(email, password)
+    user = db.get_user(email=email)
 
     if result:
         if not user['confirmed']:
@@ -91,7 +90,7 @@ def _check_login():
             return render_template('auth/banned.html', reason=user['banned_reason'])
 
         session['loggedIn'] = True
-        session['id'] = auth_db.get_user_id(email=email)
+        session['id'] = db.get_user(email=email)['id']
         session.permanent = True
         return redirect(url_for("news._root"))
     
@@ -108,13 +107,13 @@ def _confirm_email(token):
         return render_template("auth/confirm_email.html", message='The confirmation link is invalid or has expired.')
     if email is None:
         return render_template("auth/confirm_email.html", message='The confirmation link is invalid or has expired.')
-    user = auth_db.get_user(email=email)
+    user = db.get_user(email=email)
     if user is None:
         return render_template("auth/confirm_email.html", message='Account got deleted or doesn\'t exist.')
     if user['confirmed']:
         return render_template("auth/confirm_email.html", message='Account already confirmed. Please login.')
     else:
-        auth_db.confirm_user(email)
+        db.confirm_user(email)
         return render_template("auth/confirm_email.html", message='You have confirmed your account. Thanks! <br /><br /> <input type="button" class="Btn" onclick="window.location.href=\'/\'" value="Return to home page"></input>')
 
 
@@ -136,12 +135,12 @@ def _check_register():
     if not re.match(r'^(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$', email):
         return redirect(url_for("._register", message="Wrong e-mail address."))
 
-    if auth_db.email_exists(email):
+    if db.email_exists(email):
         return redirect(url_for("._register", message="Account already exists."))
-    if auth_db.username_exists(username):
+    if db.username_exists(username):
         return redirect(url_for("._register", message="Username already taken."))
 
-    auth_db.register(email, password, username)
+    db.register(email, password, username)
     token = generate_confirmation_token(email)
 
     text_message = f'''Please confirm your email by clicking the link below:
@@ -180,11 +179,11 @@ def _change_password():
     
     user_id = session['id']
 
-    email = auth_db.get_user_email(id=user_id)
-    if not auth_db.check_credentials(email, current_password):
+    email = db.get_user(id=user_id)['email']
+    if not db.check_credentials(email, current_password):
         return redirect(url_for("._profile", message="Wrong current password!"))
     
-    auth_db.change_password(user_id, new_password)
+    db.change_password(user_id, new_password)
 
     return redirect(url_for("._profile", message="Password changed!"))
 

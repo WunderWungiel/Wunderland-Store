@@ -5,9 +5,9 @@ import math
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
 
 from . import database as db
-from . import auth_database as auth_db
+from .auth import database as auth_db
 from . import config
-from .auth import session_logout, is_logged
+from .auth.routes import session_logout, is_logged
 
 store = Blueprint("store", __name__, template_folder="templates")
 
@@ -268,11 +268,11 @@ def _platform():
 @store.route("/set_platform")
 def _set_platform():
     platform = request.args.get('platform')
-    if not platform:
-        return redirect(url_for("news._root"))
-    elif platform is None:
+    if platform is None:
         session['platform'] = None
         session.permanent = True
+        return redirect(url_for("news._root"))
+    elif not platform:
         return redirect(url_for("news._root"))
     elif not db.get_platform(platform):
         return redirect(url_for("news._root"))

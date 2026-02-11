@@ -47,7 +47,7 @@ def format_results(results, content_type):
 
 def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
-    query = sql.SQL("SELECT * FROM {}".format(sql.Identifier(content_type)))
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
     where_clauses = [sql.SQL("visible = TRUE")]
     params = []
 
@@ -58,7 +58,7 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
         where_clauses.append(sql.SQL("category = %s"))
         params.append(category_id)
     if platform_id is not None:
-        where_clauses.append(sql.SQL("(platform = %s OR platform IS NULL]"))
+        where_clauses.append(sql.SQL("(platform = %s OR platform IS NULL)"))
         params.append(platform_id)
 
     if where_clauses:

@@ -26,7 +26,7 @@
                                 {% else %}
                                 {% set platform_name = get_platform(session['platform'])['name'] %}
                                 {% endif %}
-                                <span><a href="/platform_chooser">Platform</a>: <b>{{ platform_name }}</b></span>
+                                <span><a href="/platform">Platform</a>: <b>{{ platform_name }}</b></span>
                                 |
                                 {% if session['loggedIn'] is defined %}
                                 <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>

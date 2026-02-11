@@ -4,10 +4,10 @@ from xml.etree.ElementTree import Element, SubElement
 from urllib.parse import quote
 
 from flask import request
-import psycopg2
-import psycopg2.extras
+from psycopg2 import sql
+from psycopg2.extras import RealDictCursor
 
-from . import connection
+from .. import connection
 
 
 def version():
@@ -23,7 +23,6 @@ def version():
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
-
 def changelog():
     root = Element("xml")
     message = Element("message")
@@ -37,7 +36,6 @@ def changelog():
     ET.indent(root)
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
-
 
 # !!! Replace right side and comments with YOUR categories' IDs!
 def applist_to_wunderland(category_id):
@@ -66,7 +64,6 @@ def applist_to_wunderland(category_id):
     }
 
     return categories.get(category_id)
-
 
 # !!! Replace left side and comments with YOUR categories' IDs!
 def wunderland_to_applist(category_id, content_type):
@@ -100,7 +97,6 @@ def wunderland_to_applist(category_id, content_type):
     }
 
     return categories.get(content_type).get(category_id)
-
 
 def format_results(results, content_type, widget=False):
 
@@ -220,144 +216,79 @@ def format_results(results, content_type, widget=False):
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
-
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
 
     platforms = ("s60", "symbian3")
-    cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    if id:
-        if id.isdigit():
-            id = int(id)
-            ids = None
-        else:
-            try:
-                ids = [int(id) for id in id.split(",")]
-            except:
-                ids = None
-            id = None
-    else:
-        id, ids = None, None
-    
     start = int(start) if start else None
     count = int(count) if count else None
     
-    if category:
-        category = int(category)
+    if category is not None:
         new_category, content_type = applist_to_wunderland(category)
     else:
         new_category = None
 
-    if latest:
-        latest = True if latest == "true" else False
-    if widget:
-        widget = True if widget == "true" else False
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+    where_clauses = [sql.SQL("visible = true")]
+    params = []
 
-    query = f"SELECT * FROM {content_type}"
-    args = []
-    where = False
+    if new_category is not None:
+        where_clauses.append(sql.SQL("category = %s"))
+        params.append(new_category)
 
-    if new_category is not None and new_category != "all":
-        query += " WHERE category=%s"
-        args.append(new_category)
-        where = True
     if platforms:
-        if not where:
-            query += " WHERE"
-            where = True
+        where_clauses.append(sql.SQL("(platform = ANY(%s) OR platform IS NULL)"))
+        params.append(platforms)
+
+    if id is not None:
+        if isinstance(id, int):
+            where_clauses.append(sql.SQL("id = %s"))
+            params.append(id)
         else:
-            query += " AND"
-        query += " ("
-        for platform in platforms:
-            query += "platform=%s OR "
-            args.append(platform)
-        query += "platform IS NULL)"
-    if id or ids:
-        if not where:
-            query += " WHERE"
-            where = True
-        else:
-            query += " AND"
-        if id:
-            query += " id=%s"
-            args.append(id)
-        elif ids:
-            query += " ("
-            for i, id in enumerate(ids):
-                if i != len(ids)-1:
-                    query += "id=%s OR "
-                else:
-                    query += "id=%s)"
-                args.append(id)
-    if start:
-        if not where:
-            query += " WHERE"
-            where = True
-        else:
-            query += " AND"
-        query += " id > %s"
-        args.append(start)
-    if search:
-        if not where:
-            query += " WHERE"
-            where = True
-        else:
-            query += " AND"
-        query += " title iLIKE %s"
-        args.append(f"%{search}%")
-    
-    if not where:
-        query += " WHERE"
-        where = True
-    else:
-        query += " AND"
-    query += " visible=true"
+            where_clauses.append(sql.SQL("id = ANY(%s)"))
+            params.append(id)
+
+    if start is not None:
+        where_clauses.append(sql.SQL("id > %s"))
+        params.append(start)
+
+    if search is not None:
+        where_clauses.append(sql.SQL("title iLIKE %s"))
+        params.append(f"%{search}%")
+
+    if where_clauses:
+        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
     if search:
-        
         all_results = []
 
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(query, tuple(args))
-        results = cursor.fetchall()
-        cursor.close()
-        for i, result in enumerate(results):
-            results[i]["content_type"] = "apps"
-        all_results += results
+        for table in ("apps", "games", "themes"):
+            query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
+        
+            if where_clauses:
+                query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-        query = query.replace("FROM apps", "FROM games", 1)
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            for i, result in enumerate(results):
+                results[i]["content_type"] = table
 
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(query, tuple(args))
-        results = cursor.fetchall()
-        cursor.close()
-        for i, result in enumerate(results):
-            results[i]["content_type"] = "games"
-        all_results += results
+            all_results += results
 
-        query = query.replace("FROM games", "FROM themes", 1)
+        xml = format_results(all_results, None, widget)
 
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cursor.execute(query, tuple(args))
-        results = cursor.fetchall()
-        cursor.close()
-        for i, result in enumerate(results):
-            results[i]["content_type"] = "themes"
-        all_results += results
+        return xml
 
-        results_xml = format_results(all_results, None, widget)
-
-        return results_xml
-
-    if latest and count:
-        query += " ORDER BY id DESC LIMIT %s"
-        args.append(count)
+    if latest is not None and count is not None:
+        query += sql.SQL(" ORDER BY id DESC LIMIT %s")
+        params.append(count)
     else:
-        query += " ORDER BY id DESC"
+        query += sql.SQL(" ORDER BY id DESC")
 
-    cursor.execute(query, args)
+    cursor.execute(query, params)
     results = cursor.fetchall()
     cursor.close()
 
-    results_xml = format_results(results, content_type, widget)
-    return results_xml
+    xml = format_results(results, content_type, widget)
+    return xml

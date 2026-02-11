@@ -2,8 +2,11 @@ from datetime import datetime
 
 from flask import Flask, send_from_directory
 
-from lib import config, api_blueprint, auth_blueprint, store_blueprint, applist_blueprint, qtstore_blueprint, news_blueprint
 from lib import database as db
+from lib import config, api_blueprint, store_blueprint, news_blueprint
+from lib.applist import applist_blueprint
+from lib.auth import auth_blueprint
+from lib.qtstore import qtstore_blueprint
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -17,9 +20,9 @@ if config["proxy"]:
     )
 
 app.register_blueprint(api_blueprint)
-app.register_blueprint(auth_blueprint)
 app.register_blueprint(store_blueprint)
 app.register_blueprint(applist_blueprint)
+app.register_blueprint(auth_blueprint)
 app.register_blueprint(qtstore_blueprint)
 app.register_blueprint(news_blueprint)
 

@@ -2,19 +2,16 @@ import os
 
 from flask import Blueprint, current_app, send_from_directory, request
 
-from . import qtstore_database as db
+from . import database as db
 
 qtstore = Blueprint("qtstore", __name__, template_folder="templates")
 
 content_types = ("apps", "games", "themes")
 
-
 @qtstore.route("/StoreData/storeIndex.xml")
-def store_index():
+def index():
 
-    content = db.qtstore_generator()
-    return content
-
+    return db.index()
 
 @qtstore.route("/StoreData/<content_type>/<app>/descr.txt")
 def description(content_type, app):
@@ -23,7 +20,7 @@ def description(content_type, app):
     if content_type not in content_types:
         return ""
 
-    content = db.qtstore_content(app, content_type)
+    content = db.get_content(app, content_type)
     if not content:
         return ""
 
@@ -45,7 +42,6 @@ def description(content_type, app):
 
     return description
 
-
 @qtstore.route("/StoreData/<content_type>/<app>/file<ext>")
 def file(content_type, app, ext):
 
@@ -53,11 +49,10 @@ def file(content_type, app, ext):
     if content_type not in content_types:
         return ""
 
-    content = db.qtstore_content(app, content_type)
+    content = db.get_content(app, content_type)
     path = os.path.join(current_app.root_path, "static", "content", "files"), content['file']
 
     return send_from_directory(path) if content else None
-
 
 @qtstore.route("/StoreData/<content_type>/<app>/preview.png")
 def preview(content_type, app):
@@ -66,7 +61,7 @@ def preview(content_type, app):
     if content_type not in content_types:
         return ""
 
-    content = db.qtstore_content(app, content_type)
+    content = db.get_content(app, content_type)
     path = os.path.join(current_app.root_path, "static", "content", "store", content_type), content['img']
 
     return send_from_directory(path) if content else None
