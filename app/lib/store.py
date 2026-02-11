@@ -231,11 +231,11 @@ def _search():
 
     ids = list(results.keys())
 
+    first_index = (page_id - 1) * per_page
+    last_index = first_index + per_page
+
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
-
-    first_index = page_id - 1
-    last_index = first_index + 10
 
     apps_to_show = [results[id] for id in ids[first_index:last_index]]
 
