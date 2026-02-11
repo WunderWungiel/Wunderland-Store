@@ -4,7 +4,7 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         {% if category is defined and category != None %}
-        <title>Apps :: {{ category }} | Wunderland Store</title>
+        <title>Apps :: {{ category['name'] }}  | Wunderland Store</title>
         {% else %}
         <title>Apps | Wunderland Store</title>
         {% endif %}
@@ -50,7 +50,7 @@
                 </div> <!-- end navigation -->
                 
                 {% if category != None %}
-                <div id="crumbNav">Applications&nbsp;&gt; {{ category }}&nbsp;<a href="/apps/browse/">Change</a></div>
+                <div id="crumbNav">Applications&nbsp;&gt; {{ category['name'] }} &nbsp;<a href="/apps/browse/">Change</a></div>
                 {% else %}
                 <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/apps/browse/">Change</a></div>
                 {% endif %}
@@ -100,16 +100,16 @@
                 <p class="pagination">
                 {% if previous_page != None %}
                 {% if category_id != None %}
-                    <a href="/apps/?categoryId={{ category_id }}&pageId={{ previous_page }}">Previous</a>
+                    <a href="/apps/?category_id={{ category_id }}&page={{ previous_page }}">Previous</a>
                 {% else %}
-                    <a href="/apps/?pageId={{ previous_page }}">Previous</a>
+                    <a href="/apps/?page={{ previous_page }}">Previous</a>
                 {% endif %}
                 {% endif %}
                 {% if next_page != None %}
                 {% if category_id != None %}
-                    <a href="/apps/?categoryId={{ category_id }}&pageId={{ next_page }}">Next</a>
+                    <a href="/apps/?category_id={{ category_id }}&page={{ next_page }}">Next</a>
                 {% else %}
-                <a href="/apps/?pageId={{ next_page }}">Next</a>
+                <a href="/apps/?page={{ next_page }}">Next</a>
                 {% endif %}
                 {% endif %}
                 </p>

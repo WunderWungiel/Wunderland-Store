@@ -4,7 +4,7 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         {% if category is defined and category != None %}
-        <title>Games :: {{ category }} | Wunderland Store</title>
+        <title>Games :: {{ category['name'] }}  | Wunderland Store</title>
         {% else %}
         <title>Games | Wunderland Store</title>
         {% endif %}
@@ -49,8 +49,8 @@
                     <a href="/themes/">Themes</a>
                 </div> <!-- end navigation -->
                 
-                {% if category is defined and category != None%}
-                <div id="crumbNav">Games&nbsp;&gt; {{ category }}&nbsp;<a href="/games/browse/">Change</a></div>
+                {% if category is defined and category != None %}
+                <div id="crumbNav">Games&nbsp;&gt; {{ category['name'] }}&nbsp;<a href="/games/browse/">Change</a></div>
                 {% else %}
                 <div id="crumbNav">Games&nbsp;&gt; All&nbsp;<a href="/games/browse/">Change</a></div>
                 {% endif %}

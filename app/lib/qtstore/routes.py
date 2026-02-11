@@ -2,20 +2,20 @@ import os
 
 from flask import Blueprint, current_app, send_from_directory, request
 
+from .. import config
 from . import database as db
 
 qtstore = Blueprint("qtstore", __name__, template_folder="templates")
 
 @qtstore.route("/StoreData/storeIndex.xml")
 def index():
-
     return db.index()
 
 @qtstore.route("/StoreData/<content_type>/<app>/descr.txt")
 def description(content_type, app):
 
     content_type = content_type.lower()
-    if content_type not in content_types:
+    if content_type not in config['content_types']:
         return ""
 
     content = db.get_content(app, content_type)
@@ -44,7 +44,7 @@ def description(content_type, app):
 def file(content_type, app, ext):
 
     content_type = content_type.lower()
-    if content_type not in content_types:
+    if content_type not in config['content_types']:
         return ""
 
     content = db.get_content(app, content_type)
@@ -56,7 +56,7 @@ def file(content_type, app, ext):
 def preview(content_type, app):
 
     content_type = content_type.lower()
-    if content_type not in content_types:
+    if content_type not in config['content_types']:
         return ""
 
     content = db.get_content(app, content_type)

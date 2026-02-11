@@ -56,12 +56,12 @@ def _root():
     if not news:
         return render_template("index.html", news=[], next_page=None, previous_page=None)
     
-    page_id = request.args.get('pageId', default=1, type=int)
+    page_id = request.args.get('page', default=1, type=int)
 
     total_pages = math.ceil(len(news) / 10)
 
     if page_id < 1 or page_id > total_pages:
-        return redirect(url_for("._root", pageId=1))
+        return redirect(url_for("._root", page=1))
 
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None

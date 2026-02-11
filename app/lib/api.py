@@ -14,7 +14,7 @@ def _get_content(content_type):
     id = request.args.get("id")
     platform = request.args.get("platform")
     platforms = platform.split(",") if platform else None
-    category_id = request.args.get("categoryId")
+    category_id = request.args.get("category_id")
 
     arguments = {}
 

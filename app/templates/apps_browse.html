@@ -45,7 +45,7 @@
                         <div id="categories">
                             <a href="/apps" class="selected">All applications</a><br />
                             {% for category in categories %}
-                            <a href="/apps/?categoryId={{ category[0] }}">{{ category[1] }}</a>{% if loop.index != categories|length %}<br />{% endif %}
+                            <a href="/apps/?category_id={{ category[0] }}">{{ category[1] }}</a>{% if loop.index != categories|length %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
 

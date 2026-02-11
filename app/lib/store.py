@@ -219,16 +219,17 @@ def _search():
     
     results = db.search(query, platform_id=session['platform'])
 
-    if len(results) == 0:
+    if not results:
         return render_template("apps_empty.html", category=None)
-
     
-    page_id = request.args.get('pageId', default=1, type=int)
-
-    total_pages = math.ceil(len(results) / 10)
+    page_id = request.args.get('page', default=1, type=int)
+    per_page = 10
+    total_pages = max(1, math.ceil(len(results) / per_page))
 
     if page_id < 1 or page_id > total_pages:
-        return redirect(url_for("._search", q=query, pageId=1))
+        return redirect(url_for("._search", q=query, page=1))
+
+    ids = list(results.keys())
 
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
@@ -236,25 +237,19 @@ def _search():
     first_index = page_id - 1
     last_index = first_index + 10
 
-    ids = list(results.keys())
-    apps_to_show = ids[first_index:last_index]
-    apps_to_show = [results[id] for id in apps_to_show]
+    apps_to_show = [results[id] for id in ids[first_index:last_index]]
 
-    if not results:
-        return ""
-    else:
-        return render_template(
-            "search.html",
-            results=apps_to_show,
-            search_query=query,
-            next_page=next_page,
-            previous_page=previous_page
-        )
+    return render_template(
+        "search.html",
+        results=apps_to_show,
+        search_query=query,
+        next_page=next_page,
+        previous_page=previous_page
+    )
 
 
 @store.route("/platform")
 def _platform():
-
     platforms = db.get_platforms()
     return render_template("platform.html", platforms=platforms)
 
@@ -276,61 +271,49 @@ def _set_platform():
 
     return redirect(url_for("news._root"))
 
-@store.route("/apps")
-def _apps():
-    return _content("apps")
-
-
-@store.route("/games")
-def _games():
-    return _content("games")
-
-
-@store.route("/themes")
-def _themes():
-    return _content("themes")
-
+@store.route("/<content_type>")
+def _content_type(content_type):
+    if content_type in config['content_types']:
+        return _content(content_type)
 
 def _content(content_type):
 
-    category_id = request.args.get('categoryId')
+    category_id = request.args.get('category_id')
     category_id = int(category_id) if category_id else None
-    category_name = db.get_category(category_id, content_type)['name'] if category_id else None
 
-    if category_id and not category_name:
-        return redirect(f"/{content_type}/")
+    category = db.get_category(category_id, content_type) if category_id else None
 
-    all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])        
+    if category_id and not category:
+        return redirect(url_for("._content_type", content_type=content_type))
 
+    all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])
     if not all_apps:
-        return render_template(f"{content_type}_empty.html", category=category_name)
-    page_id = request.args.get('pageId', default=1, type=int)
-
-    total_pages = math.ceil(len(all_apps) / 10)
+        return render_template(f"{content_type}_empty.html", category=category)
+    
+    page_id = request.args.get('page', default=1, type=int)
+    per_page = 10
+    total_pages = max(1, math.ceil(len(all_apps) / per_page))
 
     if page_id < 1 or page_id > total_pages:
-        redirect_url = f"/{content_type}/?pageId=1"
+        arguments = {'page': 1}
         if category_id:
-            redirect_url += f"&categoryId={category_id}"
-        return redirect(redirect_url)
+            arguments['category_id'] = category_id
+        return redirect(url_for('._content_type', content_type=content_type, **arguments))
 
-    if len(all_apps) == 0:
-        return render_template(f"{content_type}_empty.html", category=category_name)
+    ids = list(all_apps.keys())
+
+    first_index = (page_id - 1) * per_page
+    last_index = first_index + per_page
 
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
 
-    first_index = (page_id - 1) * 10
-    last_index = first_index + 10
-
-    ids = list(all_apps.keys())
-    apps_to_show = ids[first_index:last_index]
-    apps_to_show = [all_apps[app_id] for app_id in apps_to_show]
+    apps_to_show = [all_apps[app_id] for app_id in ids[first_index:last_index]]
 
     return render_template(
         f'{content_type}.html',
         apps=apps_to_show,
-        category=category_name,
+        category=category,
         category_id=category_id,
         next_page=next_page,
         previous_page=previous_page

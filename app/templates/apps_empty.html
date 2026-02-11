@@ -4,7 +4,7 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         {% if category is defined and category != None %}
-        <title>Apps :: {{ category }} | Wunderland Store</title>
+        <title>Apps :: {{ category['name'] }}  | Wunderland Store</title>
         {% else %}
         <title>Apps | Wunderland Store</title>
         {% endif %}
@@ -50,7 +50,7 @@
                 </div> <!-- end navigation -->
                 
                 {% if category is defined and category != None %}
-                <div id="crumbNav">Applications&nbsp;&gt; {{ category }}&nbsp;<a href="/apps/browse/">Change</a></div>
+                <div id="crumbNav">Applications&nbsp;&gt; {{ category['name'] }}&nbsp;<a href="/apps/browse/">Change</a></div>
                 {% else %}
                 <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/apps/browse/">Change</a></div>
                 {% endif %}
