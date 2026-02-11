@@ -35,7 +35,7 @@
                             <form action="/check_register/" method="POST" id="loginForm" onsubmit="return validateRegisterForm()">
                                 <fieldset>
 
-                                    {% if message is defined and message != None %}
+                                    {% if message is defined and message is not none %}
                                     <h1>{{ message }}</h1>
                                     {% endif %}
 

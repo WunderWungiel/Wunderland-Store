@@ -62,7 +62,7 @@
 
                         <br />
 
-                        {% if share is defined and share != None %}
+                        {% if share is defined and share is not none %}
                         <h2 class="share">Share: <a href="{{ request.url }}">{{ request.url }}</a> (link)</h2>
                         {% endif %}    
 

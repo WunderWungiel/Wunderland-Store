@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        {% if category is defined and category != None %}
+        {% if category is defined and category is not none %}
         <title>Games :: {{ category['name'] }}  | Wunderland Store</title>
         {% else %}
         <title>Games | Wunderland Store</title>
@@ -49,7 +49,7 @@
                     <a href="/themes/">Themes</a>
                 </div> <!-- end navigation -->
 
-                {% if category != None %}
+                {% if category is not none %}
                 <div id="crumbNav">Games&nbsp;&gt; {{ category['name'] }} &nbsp;<a href="/games/browse/">Change</a></div>
                 {% else %}
                 <div id="crumbNav">Games&nbsp;&gt; All&nbsp;<a href="/games/browse/">Change</a></div>
@@ -75,7 +75,7 @@
                             <td class="contentType">
                                 <h2 class="title">
                                     <a href="/game/{{ app['id'] }}/">{{ app['title'] }}</a>
-                                </h2>{% if category == None %}{{ app['category_name'] }}{% endif %}
+                                </h2>{% if category is none %}{{ app['category_name'] }}{% endif %}
                             </td>
 
                             <td class="contentRatingPrice">
@@ -94,17 +94,17 @@
                         </tr>
                     </table>
 
-                {% if previous_page != None or next_page != None %}
+                {% if previous_page is not none or next_page is not none %}
                 <p class="pagination">
-                {% if previous_page != None %}
-                {% if category_id != None %}
+                {% if previous_page is not none %}
+                {% if category_id is not none %}
                     <a href="/games/?category_id={{ category_id }}&page={{ previous_page }}">Previous</a>
                 {% else %}
                     <a href="/games/?page={{ previous_page }}">Previous</a>
                 {% endif %}
                 {% endif %}
-                {% if next_page != None %}
-                {% if category_id != None %}
+                {% if next_page is not none %}
+                {% if category_id is not none %}
                     <a href="/games/?category_id={{ category_id }}&page={{ next_page }}">Next</a>
                 {% else %}
                     <a href="/games/?page={{ next_page }}">Next</a>

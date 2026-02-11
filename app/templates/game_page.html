@@ -59,7 +59,7 @@
                                     <div>
                                         <p class="type">
                                             <b>Size: </b>{{ app['size'] }} MB<br />
-                                            {% if app['platform_name'] != None %}
+                                            {% if app['platform_name'] is not none %}
                                             <b>Platform</b>: {{ app['platform_name'] }}<br />
                                             {% endif %}
                                             <b>Publisher</b>: {{ app['publisher'] }}<br />
@@ -116,7 +116,7 @@
                         <br />
                         {% endif %}
         
-                        {% if recommended != None %}
+                        {% if recommended is not none %}
                         <div class="related">
                             <h3>Here are items similar to {{ app['title'] }}:</h3>
 

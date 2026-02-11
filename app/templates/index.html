@@ -76,12 +76,12 @@
 
                 <!-- </div> end Content Stream -->
 
-                    {% if previous_page != None and next_page != None %}
+                    {% if previous_page is not none and next_page is not none %}
                     <p class="pagination">
-                    {% if previous_page != None %}
+                    {% if previous_page is not none %}
                         <a href="/home/?page={{ previous_page }}">Previous</a>
                     {% endif %}
-                    {% if next_page != None %}
+                    {% if next_page is not none %}
                         <a href="/home/?page={{ next_page }}">Next</a>
                     {% endif %}
                     </p>

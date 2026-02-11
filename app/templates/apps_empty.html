@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        {% if category is defined and category != None %}
+        {% if category is defined and category is not none %}
         <title>Apps :: {{ category['name'] }}  | Wunderland Store</title>
         {% else %}
         <title>Apps | Wunderland Store</title>
@@ -49,7 +49,7 @@
                     <a href="/themes/">Themes</a>
                 </div> <!-- end navigation -->
                 
-                {% if category is defined and category != None %}
+                {% if category is defined and category is not none %}
                 <div id="crumbNav">Applications&nbsp;&gt; {{ category['name'] }}&nbsp;<a href="/apps/browse/">Change</a></div>
                 {% else %}
                 <div id="crumbNav">Applications&nbsp;&gt; All&nbsp;<a href="/apps/browse/">Change</a></div>

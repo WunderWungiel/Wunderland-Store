@@ -34,8 +34,8 @@
                             <form action="/check_login/" method="POST" id="loginForm" onsubmit="return validateLoginForm()">
                                 <fieldset>
 
-                                    {% if message != None %}
-                                    <p style="{% if color != None %}color: {{ color }};{% endif %}font-weight: bold;">{{ message }}</p>
+                                    {% if message is not none %}
+                                    <p style="{% if color is not none %}color: {{ color }};{% endif %}font-weight: bold;">{{ message }}</p>
                                     {% endif %}
 
                                     <label for="email" id="email_label">E-mail address: <span class="required">*</span></label>
