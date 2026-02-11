@@ -223,6 +223,8 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
 
     if id is not None and id.isdigit():
         id = int(id)
+    elif "," in id:
+        id = [int(id) for id in id.split(",")]
     
     start = int(start) if start else None
     count = int(count) if count else None
