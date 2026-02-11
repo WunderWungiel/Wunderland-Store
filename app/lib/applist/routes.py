@@ -23,8 +23,6 @@ def _applist():
     widget = request.args.get("widget")
     category = request.args.get("category", type=int)
 
-    try
-
     return db.get_content(id=id, start=start, latest=latest, count=count, search=search, widget=widget, category=category, content_type="apps")
 
 @applist.route("/version.xml")
