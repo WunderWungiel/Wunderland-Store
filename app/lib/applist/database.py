@@ -40,7 +40,7 @@ def changelog():
 # !!! Replace right side and comments with YOUR categories' IDs!
 def applist_to_wunderland(category_id):
     categories = {
-        0: ("all", "apps"),  # All apps
+        0: (None, "apps"),  # All apps
         1: (2, "apps"),  # Weather & GPS
         2: (3, "apps"),  # Office
         3: (4, "apps"),  # Camera, photos, videos
@@ -53,7 +53,7 @@ def applist_to_wunderland(category_id):
         11: (12, "apps"),  # Extras
         12: (10, "apps"),  # Tools
         13: (1, "apps"),  # Other apps
-        20: ("all", "games"),  # All games
+        20: (None, "games"),  # All games
         21: (2, "games"),  # Action
         22: (3, "games"),  # Adventure
         23: (6, "games"),  # Puzzles & cards
@@ -221,6 +221,9 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     platforms = ["s60", "symbian3"]
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
+    if id is not None and id.isdigit():
+        id = int(id)
+    
     start = int(start) if start else None
     count = int(count) if count else None
     

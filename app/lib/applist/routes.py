@@ -16,12 +16,14 @@ def _applist_download():
 @applist.route("/applist.php")
 def _applist():
     id = request.args.get("id")
-    start = request.args.get("start")
-    latest = request.args.get("latest")
-    count = request.args.get("count")
+    start = request.args.get("start", type=int)
+    latest = request.args.get("latest", type=int)
+    count = request.args.get("count", type=int)
     search = request.args.get("search")
     widget = request.args.get("widget")
-    category = request.args.get("category")
+    category = request.args.get("category", type=int)
+
+    try
 
     return db.get_content(id=id, start=start, latest=latest, count=count, search=search, widget=widget, category=category, content_type="apps")
 
