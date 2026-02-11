@@ -5,6 +5,7 @@ import math
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
 
 from . import database as db
+from .auth import database as auth_db
 from . import config
 
 store = Blueprint("store", __name__, template_folder="templates")
@@ -91,7 +92,7 @@ def _item_page(id, content_type):
 
     app = db.get_content(id=id, content_type=content_type)
 
-    if app and ((session.get('logged_in') and session['username'] not in config['admin_usernames']) or not session.get('logged_in')):
+    if app and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
         db.increment_counter(id, content_type)
 
     if not app:
