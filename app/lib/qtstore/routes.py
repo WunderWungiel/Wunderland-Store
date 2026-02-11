@@ -48,7 +48,7 @@ def file(content_type, app, ext):
         abort(404)
 
     content = db.get_content(app, content_type)
-    path = os.path.join(current_app.root_path, "static", "content", "files", content_type, content['file'])
+    path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
 
     if content and os.path.isfile(path):
         return send_file(path)
