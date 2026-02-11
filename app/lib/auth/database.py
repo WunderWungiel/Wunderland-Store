@@ -13,6 +13,7 @@ def _generate_password(user_password):
 
 
 def get_user(id=None, username=None, email=None):
+
     query = sql.SQL("SELECT * FROM users")
     where_clauses = [sql.SQL("active = true")]
     params = []
@@ -20,15 +21,16 @@ def get_user(id=None, username=None, email=None):
     if email is not None:
         where_clauses.append(sql.SQL("email = %s"))
         params.append(email)
-    elif username is not None:
+    if username is not None:
         where_clauses.append(sql.SQL("username = %s"))
         params.append(username)
-    elif id is not None:
+    if id is not None:
         where_clauses.append(sql.SQL("id = %s"))
         params.append(id)
-    else:
-        raise TypeError
-    
+
+    if where_clauses:
+        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+
     cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query, params)
     result = cursor.fetchone()

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, session, url_for, current_app
+from flask import Blueprint, render_template, request, redirect, session, url_for, current_app, session
 from itsdangerous import URLSafeTimedSerializer
 import re
 
@@ -6,19 +6,6 @@ from .. import email as email_system
 from . import database as db
 
 auth = Blueprint("auth", __name__, template_folder="templates")
-
-@auth.before_request
-def check_platform():
-    user_id = session.get('id')
-    if not user_id:
-        session_logout()
-        return
-    else:
-        user = db.get_user(id=user_id)
-        if user['banned']:
-            session_logout()
-            return render_template('auth/banned.html', reason=user['banned_reason'])
-
 
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
@@ -39,30 +26,22 @@ def confirm_token(token, expiration=3600):
 
 
 def session_logout():
-    session.pop('loggedIn', None)
-    session.pop('id', None)
+    session.pop('logged_in', None)
+    session.pop('user_id', None)
     session.permanent = True
-
-
-def is_logged():
-    if session.get('loggedIn'):
-        return True
-    else:
-        return False
-
 
 @auth.route("/login/")
 def _login():
-    if session.get("loggedIn") is True:
-        return redirect("/home/")
+    if session.get("logged_in") is True:
+        return redirect(url_for("news._root"))
     
     return render_template('auth/login.html.jinja', message=request.args.get('message'), color=request.args.get('color'))
 
 
 @auth.route("/register")
 def _register():
-    if session.get("loggedIn") is True:
-        return redirect("/home/")
+    if session.get("logged_in") is True:
+        return redirect(url_for("news._root"))
     
     return render_template('auth/register.html', message=request.args.get('message'))
 
@@ -70,13 +49,13 @@ def _register():
 @auth.route("/check_login", methods=["GET", "POST"])
 def _check_login():
     if request.method == "GET":
-        return redirect("/login/")
+        return redirect(url_for("._login"))
 
     email = request.form.get("email")
     password = request.form.get("password")
 
     if not email or not password:
-        return redirect("/login")
+        return redirect(url_for("._login"))
     
     result = db.check_credentials(email, password)
     user = db.get_user(email=email)
@@ -89,8 +68,8 @@ def _check_login():
             session_logout()
             return render_template('auth/banned.html', reason=user['banned_reason'])
 
-        session['loggedIn'] = True
-        session['id'] = db.get_user(email=email)['id']
+        session['logged_in'] = True
+        session['user_id'] = db.get_user(email=email)['id']
         session.permanent = True
         return redirect(url_for("news._root"))
     
@@ -120,7 +99,7 @@ def _confirm_email(token):
 @auth.route("/check_register", methods=["GET", "POST"])
 def _check_register():
     if request.method == "GET":
-        return redirect("/register/")
+        return redirect(url_for("._register"))
 
     email = request.form.get("email")
     username = request.form.get("username")
@@ -171,13 +150,13 @@ def _change_password():
     current_password = request.form.get("current_password")
     new_password = request.form.get("new_password")
 
-    if not is_logged():
-        return redirect("/")
+    if not session.get('logged_in'):
+        return redirect(url_for("news._root"))
 
     if not current_password or not new_password:
         return redirect(url_for("._profile", message="Fill in the form!"))
     
-    user_id = session['id']
+    user_id = session['user_id']
 
     email = db.get_user(id=user_id)['email']
     if not db.check_credentials(email, current_password):
@@ -190,8 +169,7 @@ def _change_password():
     
 @auth.route("/profile")
 def _profile():
-
-    if not is_logged():
+    if not session.get('logged_in'):
         session_logout()
         return redirect(url_for("._login"))
     
@@ -201,4 +179,4 @@ def _profile():
 @auth.route("/logout")
 def _logout():
     session_logout()
-    return redirect("/")
+    return redirect(url_for("news._root"))

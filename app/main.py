@@ -30,7 +30,12 @@ app.register_blueprint(news_blueprint)
 @app.context_processor
 def utility_processor():
 
-    return dict(now=datetime.now(), get_platform=db.get_platform)
+    def get_user(user_id):
+        user = auth_db.get_user(user_id)
+        user.pop('password', None)
+        return user
+
+    return dict(now=datetime.now(), get_platform=db.get_platform, get_user=get_user)
 
 @app.before_request
 def check_platform_id():

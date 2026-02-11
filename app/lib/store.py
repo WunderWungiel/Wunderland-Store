@@ -6,7 +6,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 
 from . import database as db
 from . import config
-from .auth.routes import is_logged
 
 store = Blueprint("store", __name__, template_folder="templates")
 
@@ -45,7 +44,7 @@ def _rate_form(id, content_type):
     if not db.get_content(id=id, content_type=content_type):
         return redirect(url_for(f"._{prefixes[content_type]}", id=id))
 
-    if not is_logged():
+    if not session.get('logged_in'):
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
     
     app = db.get_content(id=id, content_type=content_type)
@@ -63,13 +62,13 @@ def rate(id, content_type):
     if not db.get_content(id=id, content_type=content_type):
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
 
-    if not is_logged():
+    if not session.get('logged_in'):
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
     rating = request.form.get("rating")
     if not rating:
         return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
     
-    db.rate(rating, user_id=session['id'], content_id=id, content_type=content_type)
+    db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type)
     return redirect(url_for(f"store._{prefixes[content_type]}", id=id))
 
 
@@ -92,7 +91,7 @@ def _item_page(id, content_type):
 
     app = db.get_content(id=id, content_type=content_type)
 
-    if app and ((is_logged() and session['username'] not in config['admin_usernames']) or not is_logged()):
+    if app and ((session.get('logged_in') and session['username'] not in config['admin_usernames']) or not session.get('logged_in')):
         db.increment_counter(id, content_type)
 
     if not app:

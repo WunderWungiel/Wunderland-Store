@@ -69,8 +69,6 @@ def get_content(name, content_type):
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
     query += sql.SQL(" LIMIT 1")
 
-    print(query, where_clauses, params)
-
     cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query, params)
     result = cursor.fetchone()

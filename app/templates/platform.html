@@ -27,9 +27,10 @@
                                 {% set platform_name = get_platform(session['platform'])['name'] %}
                                 {% endif %}
                                 <span><a href="/platform">Platform</a>: <b>{{ platform_name }}</b></span>
-                                {% if session['loggedIn'] is defined %}
+                                {% if session['logged_in'] is defined %}
                                 |
-                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                {% set username = get_user(session['user_id'])['username'] %}
+                                <span>Logged in as: <a href="/profile">{{ username }}</a></span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -66,7 +67,7 @@
             <div id="bottom"></div>
                         
             <div id="footer">
-                {% if session['loggedIn'] is not defined %}
+                {% if session['logged_in'] is not defined %}
                 <a class="accountStatusChange" href="/login">Sign in</a> |
                 {% else %}
                 <a class="accountStatusChange" href="/logout">Log out</a> |

@@ -24,7 +24,8 @@
                                 <a id='logoImg' href="/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
-                                <span>Logged in as: <a href="/profile">{{ session['username'] }}</a></span>
+                                {% set username = get_user(session['user_id'])['username'] %}
+                                <span>Logged in as: <a href="/profile">{{ username }}</a></span>
                             </td>
                         </tr>
                     </table>
@@ -39,8 +40,10 @@
                         <h1>{{ message }}</h1>
                         {% endif %}
 
-                        <h1>Username: {{ session['username'] }}</h1>
-                        <h1>Email: {{ session['email'] }}</h1>
+                        {% set user = get_user(session['user_id']) %}
+
+                        <h1>Username: {{ user['username'] }}</h1>
+                        <h1>Email: {{ user['email'] }}</h1>
 
                         <h1><b>Change password:</b></h1>
 
