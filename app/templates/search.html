@@ -106,17 +106,15 @@
                     </div> <!-- end contentList -->
                     <!-- end results -->
                 
-                    {% if previous_page != None and next_page != None %}
-                    <div class="pagination">
-                        <p class="pagination">
-                    {% if previous_page != None %}
-                            <a href="/search/?q={{ search_query}}&page={{ previous_page }}">Previous</a>
+                    {% if previous_page is not none or next_page is not none %}
+                    <p class="pagination">
+                    {% if previous_page is not none %}
+                        <a href="/search/?q={{ search_query}}&page={{ previous_page }}">Previous</a>
                     {% endif %}
-                    {% if next_page != None %}
-                            <a href="/search/?q={{ search_query}}&page={{ next_page }}">Next</a>
+                    {% if next_page is not none %}
+                        <a href="/search/?q={{ search_query}}&page={{ next_page }}">Next</a>
                     {% endif %}
-                        </p>
-                    </div>
+                    </p>
                     {% endif %}
 
                     <!-- end results -->

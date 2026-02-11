@@ -278,8 +278,7 @@ def _content_type(content_type):
 
 def _content(content_type):
 
-    category_id = request.args.get('category_id')
-    category_id = int(category_id) if category_id else None
+    category_id = request.args.get('category_id', default=1, type=int)
 
     category = db.get_category(category_id, content_type) if category_id else None
 
