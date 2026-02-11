@@ -218,7 +218,7 @@ def format_results(results, content_type, widget=False):
 
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
 
-    platforms = ("s60", "symbian3")
+    platforms = ["s60", "symbian3"]
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     start = int(start) if start else None
