@@ -221,10 +221,11 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     platforms = ["s60", "symbian3"]
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    if id is not None and id.isdigit():
-        id = int(id)
-    elif "," in id:
-        id = [int(id) for id in id.split(",")]
+    if id is not None:
+        if id.isdigit():
+            id = int(id)
+        elif "," in id:
+            id = [int(id) for id in id.split(",")]
     
     start = int(start) if start else None
     count = int(count) if count else None
