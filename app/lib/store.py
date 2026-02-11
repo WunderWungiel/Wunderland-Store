@@ -315,7 +315,7 @@ def _content(content_type):
         return redirect(redirect_url)
 
     if len(all_apps) == 0:
-        return render_template(f"{content_type_prefix}_empty.html", category=category_name)
+        return render_template(f"{content_type}_empty.html", category=category_name)
 
     next_page = page_id + 1 if page_id < total_pages else None
     previous_page = page_id - 1 if page_id > 1 else None
@@ -328,7 +328,7 @@ def _content(content_type):
     apps_to_show = [all_apps[app_id] for app_id in apps_to_show]
 
     return render_template(
-        f'{content_type_prefix}.html',
+        f'{content_type}.html',
         apps=apps_to_show,
         category=category_name,
         category_id=category_id,
