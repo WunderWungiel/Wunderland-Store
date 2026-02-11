@@ -5,30 +5,10 @@ import math
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
 
 from . import database as db
-from .auth import database as auth_db
 from . import config
-from .auth.routes import session_logout, is_logged
+from .auth.routes import is_logged
 
 store = Blueprint("store", __name__, template_folder="templates")
-
-
-@store.before_request
-def check_platform_id():
-    session.permanent = True
-
-    platform_id = session.get('platform')
-    if not platform_id:
-        session['platform'] = None
-    user_id = session.get('user_id')
-
-    if not user_id:
-        session_logout()
-        return
-    else:
-        user = auth_db.get_user(id=user_id)
-        if user['banned']:
-            session_logout()
-            return render_template('auth/banned.html', reason=user['banned_reason'])
 
 @store.route("/app/<int:id>/rate", methods=["GET", "POST"])
 def _app_rate(id):

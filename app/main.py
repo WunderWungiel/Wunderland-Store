@@ -1,11 +1,12 @@
 from datetime import datetime
 
-from flask import Flask, send_from_directory
+from flask import Flask, session, render_template, send_from_directory
 
 from lib import database as db
 from lib import config, api_blueprint, store_blueprint, news_blueprint
 from lib.applist import applist_blueprint
-from lib.auth import auth_blueprint
+from lib.auth import auth_blueprint, database as auth_db
+from lib.auth.routes import session_logout
 from lib.qtstore import qtstore_blueprint
 
 app = Flask(__name__)
@@ -30,6 +31,24 @@ app.register_blueprint(news_blueprint)
 def utility_processor():
 
     return dict(now=datetime.now(), get_platform=db.get_platform)
+
+@app.before_request
+def check_platform_id():
+    session.permanent = True
+
+    platform_id = session.get('platform')
+    if not platform_id:
+        session['platform'] = None
+    user_id = session.get('user_id')
+
+    if not user_id:
+        session_logout()
+        return
+    else:
+        user = auth_db.get_user(id=user_id)
+        if user['banned']:
+            session_logout()
+            return render_template('auth/banned.html', reason=user['banned_reason'])
 
 @app.route("/robots.txt")
 def _robots():
