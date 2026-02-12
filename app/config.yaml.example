@@ -14,6 +14,13 @@ admin_usernames:
   - ADMIN_USERNAME
 proxy: false
 api_prefix: "/api/v1"
+platforms:
+  qtstore:
+    - 's60v3'
+    - 's60'
+  applist:
+    - 's60'
+    - 'symbian3'
 content_types:
   apps:
     prefix: "app"

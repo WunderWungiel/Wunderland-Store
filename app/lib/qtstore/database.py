@@ -5,16 +5,16 @@ from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
 
 from .. import connection
+from .. import config
 
 def generate_content(database, content_name, host):
 
     content = ""
-    platforms = ["s60", "s60v3"]
 
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
-    if platforms:
+    if config['platforms']['qtstore']:
         query = sql.SQL("""
             WITH RECURSIVE platform_tree AS (
                 SELECT id, parent_id
@@ -31,7 +31,7 @@ def generate_content(database, content_name, host):
         """).format(sql.Identifier(database))
 
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
-        params.append(platforms)
+        params.append(config['platforms']['qtstore'])
 
     else:
         query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))

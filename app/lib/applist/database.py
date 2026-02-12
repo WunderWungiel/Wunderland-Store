@@ -213,8 +213,6 @@ def format_results(results, content_type=None, widget=False):
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
-
-    platforms = ["s60", "symbian3"]
     
     if category is not None:
         new_category, content_type = applist_to_wunderland(category)
@@ -224,7 +222,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
-    if platforms:
+    if config['platforms']['applist']:
         query = sql.SQL("""
             WITH RECURSIVE platform_tree AS (
                 SELECT id, parent_id
@@ -241,7 +239,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         """).format(sql.Identifier(content_type))
 
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
-        params.append(platforms)
+        params.append(config['platforms']['applist'])
 
     else:
         query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
@@ -276,7 +274,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
 
         for table in ("apps", "games", "themes"):
 
-            if platforms:
+            if config['platforms']['applist']:
                 query = sql.SQL("""
                     WITH RECURSIVE platform_tree AS (
                         SELECT id, parent_id
