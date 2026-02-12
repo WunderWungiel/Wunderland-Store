@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict hfNtRkg6piz3fe85OaN6vAWG3RS3aASE0gxcHBAeddtNgT87yG7cNzd86NL9Ili
+\restrict 2cNb0QGIMLrFArVcEFFKS16vwdFrZQMOEHDKLkJ5p7EbpOUq6H6jikmoeNv3mgi
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -276,7 +276,8 @@ ALTER SEQUENCE public.news_id_seq OWNED BY public.news.id;
 
 CREATE TABLE public.platforms (
     id character varying NOT NULL,
-    name character varying NOT NULL
+    name character varying NOT NULL,
+    parent_id character varying
 );
 
 
@@ -654,6 +655,14 @@ ALTER TABLE ONLY public.games_rating
 
 
 --
+-- Name: platforms platforms_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.platforms
+    ADD CONSTRAINT platforms_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.platforms(id);
+
+
+--
 -- Name: themes themes_category_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -681,5 +690,5 @@ ALTER TABLE ONLY public.themes_rating
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hfNtRkg6piz3fe85OaN6vAWG3RS3aASE0gxcHBAeddtNgT87yG7cNzd86NL9Ili
+\unrestrict 2cNb0QGIMLrFArVcEFFKS16vwdFrZQMOEHDKLkJ5p7EbpOUq6H6jikmoeNv3mgi
 

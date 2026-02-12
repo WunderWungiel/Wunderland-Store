@@ -8,19 +8,37 @@ from .. import connection
 
 def generate_content(database, content_name, host):
 
+    content = ""
     platforms = ["s60", "s60v3"]
 
-    content = ""
-
-    query = sql.SQL("SELECT title, file FROM {}").format(sql.Identifier(database))
-    where_clauses = []
+    where_clauses = [sql.SQL("visible = true")]
     params = []
 
-    where_clauses.append(sql.SQL("(platform = ANY(%s) OR platform IS NULL)"))
-    params.append(platforms)
+    if platforms:
+        query = sql.SQL("""
+            WITH RECURSIVE platform_tree AS (
+                SELECT id, parent_id
+                FROM platforms
+                WHERE id = ANY(%s)
+
+                UNION ALL
+
+                SELECT parent.id, parent.parent_id
+                FROM platforms parent
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+            )
+            SELECT * FROM {}
+        """).format(sql.Identifier(database))
+
+        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        params.append(platforms)
+
+    else:
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+    
     query += sql.SQL(" ORDER BY id DESC")
 
     cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -30,7 +48,7 @@ def generate_content(database, content_name, host):
 
     for row in results:
 
-        path = os.path.join(current_app.root_path, "static", "content", "files", row['file'])
+        path = os.path.join(current_app.static_folder, "content", "files", row['file'])
 
         try:
             timestamp = int(os.path.getmtime(path))
@@ -58,16 +76,41 @@ def index():
 
 def get_content(name, content_type):
 
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
-    where_clauses = [sql.SQL("VISIBLE = true"), sql.SQL("title LIKE %s")]
-    params = [name]
+    platforms = ["s60", "s60v3"]
 
-    where_clauses.append(sql.SQL("(platform = ANY(%s) OR platform IS NULL)"))
-    params.append(["s60", "s60v3"])
+    where_clauses = [sql.SQL("visible = true")]
+    params = []
+
+    if platforms:
+        query = sql.SQL("""
+            WITH RECURSIVE platform_tree AS (
+                SELECT id, parent_id
+                FROM platforms
+                WHERE id = ANY(%s)
+
+                UNION ALL
+
+                SELECT parent.id, parent.parent_id
+                FROM platforms parent
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+            )
+            SELECT * FROM {}
+        """).format(sql.Identifier(content_type))
+
+        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        params.append(platforms)
+
+    else:
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+
+    where_clauses.append(sql.SQL("title LIKE %s"))
+    params.append(name)
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
     query += sql.SQL(" LIMIT 1")
+
+    print(query)
 
     cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query, params)

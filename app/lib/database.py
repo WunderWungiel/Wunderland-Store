@@ -8,7 +8,6 @@ from flask import current_app
 
 from . import connection
 
-
 def format_results(results, content_type):
 
     final_results = {}
@@ -44,12 +43,32 @@ def format_results(results, content_type):
 
     return final_results
 
-
 def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
     where_clauses = [sql.SQL("visible = TRUE")]
     params = []
+
+    if platform_id is not None:
+        query = sql.SQL("""
+            WITH RECURSIVE platform_tree AS (
+                SELECT id, parent_id
+                FROM platforms
+                WHERE id = %s
+
+                UNION ALL
+
+                SELECT parent.id, parent.parent_id
+                FROM platforms parent
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+            )
+            SELECT * FROM {}
+        """).format(sql.Identifier(content_type))
+
+        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        params.append(platform_id)
+
+    else:
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
 
     if id is not None:
         where_clauses.append(sql.SQL("id = %s"))
@@ -57,9 +76,6 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
     if category_id is not None:
         where_clauses.append(sql.SQL("category = %s"))
         params.append(category_id)
-    if platform_id is not None:
-        where_clauses.append(sql.SQL("(platform = %s OR platform IS NULL)"))
-        params.append(platform_id)
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
@@ -74,11 +90,10 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
 
     results = format_results(results, content_type)
 
-    if id:
+    if id is not None:
         return results.get(id)
     else:
         return results
-
 
 def get_rating(content_id, content_type):
     
@@ -91,7 +106,6 @@ def get_rating(content_id, content_type):
     cursor.close()
 
     return int(result["rating"])
-
 
 def rate(rating, user_id, content_id, content_type):
 
@@ -109,7 +123,6 @@ def rate(rating, user_id, content_id, content_type):
     connection.commit()
     cursor.close()
 
-
 def get_categories(content_type):
 
     table = f"{content_type}_categories"
@@ -122,7 +135,6 @@ def get_categories(content_type):
 
     return results
 
-
 def get_platforms():
 
     query = sql.SQL("SELECT * FROM platforms ORDER by name")
@@ -133,7 +145,6 @@ def get_platforms():
     cursor.close()
 
     return results
-
 
 def get_platform(platform_id):
     
@@ -148,7 +159,6 @@ def get_platform(platform_id):
 
     return result
 
-
 def get_category(category_id, content_type):
     
     table = f"{content_type}_categories"
@@ -161,7 +171,6 @@ def get_category(category_id, content_type):
     cursor.close()
 
     return result
-
 
 def search(search_query, databases=None, platform_id=None):
 
@@ -195,7 +204,6 @@ def search(search_query, databases=None, platform_id=None):
         results = results | format_results(database_results, database)
 
     return results
-
 
 def increment_counter(id, content_type):
 

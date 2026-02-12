@@ -221,17 +221,34 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     else:
         new_category = None
 
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
     where_clauses = [sql.SQL("visible = true")]
     params = []
+
+    if platforms:
+        query = sql.SQL("""
+            WITH RECURSIVE platform_tree AS (
+                SELECT id, parent_id
+                FROM platforms
+                WHERE id = ANY(%s)
+
+                UNION ALL
+
+                SELECT parent.id, parent.parent_id
+                FROM platforms parent
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+            )
+            SELECT * FROM {}
+        """).format(sql.Identifier(content_type))
+
+        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        params.append(platforms)
+
+    else:
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
 
     if new_category is not None:
         where_clauses.append(sql.SQL("category = %s"))
         params.append(new_category)
-
-    if platforms:
-        where_clauses.append(sql.SQL("(platform = ANY(%s) OR platform IS NULL)"))
-        params.append(platforms)
 
     if id is not None:
         if isinstance(id, int):
@@ -246,7 +263,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         params.append(start)
 
     if search is not None:
-        where_clauses.append(sql.SQL("title iLIKE %s"))
+        where_clauses.append(sql.SQL("title ILIKE %s"))
         params.append(f"%{search}%")
 
     if where_clauses:
@@ -258,7 +275,24 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
         all_results = []
 
         for table in ("apps", "games", "themes"):
-            query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
+
+            if platforms:
+                query = sql.SQL("""
+                    WITH RECURSIVE platform_tree AS (
+                        SELECT id, parent_id
+                        FROM platforms
+                        WHERE id = ANY(%s)
+
+                        UNION ALL
+
+                        SELECT parent.id, parent.parent_id
+                        FROM platforms parent
+                        JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                    )
+                    SELECT * FROM {}
+                """).format(sql.Identifier(table))
+            else:
+                query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
         
             if where_clauses:
                 query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
