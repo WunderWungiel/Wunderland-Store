@@ -180,16 +180,34 @@ def search(search_query, databases=None, platform_id=None):
     results = {}
 
     for database in databases:
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
-        where_clauses = [
-            sql.SQL("visible = TRUE"),
-            sql.SQL("LOWER(title) LIKE %s")
-        ]
-        params = [f"%{search_query.lower()}%"]
+
+        where_clauses = [sql.SQL("visible = TRUE")]
+        params = []
 
         if platform_id is not None:
-            where_clauses.append(sql.SQL("(platform = %s OR platform IS NULL)"))
+            query = sql.SQL("""
+                WITH RECURSIVE platform_tree AS (
+                    SELECT id, parent_id
+                    FROM platforms
+                    WHERE id = %s
+
+                    UNION ALL
+
+                    SELECT parent.id, parent.parent_id
+                    FROM platforms parent
+                    JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                )
+                SELECT * FROM {}
+            """).format(sql.Identifier(database))
+
+            where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
             params.append(platform_id)
+
+        else:
+            query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
+
+        where_clauses.append(sql.SQL("LOWER(title) LIKE %s"))
+        params.append(f"%{search_query.lower()}%")
 
         if where_clauses:
             query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
