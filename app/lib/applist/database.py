@@ -8,6 +8,7 @@ from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
 
 from .. import connection
+from .. import config
 
 
 def version():
@@ -69,7 +70,7 @@ def applist_to_wunderland(category_id):
 def wunderland_to_applist(category_id, content_type):
     categories = {
         "apps": {
-            "all": 0,  # All apps
+            None: 0,  # All apps
             2: 1,  # Weather & GPS
             3: 2,  # Camera, photos, videos
             4: 3,  # Emulator
@@ -83,7 +84,7 @@ def wunderland_to_applist(category_id, content_type):
             1: 13  # Other apps
         },
         "games": {
-            "all": 20,  # All games
+            None: 20,  # All games
             2: 21,  # Action
             3: 22,  # Adventure
             6: 23,  # Puzzles & cards
@@ -99,10 +100,6 @@ def wunderland_to_applist(category_id, content_type):
     return categories.get(content_type).get(category_id)
 
 def format_results(results, content_type, widget=False):
-
-    if not results:
-        results = []
-
     root = Element("applist")
     minversion = Element("minversion")
     minversion.text = "1.0.298"
@@ -110,13 +107,12 @@ def format_results(results, content_type, widget=False):
 
     for row in results:
 
-        if content_type:
-            c = content_type
-        else:
-            c = row['content_type']
-        prefix = c.rstrip("s")
+        if not content_type:
+            content_type = row['content_type']
 
-        row = {k: v.strip() if isinstance(v, str) else v for (k, v) in row.items()}
+        prefix = config['content_types'][content_type]['prefix']
+
+        row = {key: value.strip() if isinstance(value, str) else value for (key, value) in row.items()}
 
         app = Element("app")
 
@@ -150,7 +146,7 @@ def format_results(results, content_type, widget=False):
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             icon = SubElement(app, "icon")
-            icon.text = f"http://{request.host}/static/content/icons/" + os.path.join(c, row['img'])
+            icon.text = f"http://{request.host}/static/content/icons/" + os.path.join(content_type, row['img'])
             version = SubElement(app, "version")
             version.text = row['version']
             versionstore = SubElement(app, "versionstore")
@@ -160,7 +156,7 @@ def format_results(results, content_type, widget=False):
             versiondatestore = SubElement(app, "versiondatestore")
             versiondateunsigned = SubElement(app, "versiondateunsigned")
             category = SubElement(app, "category")
-            category.text = str(wunderland_to_applist(row['category'], c))
+            category.text = str(wunderland_to_applist(row['category'], content_type))
             language = SubElement(app, "language")
             language.text = "EN"
             
@@ -192,13 +188,13 @@ def format_results(results, content_type, widget=False):
             image4 = SubElement(app, "image4")
             image5 = SubElement(app, "image5")
             if row['image1']:
-                image1.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image1']}"
+                image1.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image1']}"
             if row['image2']:
-                image2.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image2']}"
+                image2.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image2']}"
             if row['image3']:
-                image3.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image3']}"
+                image3.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image3']}"
             if row['image4']:
-                image4.text = f"http://{request.host}/static/content/screenshots/{c}/{row['image4']}"
+                image4.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image4']}"
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
@@ -219,16 +215,6 @@ def format_results(results, content_type, widget=False):
 def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
 
     platforms = ["s60", "symbian3"]
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
-
-    if id is not None:
-        if id.isdigit():
-            id = int(id)
-        elif "," in id:
-            id = [int(id) for id in id.split(",")]
-    
-    start = int(start) if start else None
-    count = int(count) if count else None
     
     if category is not None:
         new_category, content_type = applist_to_wunderland(category)
@@ -266,6 +252,8 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
     if search:
         all_results = []
 
@@ -282,7 +270,8 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
 
             all_results += results
 
-        xml = format_results(all_results, None, widget)
+        cursor.close()
+        xml = format_results(all_results, widget=widget)
 
         return xml
 

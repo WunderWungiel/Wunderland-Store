@@ -17,11 +17,17 @@ def _applist_download():
 def _applist():
     id = request.args.get("id")
     start = request.args.get("start", type=int)
-    latest = request.args.get("latest", type=int)
+    latest = request.args.get("latest")
     count = request.args.get("count", type=int)
     search = request.args.get("search")
     widget = request.args.get("widget")
     category = request.args.get("category", type=int)
+
+    if id is not None:
+        if id.isdigit():
+            id = int(id)
+        elif "," in id:
+            id = [int(id) for id in id.split(",")]
 
     return db.get_content(id=id, start=start, latest=latest, count=count, search=search, widget=widget, category=category, content_type="apps")
 
