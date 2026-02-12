@@ -29,7 +29,10 @@ def _applist():
         elif "," in id:
             id = [int(id) for id in id.split(",")]
 
-    return db.get_content(id=id, start=start, latest=latest, count=count, search=search, widget=widget, category=category, content_type="apps")
+    if search is None:
+        return db.get_content(id=id, start=start, latest=latest, count=count, widget=widget, category=category, content_type="apps")
+    else:
+        return db.search(search, start=start)
 
 @applist.route("/version.xml")
 @applist.route("/aversion.xml")

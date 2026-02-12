@@ -10,7 +10,6 @@ from psycopg2.extras import RealDictCursor
 from .. import connection
 from .. import config
 
-
 def version():
     root = Element("xml")
     message = Element("message")
@@ -212,37 +211,89 @@ def format_results(results, content_type=None, widget=False):
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
-def get_content(id=None, category=None, start=None, latest=None, count=None, search=None, widget=None, content_type=None):
+def search(search_query, start=None):
+
+    cte = sql.SQL("""
+        WITH RECURSIVE platform_tree AS (
+            SELECT id, parent_id
+            FROM platforms
+            WHERE id = ANY(%s)
+
+            UNION ALL
+
+            SELECT parent.id, parent.parent_id
+            FROM platforms parent
+            JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+        )
+    """)
+
+    results = []
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
+
+    for table in config['content_types'].keys():
+
+        where_clauses = [sql.SQL("visible = true")]
+        params = []
+
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
+
+        if config['platforms']['applist']:
+            query = cte + query
+            where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+            params.append(config['platforms']['applist'])
+
+        where_clauses.append(sql.SQL("title ILIKE %s"))
+        params.append(f"%{search_query}%")
+
+        if start is not None:
+            where_clauses.append(sql.SQL("id > %s"))
+            params.append(start)
+    
+        if where_clauses:
+            query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+
+        cursor.execute(query, params)
+        content_type_results = cursor.fetchall()
+        for i, result in enumerate(content_type_results):
+            content_type_results[i]["content_type"] = table
+
+        results += content_type_results
+
+    cursor.close()
+    xml = format_results(results)
+
+    return xml
+
+def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type=None):
     
     if category is not None:
         new_category, content_type = applist_to_wunderland(category)
     else:
         new_category = None
 
+    cte = sql.SQL("""
+        WITH RECURSIVE platform_tree AS (
+            SELECT id, parent_id
+            FROM platforms
+            WHERE id = ANY(%s)
+
+            UNION ALL
+
+            SELECT parent.id, parent.parent_id
+            FROM platforms parent
+            JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+        )
+    """)
+
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+
     if config['platforms']['applist']:
-        query = sql.SQL("""
-            WITH RECURSIVE platform_tree AS (
-                SELECT id, parent_id
-                FROM platforms
-                WHERE id = ANY(%s)
-
-                UNION ALL
-
-                SELECT parent.id, parent.parent_id
-                FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
-            )
-            SELECT * FROM {}
-        """).format(sql.Identifier(content_type))
-
+        query = cte + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
         params.append(config['platforms']['applist'])
-
-    else:
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
 
     if new_category is not None:
         where_clauses.append(sql.SQL("category = %s"))
@@ -251,67 +302,24 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, sea
     if id is not None:
         if isinstance(id, int):
             where_clauses.append(sql.SQL("id = %s"))
-            params.append(id)
         else:
             where_clauses.append(sql.SQL("id = ANY(%s)"))
-            params.append(id)
+        params.append(id) # Append regardless of type
 
     if start is not None:
         where_clauses.append(sql.SQL("id > %s"))
         params.append(start)
-
-    if search is not None:
-        where_clauses.append(sql.SQL("title ILIKE %s"))
-        params.append(f"%{search}%")
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    if search:
-        all_results = []
-
-        for table in ("apps", "games", "themes"):
-
-            if config['platforms']['applist']:
-                query = sql.SQL("""
-                    WITH RECURSIVE platform_tree AS (
-                        SELECT id, parent_id
-                        FROM platforms
-                        WHERE id = ANY(%s)
-
-                        UNION ALL
-
-                        SELECT parent.id, parent.parent_id
-                        FROM platforms parent
-                        JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
-                    )
-                    SELECT * FROM {}
-                """).format(sql.Identifier(table))
-            else:
-                query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
-        
-            if where_clauses:
-                query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
-
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-            for i, result in enumerate(results):
-                results[i]["content_type"] = table
-
-            all_results += results
-
-        cursor.close()
-        xml = format_results(all_results, widget=widget)
-
-        return xml
+    query += sql.SQL(" ORDER BY id DESC")
 
     if latest is not None and count is not None:
-        query += sql.SQL(" ORDER BY id DESC LIMIT %s")
+        query += sql.SQL(" LIMIT %s")
         params.append(count)
-    else:
-        query += sql.SQL(" ORDER BY id DESC")
 
     cursor.execute(query, params)
     results = cursor.fetchall()
