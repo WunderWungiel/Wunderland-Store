@@ -99,7 +99,7 @@ def wunderland_to_applist(category_id, content_type):
 
     return categories.get(content_type).get(category_id)
 
-def format_results(results, content_type, widget=False):
+def format_results(results, content_type=None, widget=False):
     root = Element("applist")
     minversion = Element("minversion")
     minversion.text = "1.0.298"
