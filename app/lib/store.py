@@ -253,27 +253,27 @@ def _feed():
     now_string = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
     news = db.get_news()
 
-    xml = f'''<?xml version="1.0" encoding="windows-1252"?>
+    xml = f"""<?xml version="1.0" encoding="windows-1252"?>
 <rssversion="2.0">
     <channel>
         <title>Wunderland Store</title>
         <description>News, content and programs for retro devices.</description>
         <link>http://ovi.wunderwungiel.pl/</link>
-        <lastBuildDate>{now_string}</lastBuildDate>'''
+        <lastBuildDate>{now_string}</lastBuildDate>"""
     
     for content in news:
-        xml += f'''
+        xml += f"""
         <item>
             <title>{content['title']}</title>
             <link>{url_for('._news', _external=True, news_id=content['id'])}</link>
             <description></description>
             <pubDate>{content['date']}</pubDate>
             <guid>{url_for('._news', _external=True, news_id=content['id'])}</guid>
-        </item>'''
+        </item>"""
 
-    xml += '''
+    xml += """
     </channel>
-</rss>'''
+</rss>"""
 
     return xml
 

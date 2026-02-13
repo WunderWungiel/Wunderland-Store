@@ -122,19 +122,19 @@ def _check_register():
     db.register(email, password, username)
     token = generate_confirmation_token(email)
 
-    text_message = f'''Please confirm your email by clicking the link below:
+    text_message = f"""Please confirm your email by clicking the link below:
 
 {url_for('._confirm_email', token=token, _external=True)}
 
 Thank you.
-    '''
+    """
 
-    html_message = f'''Please confirm your email by clicking the link below:
+    html_message = f"""Please confirm your email by clicking the link below:
 <br>
 <a href="{url_for('._confirm_email', token=token, _external=True)}">{url_for('._confirm_email', token=token, _external=True)}</a>
 <br>
 Thank you.
-    '''
+    """
 
     try:
         email_system.send_email("Confirm your account", text_message, html_message, email)
