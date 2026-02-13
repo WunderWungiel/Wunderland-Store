@@ -18,7 +18,7 @@
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
                                 {% if session['platform'] is none %}
@@ -51,7 +51,7 @@
             <div id="views">
                 <div class="view">
 
-                    <table class="contentList" cellspacing="0" width='100%' >
+                    <table class="contentList" cellspacing="0" width="100%" >
 
                         {% for content in news %}
 
@@ -98,7 +98,7 @@
             <div id="bottom">
                 <div id="searchContent">
                     <form action="/search" method="get" id="searchForm">
-                        <fieldset id='searchField'>
+                        <fieldset id="searchField">
                             <label for="search">Search</label>
                             <input type="text" id="search" name="q" title="" value="" /> <input type="submit" id="searchBtn" value="Search" />
                         </fieldset>

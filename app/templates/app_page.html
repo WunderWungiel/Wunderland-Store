@@ -21,7 +21,7 @@
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id='logoImg' href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
                                 {% if session['platform'] is none %}
@@ -73,9 +73,9 @@
                             </tr>
                         </table>
         
-                        <table width='100%'>
+                        <table width="100%"">
                             <tr>
-                                <td align='right'>
+                                <td align="right">
                                     <div class="buy">
                                         <div class="buttons">
                                             <a href="/static/content/files/{{ app['file'] }}" class="lite" target="_blank">Download</a>
@@ -123,7 +123,7 @@
                         <div class="related">
                             <h3>Here are items similar to {{ app['title'] }}:</h3>
 
-                            <table class="contentList" cellspacing="0" width='100%' >
+                            <table class="contentList" cellspacing="0" width="100%" >
                 
                                 {% for app in recommended %}
                                 {% if loop.index % 2 == 0 %}
@@ -167,7 +167,7 @@
             <div id="bottom">
                 <div id="searchContent">
                     <form action="/search" method="get" id="searchForm">
-                        <fieldset id='searchField'>
+                        <fieldset id="searchField">
                             <label for="search">Search</label>
                             <input type="text" id="search" name="q" title="" value="" />
                             <input type="submit" id="searchBtn" value="Search" />
