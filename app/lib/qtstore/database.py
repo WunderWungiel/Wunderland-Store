@@ -52,14 +52,14 @@ def generate_content(database, content_name):
         except FileNotFoundError:
             timestamp = 1672531200
 
-        name, ext = os.path.splitext(row['file'])
+        name, extension = os.path.splitext(row['file'])
 
-        content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
-        if ext in (".sis", ".sisx"):
-            content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
+        content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
+        if extension in (".sis", ".sisx"):
+            content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
         else:
-            content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{ext}]\n"
-        content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
+            content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{extension}]\n"
+        content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
 
     return content
 
