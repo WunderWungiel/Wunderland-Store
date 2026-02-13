@@ -5,3 +5,4 @@ bcrypt
 psycopg[binary]
 markdown
 gunicorn
+pyyaml
