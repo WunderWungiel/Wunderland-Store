@@ -15,13 +15,13 @@ def _applist_download():
 @applist.route("/aapplist.php")
 @applist.route("/applist.php")
 def _applist():
-    id = request.args.get("id")
-    start = request.args.get("start", type=int)
-    latest = request.args.get("latest")
-    count = request.args.get("count", type=int)
-    search = request.args.get("search")
-    widget = request.args.get("widget")
-    category = request.args.get("category", type=int)
+    id = request.args.get('id')
+    start = request.args.get('start', type=int)
+    latest = request.args.get('latest')
+    count = request.args.get('count', type=int)
+    search = request.args.get('search')
+    widget = request.args.get('widget')
+    category = request.args.get('category', type=int)
 
     if id is not None:
         if id.isdigit():

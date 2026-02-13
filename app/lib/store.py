@@ -43,7 +43,7 @@ def rate(id, content_type):
     if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
         return redirect(url_for('._item', prefix=config['content_types'][content_type]['prefix'], id=id))
 
-    rating = request.form.get("rating")
+    rating = request.form.get('rating')
     if not rating:
         return redirect(url_for('._item', prefix=config['content_types'][content_type]['prefix'], id=id))
     

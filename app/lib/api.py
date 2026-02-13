@@ -11,10 +11,10 @@ def _get_content(content_type):
     if content_type not in config['content_types']:
         return {"error": "Wrong content type"}
 
-    id = request.args.get("id")
-    platform = request.args.get("platform")
+    id = request.args.get('id')
+    platform = request.args.get('platform')
     platforms = platform.split(",") if platform else None
-    category_id = request.args.get("category_id")
+    category_id = request.args.get('category_id')
 
     arguments = {}
 
@@ -74,7 +74,7 @@ def _content_visit(content_type):
     if content_type not in config['content_types']:
         return {"error": "Wrong content type"}
     
-    id = request.args.get("id")
+    id = request.args.get('id')
     if id and id.isnumeric():
         db.increment_counter(id, content_type)
         return {}

@@ -32,7 +32,7 @@ def session_logout():
 
 @auth.route("/login/")
 def _login():
-    if session.get("logged_in") is True:
+    if session.get('logged_in') is True:
         return redirect(url_for('store._root'))
     
     return render_template('auth/login.html.jinja', message=request.args.get('message'), color=request.args.get('color'))
@@ -40,7 +40,7 @@ def _login():
 
 @auth.route("/register")
 def _register():
-    if session.get("logged_in") is True:
+    if session.get('logged_in') is True:
         return redirect(url_for('store._root'))
     
     return render_template('auth/register.html', message=request.args.get('message'))
@@ -51,8 +51,8 @@ def _check_login():
     if request.method == 'GET':
         return redirect(url_for('._login'))
 
-    email = request.form.get("email")
-    password = request.form.get("password")
+    email = request.form.get('email')
+    password = request.form.get('password')
 
     if not email or not password:
         return redirect(url_for('._login'))
@@ -101,9 +101,9 @@ def _check_register():
     if request.method == 'GET':
         return redirect(url_for('._register'))
 
-    email = request.form.get("email")
-    username = request.form.get("username")
-    password = request.form.get("password")
+    email = request.form.get('email')
+    username = request.form.get('username')
+    password = request.form.get('password')
 
     if not email or not password or not username:
         return redirect(url_for('._register', message="Fill in the form."))
@@ -147,8 +147,8 @@ Thank you.
 @auth.route("/change_password", methods=['POST'])
 def _change_password():
 
-    current_password = request.form.get("current_password")
-    new_password = request.form.get("new_password")
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
 
     if not session.get('logged_in'):
         return redirect(url_for('store._root'))
