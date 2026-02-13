@@ -9,7 +9,7 @@ from . import database as db
 from .auth import database as auth_db
 from . import config
 
-store = Blueprint("store", __name__, template_folder="templates")
+store = Blueprint('store', __name__, template_folder="templates")
 
 @store.route("/<prefix>/<int:id>/rate", methods=['GET', 'POST'])
 def _item_rate(prefix, id):

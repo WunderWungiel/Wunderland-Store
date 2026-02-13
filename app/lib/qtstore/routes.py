@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, send_file, abort, url_for
 from .. import config
 from . import database as db
 
-qtstore = Blueprint("qtstore", __name__, template_folder="templates")
+qtstore = Blueprint('qtstore', __name__, template_folder="templates")
 
 @qtstore.route("/StoreData/storeIndex.xml")
 def index():

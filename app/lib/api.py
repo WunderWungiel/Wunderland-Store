@@ -3,7 +3,7 @@ from flask import Blueprint,request
 from . import database as db
 from . import config
 
-api = Blueprint("api", __name__, template_folder="templates", url_prefix=config['api_prefix'])
+api = Blueprint('api', __name__, template_folder="templates", url_prefix=config['api_prefix'])
 
 @api.route("/<content_type>/get_content")
 def _get_content(content_type):

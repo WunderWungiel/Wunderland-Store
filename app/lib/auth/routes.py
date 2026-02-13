@@ -5,7 +5,7 @@ import re
 from .. import email as email_system
 from . import database as db
 
-auth = Blueprint("auth", __name__, template_folder="templates")
+auth = Blueprint('auth', __name__, template_folder="templates")
 
 def generate_confirmation_token(email):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
