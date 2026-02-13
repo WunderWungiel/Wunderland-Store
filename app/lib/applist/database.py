@@ -59,7 +59,6 @@ def applist_to_wunderland(category_id):
         24: (5, 'games'),  # Strategy (represented as Tactic in AppList)
         25: (4, 'games'),  #  Sports (represented as Extra in AppList)
         26: (1, 'games')  # Other games
-
     }
 
     return categories.get(category_id)
@@ -263,7 +262,7 @@ def search(search_query, start=None):
 def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type=None):
     
     if category is not None:
-        new_category, content_type = applist_to_wunderland(category)
+        new_category, content_type = applist_to_wunderland(category) or (None, 'apps')
     else:
         new_category = None
 
