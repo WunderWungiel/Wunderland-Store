@@ -10,4 +10,3 @@ connection = psycopg2.connect(database=config["database"]['name'],
 
 from .api import api as api_blueprint
 from .store import store as store_blueprint
-from .news import news as news_blueprint

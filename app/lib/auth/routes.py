@@ -33,7 +33,7 @@ def session_logout():
 @auth.route("/login/")
 def _login():
     if session.get("logged_in") is True:
-        return redirect(url_for("news._root"))
+        return redirect(url_for("store._root"))
     
     return render_template('auth/login.html.jinja', message=request.args.get('message'), color=request.args.get('color'))
 
@@ -41,7 +41,7 @@ def _login():
 @auth.route("/register")
 def _register():
     if session.get("logged_in") is True:
-        return redirect(url_for("news._root"))
+        return redirect(url_for("store._root"))
     
     return render_template('auth/register.html', message=request.args.get('message'))
 
@@ -71,7 +71,7 @@ def _check_login():
         session['logged_in'] = True
         session['user_id'] = db.get_user(email=email)['id']
         session.permanent = True
-        return redirect(url_for("news._root"))
+        return redirect(url_for("store._root"))
     
     else:
         session_logout()
@@ -151,7 +151,7 @@ def _change_password():
     new_password = request.form.get("new_password")
 
     if not session.get('logged_in'):
-        return redirect(url_for("news._root"))
+        return redirect(url_for("store._root"))
 
     if not current_password or not new_password:
         return redirect(url_for("._profile", message="Fill in the form!"))
@@ -179,4 +179,4 @@ def _profile():
 @auth.route("/logout")
 def _logout():
     session_logout()
-    return redirect(url_for("news._root"))
+    return redirect(url_for("store._root"))

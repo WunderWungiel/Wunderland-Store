@@ -1,6 +1,7 @@
 import os
 import random
 import math
+from datetime import datetime
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
 
@@ -20,7 +21,7 @@ def _item_rate(prefix, id):
             break # Keep found content_type
 
     if not found:
-        return redirect(url_for("news._root"))
+        return redirect(url_for("._root"))
     
     if request.method == "GET":
         return _rate_form(id, content_type)
@@ -56,7 +57,7 @@ def _item(prefix, id):
         if content_type_properties['prefix'] == prefix:
             return _item_page(id, content_type)
         
-    return redirect(url_for("news._root"))
+    return redirect(url_for("._root"))
 
 def _item_page(id, content_type):
 
@@ -102,7 +103,7 @@ def _item_page(id, content_type):
     elif content_type == "themes":
         template = "theme_page.html"
     else:
-        return redirect(url_for("news._root"))
+        return redirect(url_for("._root"))
 
     return render_template(template, app=app, recommended=recommended)
 
@@ -184,23 +185,23 @@ def _set_platform():
     if platform is None:
         session['platform'] = None
         session.permanent = True
-        return redirect(url_for("news._root"))
+        return redirect(url_for("._root"))
     elif not platform:
-        return redirect(url_for("news._root"))
+        return redirect(url_for("._root"))
     elif not db.get_platform(platform):
-        return redirect(url_for("news._root"))
+        return redirect(url_for("._root"))
     
     session['platform'] = platform
     session.permanent = True
 
-    return redirect(url_for("news._root"))
+    return redirect(url_for("._root"))
 
 @store.route("/<content_type>")
 def _content_type(content_type):
     if content_type in config['content_types']:
         return _content(content_type)
     else:
-        return redirect(url_for("news._root"))
+        return redirect(url_for("._root"))
 
 def _content(content_type):
 
@@ -244,3 +245,70 @@ def _content(content_type):
         next_page=next_page,
         previous_page=previous_page
     )
+
+@store.route("/feed.xml")
+def _feed():
+
+    now = datetime.now()
+    now_string = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    news = db.get_news()
+
+    xml = f'''<?xml version="1.0" encoding="windows-1252"?>
+<rssversion="2.0">
+    <channel>
+        <title>Wunderland Store</title>
+        <description>News, content and programs for retro devices.</description>
+        <link>http://ovi.wunderwungiel.pl/</link>
+        <lastBuildDate>{now_string}</lastBuildDate>'''
+    
+    for content in news:
+        xml += f'''
+        <item>
+            <title>{content['title']}</title>
+            <link>{url_for('._news', _external=True, news_id=content['id'])}</link>
+            <description></description>
+            <pubDate>{content['date']}</pubDate>
+            <guid>{url_for('._news', _external=True, news_id=content['id'])}</guid>
+        </item>'''
+
+    xml += '''
+    </channel>
+</rss>'''
+
+    return xml
+
+@store.route("/news/<int:news_id>")
+def _news(news_id):
+
+    content = db.get_news(news_id=news_id)[0]
+
+    return render_template("text_page.html", title=content['title'], content=content['content'], share=True)
+
+@store.route("/")
+def __root():
+
+    return redirect(url_for("._root"))
+
+@store.route("/home")
+def _root():
+
+    news = db.get_news()
+    if not news:
+        return render_template("index.html", news=[], next_page=None, previous_page=None)
+    
+    page_id = request.args.get('page', default=1, type=int)
+    per_page = 10
+    total_pages = max(1, math.ceil(len(news) / per_page))
+
+    if page_id < 1 or page_id > total_pages:
+        return redirect(url_for("._root", page=1))
+
+    first_index = (page_id - 1) * per_page
+    last_index = first_index + per_page
+
+    next_page = page_id + 1 if page_id < total_pages else None
+    previous_page = page_id - 1 if page_id > 1 else None
+
+    news_to_show = news[first_index:last_index]
+    
+    return render_template("index.html", news=news_to_show, next_page=next_page, previous_page=previous_page)

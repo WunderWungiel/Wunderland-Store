@@ -3,11 +3,11 @@ from datetime import datetime
 from flask import Flask, session, render_template, send_from_directory
 
 from lib import database as db
-from lib import config, api_blueprint, store_blueprint, news_blueprint
+from lib import config, api_blueprint, store_blueprint
 from lib.applist import applist_blueprint
 from lib.auth import auth_blueprint, database as auth_db
-from lib.auth.routes import session_logout
 from lib.qtstore import qtstore_blueprint
+from lib.auth.routes import session_logout
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -25,7 +25,6 @@ app.register_blueprint(store_blueprint)
 app.register_blueprint(applist_blueprint)
 app.register_blueprint(auth_blueprint)
 app.register_blueprint(qtstore_blueprint)
-app.register_blueprint(news_blueprint)
 
 @app.context_processor
 def utility_processor():
