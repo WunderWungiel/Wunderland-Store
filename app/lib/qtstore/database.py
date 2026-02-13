@@ -1,8 +1,7 @@
 import os
 
 from flask import request, current_app
-from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
+from psycopg import sql
 
 from .. import connection
 from .. import config
@@ -38,7 +37,7 @@ def generate_content(database, content_name):
     
     query += sql.SQL(" ORDER BY id DESC")
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     results = cursor.fetchall()
     cursor.close()
@@ -102,7 +101,7 @@ def get_content(name, content_type):
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
     query += sql.SQL(" LIMIT 1")
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     result = cursor.fetchone()
     cursor.close()

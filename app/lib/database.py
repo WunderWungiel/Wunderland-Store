@@ -1,8 +1,7 @@
 import os
 from datetime import datetime
 
-from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
+from psycopg import sql
 from markdown import markdown
 from flask import current_app
 
@@ -80,7 +79,7 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     results = cursor.fetchall()
     cursor.close()
@@ -100,7 +99,7 @@ def get_rating(content_id, content_type):
     table = f"{content_type}_rating"
     query = sql.SQL("SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM {} WHERE content_id=%s").format(sql.Identifier(table))
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, (content_id,))
     result = cursor.fetchone()
     cursor.close()
@@ -128,7 +127,7 @@ def get_categories(content_type):
     table = f"{content_type}_categories"
     query = sql.SQL("SELECT * FROM {} ORDER by name").format(sql.Identifier(table))
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query)
     results = cursor.fetchall()
     cursor.close()
@@ -139,7 +138,7 @@ def get_platforms():
 
     query = sql.SQL("SELECT * FROM platforms ORDER by name")
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query)
     results = cursor.fetchall()
     cursor.close()
@@ -149,10 +148,9 @@ def get_platforms():
 def get_platform(platform_id):
     
     query = sql.SQL("SELECT * FROM platforms WHERE id=%s")
-
     params = (platform_id,)
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     result = cursor.fetchone()
     cursor.close()
@@ -165,7 +163,7 @@ def get_category(category_id, content_type):
     query = sql.SQL("SELECT * FROM {} WHERE id=%s").format(sql.Identifier(table))
     params = (category_id,)
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     result = cursor.fetchone()
     cursor.close()
@@ -214,7 +212,7 @@ def search(search_query, databases=None, platform_id=None):
 
         query += sql.SQL(" ORDER BY title")
         
-        cursor = connection.cursor(cursor_factory=RealDictCursor)
+        cursor = connection.cursor()
         cursor.execute(query, params)
         database_results = cursor.fetchall()
         cursor.close()
@@ -235,7 +233,7 @@ def increment_counter(id, content_type):
 
 def get_news(news_id=None):
     
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     if news_id is None:
         cursor.execute(sql.SQL("SELECT * FROM news ORDER BY id DESC"))
     else:

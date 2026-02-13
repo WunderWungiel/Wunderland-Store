@@ -1,12 +1,10 @@
-import psycopg2
+import psycopg
+from psycopg.rows import dict_row
 
 from .config import config
 
-connection = psycopg2.connect(database=config['database']['name'],
-    host=config['database']['host'],
-    user=config['database']['user'],
-    password=config['database']['password']
-)
+uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
+connection = psycopg.connect(uri, row_factory=dict_row)
 
 from .api import api as api_blueprint
 from .store import store as store_blueprint

@@ -3,8 +3,7 @@ from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
 from flask import url_for
-from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
+from psycopg import sql
 
 from .. import connection
 from .. import config
@@ -211,7 +210,7 @@ def format_results(results, content_type=None, widget=False):
 def search(search_query, start=None):
 
     results = []
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
 
     for table in config['content_types'].keys():
 
@@ -306,7 +305,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
 
     query += sql.SQL(" ORDER BY id DESC")
 

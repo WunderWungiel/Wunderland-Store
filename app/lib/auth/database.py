@@ -1,6 +1,5 @@
 import bcrypt
-from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
+from psycopg import sql
 
 from .. import connection
 
@@ -31,7 +30,7 @@ def get_user(id=None, username=None, email=None):
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     result = cursor.fetchone()
     cursor.close()
@@ -82,7 +81,7 @@ def check_credentials(email, user_password):
     query = sql.SQL("SELECT password FROM users WHERE email=%s AND active=true")
     params = (email,)
 
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
+    cursor = connection.cursor()
     cursor.execute(query, params)
     
     result = cursor.fetchone()

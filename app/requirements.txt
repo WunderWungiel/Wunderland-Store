@@ -2,6 +2,6 @@
 # Usage: pip install -r requirements.txt
 Flask
 bcrypt
-psycopg2-binary
+psycopg[binary]
 markdown
 gunicorn
