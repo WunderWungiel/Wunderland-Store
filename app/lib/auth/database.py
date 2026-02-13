@@ -76,7 +76,7 @@ def change_password(id, new_password):
     cursor.close()
 
 def check_credentials(email, user_password):
-    if not user_exists(email):
+    if not user_exists(email=email):
         return False
 
     query = sql.SQL("SELECT password FROM users WHERE email=%s AND active=true")
