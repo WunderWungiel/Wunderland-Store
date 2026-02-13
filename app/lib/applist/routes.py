@@ -23,13 +23,15 @@ def _applist():
     widget = request.args.get('widget')
     category = request.args.get('category', type=int)
 
-    if id is not None:
+    if id:
         if id.isdigit():
             id = int(id)
         elif "," in id:
             id = [int(id) for id in id.split(",")]
+    else:
+        id = None
 
-    if search is None:
+    if not search:
         return db.get_content(id=id, start=start, latest=latest, count=count, widget=widget, category=category, content_type="apps")
     else:
         return db.search(search, start=start)
