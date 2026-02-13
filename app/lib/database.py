@@ -12,27 +12,27 @@ def format_results(results, content_type):
 
     final_results = {}
     for row in results:
-        final_results[row["id"]] = {
-            "id": row["id"],
-            "title": row["title"],
-            "file": row["file"],
-            "category_name": get_category(row["category"], content_type)['name'],
-            "category_id": row["category"],
-            "description": row["description"],
-            "publisher": row["publisher"],
-            "version": row["version"],
-            "platform": row["platform"],
-            "platform_name": get_platform(row["platform"])['name'] if row['platform'] is not None else None,
-            "image1": row["image1"],
-            "image2": row["image2"],
-            "image3": row["image3"],
-            "image4": row["image4"],
-            "img": os.path.join(content_type, row["img"]),
+        final_results[row['id']] = {
+            "id": row['id'],
+            "title": row['title'],
+            "file": row['file'],
+            "category_name": get_category(row['category'], content_type)['name'],
+            "category_id": row['category'],
+            "description": row['description'],
+            "publisher": row['publisher'],
+            "version": row['version'],
+            "platform": row['platform'],
+            "platform_name": get_platform(row['platform'])['name'] if row['platform'] is not None else None,
+            "image1": row['image1'],
+            "image2": row['image2'],
+            "image3": row['image3'],
+            "image4": row['image4'],
+            "img": os.path.join(content_type, row['img']),
             "content_type": content_type,
-            "rating": get_rating(row["id"], content_type),
-            "addon_message": row["addon_message"],
-            "addon_file": row["addon_file"],
-            "uid": row["uid"],
+            "rating": get_rating(row['id'], content_type),
+            "addon_message": row['addon_message'],
+            "addon_file": row['addon_file'],
+            "uid": row['uid'],
             "screenshots": tuple([image for image in (
                 row['image1'],
                 row['image2'],
@@ -105,7 +105,7 @@ def get_rating(content_id, content_type):
     result = cursor.fetchone()
     cursor.close()
 
-    return int(result["rating"])
+    return int(result['rating'])
 
 def rate(rating, user_id, content_id, content_type):
 

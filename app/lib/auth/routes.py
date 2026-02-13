@@ -46,9 +46,9 @@ def _register():
     return render_template('auth/register.html', message=request.args.get('message'))
 
 
-@auth.route("/check_login", methods=["GET", "POST"])
+@auth.route("/check_login", methods=['GET', 'POST'])
 def _check_login():
-    if request.method == "GET":
+    if request.method == 'GET':
         return redirect(url_for('._login'))
 
     email = request.form.get("email")
@@ -96,9 +96,9 @@ def _confirm_email(token):
         return render_template("auth/confirm_email.html", message='You have confirmed your account. Thanks! <br /><br /> <input type="button" class="Btn" onclick="window.location.href=\'/\'" value="Return to home page"></input>')
 
 
-@auth.route("/check_register", methods=["GET", "POST"])
+@auth.route("/check_register", methods=['GET', 'POST'])
 def _check_register():
-    if request.method == "GET":
+    if request.method == 'GET':
         return redirect(url_for('._register'))
 
     email = request.form.get("email")
@@ -144,7 +144,7 @@ Thank you.
     return render_template("auth/confirm_email.html", message=f"Please confirm your account using link sent to your email: {email}.")
     
 
-@auth.route("/change_password", methods=["POST"])
+@auth.route("/change_password", methods=['POST'])
 def _change_password():
 
     current_password = request.form.get("current_password")

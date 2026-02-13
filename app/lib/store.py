@@ -11,7 +11,7 @@ from . import config
 
 store = Blueprint("store", __name__, template_folder="templates")
 
-@store.route("/<prefix>/<int:id>/rate", methods=["GET", "POST"])
+@store.route("/<prefix>/<int:id>/rate", methods=['GET', 'POST'])
 def _item_rate(prefix, id):
 
     found = False
@@ -23,7 +23,7 @@ def _item_rate(prefix, id):
     if not found:
         return redirect(url_for('._root'))
     
-    if request.method == "GET":
+    if request.method == 'GET':
         return _rate_form(id, content_type)
     else:
         return rate(id, content_type)

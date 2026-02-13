@@ -252,7 +252,7 @@ def search(search_query, start=None):
         cursor.execute(query, params)
         content_type_results = cursor.fetchall()
         for i, result in enumerate(content_type_results):
-            content_type_results[i]["content_type"] = table
+            content_type_results[i]['content_type'] = table
 
         results += content_type_results
 

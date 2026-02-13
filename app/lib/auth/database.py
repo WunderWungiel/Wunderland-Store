@@ -88,7 +88,7 @@ def check_credentials(email, user_password):
     result = cursor.fetchone()
     cursor.close()
 
-    hashed_password = result["password"].encode('utf-8')
+    hashed_password = result['password'].encode('utf-8')
     user_password = user_password.encode('utf-8')
 
     return bcrypt.checkpw(user_password, hashed_password)

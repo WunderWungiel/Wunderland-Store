@@ -14,7 +14,7 @@ app.url_map.strict_slashes = False
 app.config['SECRET_KEY'] = config['secret_key']
 app.config['SECURITY_PASSWORD_SALT'] = app.config['SECRET_KEY']
 
-if config["proxy"]:
+if config['proxy']:
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(
         app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1

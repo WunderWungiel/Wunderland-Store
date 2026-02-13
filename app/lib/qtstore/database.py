@@ -108,7 +108,7 @@ def get_content(name, content_type):
     cursor.close()
 
     if result:
-        result["screenshots"] = [image for image in (result['image1'], result['image2'], result['image3'], result['image4']) if image]
+        result['screenshots'] = [image for image in (result['image1'], result['image2'], result['image3'], result['image4']) if image]
         result['description'] = result['description'].replace("\n", "<br>") if result['description'] else None
         result['addon_message'] = result['addon_message'].replace("\n", "<br>") if result['addon_message'] else None
         return result
