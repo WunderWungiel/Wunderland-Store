@@ -1,9 +1,8 @@
 import os
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
-from urllib.parse import quote
 
-from flask import request
+from flask import url_for
 from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
 
@@ -145,7 +144,7 @@ def format_results(results, content_type=None, widget=False):
             uidstore = SubElement(app, "uidstore")
             uidunsigned = SubElement(app, "uidunsigned")
             icon = SubElement(app, "icon")
-            icon.text = f"http://{request.host}/static/content/icons/" + os.path.join(content_type, row['img'])
+            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", content_type, row['img']))
             version = SubElement(app, "version")
             version.text = row['version']
             versionstore = SubElement(app, "versionstore")
@@ -165,11 +164,11 @@ def format_results(results, content_type=None, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, "mail")
             website = SubElement(app, "website")
-            website.text = f"http://{request.host}/{prefix}/{row['id']}"
+            website.text = url_for('store._item', _external=True, prefix=prefix, id=row['id'])
             twitter = SubElement(app, "twitter")
             facebook = SubElement(app, "facebook")
             if row['addon_file']:
-                facebook.text = f"http://{request.host}/static/content/files/{row['addon_file']}"
+                facebook.text = url_for('static', _external=True, filename=os.path.join("content", "files", row['addon_file']))
             donation = SubElement(app, "donation")
             price = SubElement(app, "price")
             price.text = "0.00"
@@ -187,18 +186,18 @@ def format_results(results, content_type=None, widget=False):
             image4 = SubElement(app, "image4")
             image5 = SubElement(app, "image5")
             if row['image1']:
-                image1.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image1']}"
+                image1.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image1']))
             if row['image2']:
-                image2.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image2']}"
+                image2.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image2']))
             if row['image3']:
-                image3.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image3']}"
+                image3.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image3']))
             if row['image4']:
-                image4.text = f"http://{request.host}/static/content/screenshots/{content_type}/{row['image4']}"
+                image4.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image4']))
             tags = SubElement(app, "tags")
             changelog = SubElement(app, "changelog")
             unsignednote = SubElement(app, "unsignednote")
             download = SubElement(app, "download")
-            download.text = "http://" + quote(f"{request.host}/static/content/files/{row['file']}")
+            download.text = url_for('static', _external=True, filename=os.path.join("content", "files", row['file']))
             downloadsize = SubElement(app, "downloadsize")
             downloadsize.text = "0"
             downloadstore = SubElement(app, "downloadstore")

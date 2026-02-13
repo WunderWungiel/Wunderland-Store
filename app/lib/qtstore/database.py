@@ -7,12 +7,14 @@ from psycopg2.extras import RealDictCursor
 from .. import connection
 from .. import config
 
-def generate_content(database, content_name, host):
+def generate_content(database, content_name):
 
     content = ""
 
     where_clauses = [sql.SQL("visible = true")]
     params = []
+
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
 
     if config['platforms']['qtstore']:
         query = sql.SQL("""
@@ -27,14 +29,9 @@ def generate_content(database, content_name, host):
                 FROM platforms parent
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
             )
-            SELECT * FROM {}
-        """).format(sql.Identifier(database))
-
+        """) + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
         params.append(config['platforms']['qtstore'])
-
-    else:
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
@@ -57,31 +54,31 @@ def generate_content(database, content_name, host):
 
         name, ext = os.path.splitext(row['file'])
 
-        content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
+        content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
         if ext in (".sis", ".sisx"):
-            content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
+            content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
         else:
-            content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{ext}]\n"
-        content += f"http://{host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
+            content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{ext}]\n"
+        content += f"http://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
 
     return content
 
 def index():
 
-    content = generate_content("apps", "Apps", request.host)
-    content += generate_content("games", "Games", request.host)
-    content += generate_content("themes", "Themes", request.host)
+    content = generate_content("apps", "Apps")
+    content += generate_content("games", "Games")
+    content += generate_content("themes", "Themes")
 
     return content
 
 def get_content(name, content_type):
 
-    platforms = ["s60", "s60v3"]
-
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
-    if platforms:
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+
+    if config['platforms']['qtstore']:
         query = sql.SQL("""
             WITH RECURSIVE platform_tree AS (
                 SELECT id, parent_id
@@ -94,14 +91,9 @@ def get_content(name, content_type):
                 FROM platforms parent
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
             )
-            SELECT * FROM {}
-        """).format(sql.Identifier(content_type))
-
+        """) + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
-        params.append(platforms)
-
-    else:
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+        params.append(config['platforms']['qtstore'])
 
     where_clauses.append(sql.SQL("title LIKE %s"))
     params.append(name)
@@ -109,8 +101,6 @@ def get_content(name, content_type):
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
     query += sql.SQL(" LIMIT 1")
-
-    print(query)
 
     cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query, params)
