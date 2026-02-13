@@ -128,7 +128,7 @@ def get_categories(content_type):
     table = f"{content_type}_categories"
     query = sql.SQL("SELECT * FROM {} ORDER by name").format(sql.Identifier(table))
 
-    cursor = connection.cursor()
+    cursor = connection.cursor(cursor_factory=RealDictCursor)
     cursor.execute(query)
     results = cursor.fetchall()
     cursor.close()

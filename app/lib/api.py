@@ -1,4 +1,4 @@
-from flask import Blueprint,request
+from flask import Blueprint, request
 
 from . import database as db
 from . import config
@@ -42,8 +42,7 @@ def _get_categories(content_type):
     if content_type not in config['content_types']:
         return {"error": "Wrong content type"}
 
-    results = db.get_categories(content_type=content_type)
-    return [{"id": result[0], "name": result[1]} for result in results]
+    return db.get_categories(content_type=content_type)
 
 @api.route("/<content_type>/search")
 def _content_type_search(content_type):
