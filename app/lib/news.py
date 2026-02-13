@@ -11,7 +11,7 @@ news = Blueprint("news", __name__, template_folder="templates")
 def _feed():
 
     now = datetime.now()
-    now_str = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    now_string = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
     news = db.get_news()
 
     xml = f'''<?xml version="1.0" encoding="windows-1252"?>
@@ -20,16 +20,16 @@ def _feed():
         <title>Wunderland Store</title>
         <description>News, content and programs for retro devices.</description>
         <link>http://ovi.wunderwungiel.pl/</link>
-        <lastBuildDate>{now_str}</lastBuildDate>'''
+        <lastBuildDate>{now_string}</lastBuildDate>'''
     
     for content in news:
         xml += f'''
         <item>
             <title>{content['title']}</title>
-            <link>http://{request.host}/news/{content['id']}</link>
+            <link>{url_for('._news', _external=True, news_id=content['id'])}</link>
             <description></description>
             <pubDate>{content['date']}</pubDate>
-            <guid>http://{request.host}/news/{content['id']}</guid>
+            <guid>{url_for('._news', _external=True, news_id=content['id'])}</guid>
         </item>'''
 
     xml += '''

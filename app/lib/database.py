@@ -236,7 +236,7 @@ def increment_counter(id, content_type):
 def get_news(news_id=None):
     
     cursor = connection.cursor(cursor_factory=RealDictCursor)
-    if not news_id:
+    if news_id is None:
         cursor.execute(sql.SQL("SELECT * FROM news ORDER BY id DESC"))
     else:
         cursor.execute(sql.SQL("SELECT * FROM news WHERE id=%s"), (news_id,))
