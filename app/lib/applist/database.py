@@ -297,6 +297,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
         if isinstance(id, int):
             where_clauses.append(sql.SQL("id = %s"))
         else:
+            print(id)
             where_clauses.append(sql.SQL("id = ANY(%s)"))
         params.append(id) # Append regardless of type
 
