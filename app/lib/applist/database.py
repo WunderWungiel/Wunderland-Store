@@ -213,20 +213,6 @@ def format_results(results, content_type=None, widget=False):
 
 def search(search_query, start=None):
 
-    cte = sql.SQL("""
-        WITH RECURSIVE platform_tree AS (
-            SELECT id, parent_id
-            FROM platforms
-            WHERE id = ANY(%s)
-
-            UNION ALL
-
-            SELECT parent.id, parent.parent_id
-            FROM platforms parent
-            JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
-        )
-    """)
-
     results = []
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
@@ -238,7 +224,19 @@ def search(search_query, start=None):
         query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
 
         if config['platforms']['applist']:
-            query = cte + query
+            query = sql.SQL("""
+                WITH RECURSIVE platform_tree AS (
+                    SELECT id, parent_id
+                    FROM platforms
+                    WHERE id = ANY(%s)
+
+                    UNION ALL
+
+                    SELECT parent.id, parent.parent_id
+                    FROM platforms parent
+                    JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                )
+            """) + query
             where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
             params.append(config['platforms']['applist'])
 
@@ -271,27 +269,25 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
     else:
         new_category = None
 
-    cte = sql.SQL("""
-        WITH RECURSIVE platform_tree AS (
-            SELECT id, parent_id
-            FROM platforms
-            WHERE id = ANY(%s)
-
-            UNION ALL
-
-            SELECT parent.id, parent.parent_id
-            FROM platforms parent
-            JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
-        )
-    """)
-
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
     query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
 
     if config['platforms']['applist']:
-        query = cte + query
+        query = sql.SQL("""
+            WITH RECURSIVE platform_tree AS (
+                SELECT id, parent_id
+                FROM platforms
+                WHERE id = ANY(%s)
+
+                UNION ALL
+
+                SELECT parent.id, parent.parent_id
+                FROM platforms parent
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+            )
+        """) + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
         params.append(config['platforms']['applist'])
 

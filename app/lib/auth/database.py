@@ -18,15 +18,15 @@ def get_user(id=None, username=None, email=None):
     where_clauses = [sql.SQL("active = true")]
     params = []
 
-    if email is not None:
-        where_clauses.append(sql.SQL("email = %s"))
-        params.append(email)
-    if username is not None:
-        where_clauses.append(sql.SQL("username = %s"))
-        params.append(username)
     if id is not None:
         where_clauses.append(sql.SQL("id = %s"))
         params.append(id)
+    if username is not None:
+        where_clauses.append(sql.SQL("username = %s"))
+        params.append(username)
+    if email is not None:
+        where_clauses.append(sql.SQL("email = %s"))
+        params.append(email)
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
@@ -48,28 +48,9 @@ def confirm_user(email):
     connection.commit()
     cursor.close()
 
-def email_exists(email):
+def user_exists(id=None, username=None, email=None):
 
-    query = sql.SQL("SELECT * FROM users WHERE email=%s")
-    params = (email,)
-
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
-    cursor.execute(query, params)
-    result = cursor.fetchone()
-    cursor.close()
-    
-    return True if result else False
-
-def username_exists(username):
-
-    query = sql.SQL("SELECT * FROM users WHERE username=%s")
-    params = (username,)
-
-    cursor = connection.cursor(cursor_factory=RealDictCursor)
-    cursor.execute(query, params)
-    result = cursor.fetchone()
-    cursor.close()
-    
+    result = get_user(id=id, username=username, email=email)
     return True if result else False
 
 def register(email, user_password, username):
@@ -95,7 +76,7 @@ def change_password(id, new_password):
     cursor.close()
 
 def check_credentials(email, user_password):
-    if not email_exists(email):
+    if not user_exists(email):
         return False
 
     query = sql.SQL("SELECT password FROM users WHERE email=%s AND active=true")

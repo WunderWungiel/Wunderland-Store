@@ -29,7 +29,7 @@
                 <div class="view">
                     <div id="faq" class="viewWrapper">
                         <h1>You are banned, thus you can't login.
-                        {% if reason is defined and reason is not none and reason != '' %}
+                        {% if reason is defined and reason is not none %}
                         Reason: <span style="font-weight: bold; color: black;">{{ reason }}</span>
                         {% endif %}
                         </h1>
