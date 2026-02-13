@@ -24,9 +24,6 @@ services:
       - ./db/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - ./db/database.psql:/docker-entrypoint-initdb.d/database.psql
 
-volumes:
-  pgdata:
-
 networks:
   server:
     external: true
