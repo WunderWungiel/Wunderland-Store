@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 from flask import Flask, session, render_template, send_from_directory
 
@@ -52,7 +53,7 @@ def check_platform_id():
         user = auth_db.get_user(id=user_id)
         if user['banned']:
             session_logout()
-            return render_template('auth/banned.html', reason=user['banned_reason'])
+            return render_template("auth/banned.html", reason=user['banned_reason'])
 
 @app.route("/robots.txt")
 def _robots():

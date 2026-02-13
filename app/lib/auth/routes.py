@@ -35,7 +35,7 @@ def _login():
     if session.get('logged_in') is True:
         return redirect(url_for('store._root'))
     
-    return render_template('auth/login.html.jinja', message=request.args.get('message'), color=request.args.get('color'))
+    return render_template("auth/login.html.jinja", message=request.args.get('message'), color=request.args.get('color'))
 
 
 @auth.route("/register")
@@ -43,7 +43,7 @@ def _register():
     if session.get('logged_in') is True:
         return redirect(url_for('store._root'))
     
-    return render_template('auth/register.html', message=request.args.get('message'))
+    return render_template("auth/register.html", message=request.args.get('message'))
 
 
 @auth.route("/check_login", methods=['GET', 'POST'])
@@ -66,7 +66,7 @@ def _check_login():
         
         if user['banned']:
             session_logout()
-            return render_template('auth/banned.html', reason=user['banned_reason'])
+            return render_template("auth/banned.html", reason=user['banned_reason'])
 
         session['logged_in'] = True
         session['user_id'] = db.get_user(email=email)['id']
@@ -83,18 +83,20 @@ def _confirm_email(token):
     try:
         email = confirm_token(token)
     except Exception as e:
-        return render_template("auth/confirm_email.html", message='The confirmation link is invalid or has expired.')
+        return render_template("auth/confirm_email.html", message="The confirmation link is invalid or has expired.")
     if email is None:
-        return render_template("auth/confirm_email.html", message='The confirmation link is invalid or has expired.')
+        return render_template("auth/confirm_email.html", message="The confirmation link is invalid or has expired.")
     user = db.get_user(email=email)
     if user is None:
-        return render_template("auth/confirm_email.html", message='Account got deleted or doesn\'t exist.')
+        return render_template("auth/confirm_email.html", message="Account got deleted or doesn\'t exist.")
     if user['confirmed']:
-        return render_template("auth/confirm_email.html", message='Account already confirmed. Please login.')
+        return render_template("auth/confirm_email.html", message="Account already confirmed. Please login.")
     else:
         db.confirm_user(email)
-        return render_template("auth/confirm_email.html", message='You have confirmed your account. Thanks! <br /><br /> <input type="button" class="Btn" onclick="window.location.href=\'/\'" value="Return to home page"></input>')
-
+        return render_template(
+            "auth/confirm_email.html",
+            message="""You have confirmed your account. Thanks! <br /><br /> <input type="button" class="Btn" onclick="window.location.href='/'" value="Return to home page"></input>"""
+        )
 
 @auth.route("/check_register", methods=['GET', 'POST'])
 def _check_register():
@@ -143,7 +145,6 @@ Thank you.
 
     return render_template("auth/confirm_email.html", message=f"Please confirm your account using link sent to your email: {email}.")
     
-
 @auth.route("/change_password", methods=['POST'])
 def _change_password():
 
@@ -166,7 +167,6 @@ def _change_password():
 
     return redirect(url_for('._profile', message="Password changed!"))
 
-    
 @auth.route("/profile")
 def _profile():
     if not session.get('logged_in'):
@@ -174,7 +174,6 @@ def _profile():
         return redirect(url_for('._login'))
     
     return render_template("auth/profile.html", message=request.args.get('message'))
-
 
 @auth.route("/logout")
 def _logout():

@@ -238,7 +238,7 @@ def _content(content_type):
     apps_to_show = [all_apps[app_id] for app_id in ids[first_index:last_index]]
 
     return render_template(
-        f'{content_type}.html',
+        f"{content_type}.html",
         apps=apps_to_show,
         category=category,
         category_id=category_id,
