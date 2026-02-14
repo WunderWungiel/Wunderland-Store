@@ -71,7 +71,7 @@ def item(prefix, id):
     return render_template("item_page.html", app=app, recommended=recommended, content_type=content_type)
 
 @store.route("/<prefix>/<int:id>/images")
-def item_images(prefix, id):
+def images(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
 
@@ -85,10 +85,13 @@ def item_images(prefix, id):
 
     return render_template("images.html", app=app, content_type=content_type)
 
-@store.route("/<content_type>/browse")
-def content_type_browse(content_type):
-    categories = db.get_categories(content_type)
-    return render_template(f"{content_type}_browse.html", categories=categories)
+@store.route("/<content_type_name>/browse")
+def browse_categories(content_type_name):
+
+    content_type = db.get_content_type(content_type_name)
+    categories = db.get_categories(content_type['name'])
+
+    return render_template(f"categories.html", categories=categories, content_type=content_type)
 
 @store.route("/search")
 def search():
@@ -100,7 +103,7 @@ def search():
     results = db.search(query, platform_id=session['platform'])
 
     if not results:
-        return render_template("content_type_empty.html", category=None, content_type=db.get_content_type('apps'))
+        return render_template("empty.html", category=None, content_type=db.get_content_type('apps'))
     
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
@@ -169,7 +172,7 @@ def content(content_type):
 
     all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])
     if not all_apps:
-        return render_template(f"content_type_empty.html", category=category, content_type=db.get_content_type(content_type))
+        return render_template(f"empty.html", category=category, content_type=db.get_content_type(content_type))
     
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10

@@ -96,7 +96,7 @@
                         </div>
                         
                         {% if app['screenshots']|length > 0 %}
-                        <p class="morePhotos"><a href="{{ url_for('store.item_images', prefix=content_type['prefix'], id=app['id']) }}">Screenshots ({{ app['screenshots']|length }})</a></p>
+                        <p class="morePhotos"><a href="{{ url_for('store.images', prefix=content_type['prefix'], id=app['id']) }}">Screenshots ({{ app['screenshots']|length }})</a></p>
                         {% else %}
                         <p></p>
                         {% endif %}
