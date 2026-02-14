@@ -1,7 +1,7 @@
 from datetime import datetime
-import os
 
 from flask import Flask, session, render_template, send_from_directory
+import humanize
 
 from lib import database as db
 from lib import config, api_blueprint, store_blueprint
@@ -30,12 +30,15 @@ app.register_blueprint(qtstore_blueprint)
 @app.context_processor
 def utility_processor():
 
+    def get_natural_size(size):
+        return humanize.naturalsize(size)
+
     def get_user(user_id):
         user = auth_db.get_user(user_id)
         user.pop('password', None)
         return user
 
-    return dict(now=datetime.now(), get_platform=db.get_platform, get_user=get_user)
+    return dict(now=datetime.now(), get_platform=db.get_platform, get_user=get_user, get_natural_size=get_natural_size)
 
 @app.before_request
 def check_platform_id():

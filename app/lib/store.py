@@ -70,10 +70,7 @@ def _item_page(id, content_type):
         return redirect(url_for('._content_type', content_type=content_type))
 
     try:
-        app['size'] = round(
-            os.stat(
-                os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])
-            ).st_size / (1024 * 1024), 2)
+        app['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])).st_size
     except FileNotFoundError:
         app['size'] = 0
 

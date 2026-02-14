@@ -59,7 +59,7 @@
                                     <div class="title"><h2 class="fn nokia-gray">{{ app['title'] }}</h2></div>
                                     <div>
                                         <p class="type">
-                                            <b>Size: </b>{{ app['size'] }} MB<br />
+                                            <b>Size: </b>{{ get_natural_size(app['size']) }}<br />
                                             {% if app['platform_name'] is not none %}
                                             <b>Platform</b>: {{ app['platform_name'] }}<br />
                                             {% endif %}
