@@ -162,7 +162,7 @@ def format_results(results, content_type=None, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, 'mail')
             website = SubElement(app, 'website')
-            website.text = url_for('store._item', _external=True, prefix=prefix, id=row['id'])
+            website.text = url_for('store.item', _external=True, prefix=prefix, id=row['id'])
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:

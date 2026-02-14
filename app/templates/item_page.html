@@ -41,8 +41,8 @@
                 </div> <!-- end top -->
                                 
                 <div id="crumbNav">
-                    <a href="{{ url_for('store._content_type', content_type=content_type['name']) }}" id="crumbNavContentArea">{{ content_type['friendly_name'] }}</a>
-                        &gt; <a href="{{ url_for('store._content_type', content_type=content_type['name'], category_id=app['category_id']) }}" id="crumbNavContentArea">{{ app['category_name'] }}</a>
+                    <a href="{{ url_for('store.content_type', content_type=content_type['name']) }}" id="crumbNavContentArea">{{ content_type['friendly_name'] }}</a>
+                        &gt; <a href="{{ url_for('store.content_type', content_type=content_type['name'], category_id=app['category_id']) }}" id="crumbNavContentArea">{{ app['category_name'] }}</a>
                         &gt; {{ app['title'] }}
                 </div>
             </div> <!-- end header -->
@@ -86,7 +86,7 @@
                         </table>
         
                         <div class="reviewDiv">
-                            {% if session['logged_in'] is defined %}<a href="{{ url_for('store._item_rate', prefix=content_type['prefix'], id=app['id']) }}" class="reviews"> Rate</a>{% endif %}
+                            {% if session['logged_in'] is defined %}<a href="{{ url_for('store.item_rate', prefix=content_type['prefix'], id=app['id']) }}" class="reviews"> Rate</a>{% endif %}
                             {% for i in range(app['rating']) %}
                             <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                             {% endfor %}
@@ -96,7 +96,7 @@
                         </div>
                         
                         {% if app['screenshots']|length > 0 %}
-                        <p class="morePhotos"><a href="{{ url_for('store._item_images', prefix=content_type['prefix'], id=app['id']) }}">Screenshots ({{ app['screenshots']|length }})</a></p>
+                        <p class="morePhotos"><a href="{{ url_for('store.item_images', prefix=content_type['prefix'], id=app['id']) }}">Screenshots ({{ app['screenshots']|length }})</a></p>
                         {% else %}
                         <p></p>
                         {% endif %}
@@ -134,7 +134,7 @@
                                     
                                     <td class="contentType">
                                         <h2 class="title">
-                                            <a href="{{ url_for('store._item', prefix=content_type['prefix'], id=app['id']) }}">{{ app['title'] }}</a>
+                                            <a href="{{ url_for('store.item', prefix=content_type['prefix'], id=app['id']) }}">{{ app['title'] }}</a>
                                         </h2>
                                     </td>
         
@@ -174,7 +174,7 @@
                     <h3>Browse categories</h3>
                     <a href="/home/">Home</a><br />
                     {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store._content_type', content_type=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a><br />
+                    <a href="{{ url_for('store.content_type', content_type=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a><br />
                     {% endfor %}
                 </div> <!-- end navigation -->
             </div>

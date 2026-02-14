@@ -12,23 +12,23 @@ from . import config
 store = Blueprint('store', __name__, template_folder="templates")
 
 @store.route("/<prefix>/<int:id>/rate", methods=['GET', 'POST'])
-def _item_rate(prefix, id):
+def item_rate(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
     if not content_type:
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
     
     if request.method == 'GET':
-        return _rate_form(id, content_type['name'])
+        return rate_form(id, content_type['name'])
     else:
         return rate(id, content_type['name'])
 
-def _rate_form(id, content_type):
+def rate_form(id, content_type):
 
     prefix = db.get_content_type(prefix=prefix)['prefix']
 
     if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
-        return redirect(url_for('._item', prefix=prefix, id=id))
+        return redirect(url_for('.item', prefix=prefix, id=id))
     
     app = db.get_content(id=id, content_type=content_type)
     return render_template("rate.html", app=app, prefix=prefix)
@@ -36,25 +36,25 @@ def _rate_form(id, content_type):
 def rate(id, content_type):
 
     if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
-        return redirect(url_for('._item', prefix=config['content_types'][content_type]['prefix'], id=id))
+        return redirect(url_for('.item', prefix=config['content_types'][content_type]['prefix'], id=id))
 
     rating = request.form.get('rating')
     if not rating:
-        return redirect(url_for('._item', prefix=config['content_types'][content_type]['prefix'], id=id))
+        return redirect(url_for('.item', prefix=config['content_types'][content_type]['prefix'], id=id))
     
     db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type)
-    return redirect(url_for('._item', prefix=config['content_types'][content_type]['prefix'], id=id))
+    return redirect(url_for('.item', prefix=config['content_types'][content_type]['prefix'], id=id))
 
 @store.route("/<prefix>/<int:id>")
-def _item(prefix, id):
+def item(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
     if not content_type:
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
 
-    return _item_page(id, content_type['name'])
+    return item_page(id, content_type['name'])
         
-def _item_page(id, content_type):
+def item_page(id, content_type):
 
     app = db.get_content(id=id, content_type=content_type)
 
@@ -62,7 +62,7 @@ def _item_page(id, content_type):
         db.increment_counter(id, content_type)
 
     if not app:
-        return redirect(url_for('._content_type', content_type=content_type))
+        return redirect(url_for('.content_type', content_type=content_type))
 
     try:
         app['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])).st_size
@@ -91,15 +91,15 @@ def _item_page(id, content_type):
     return render_template("item_page.html", app=app, recommended=recommended, content_type=db.get_content_type(content_type))
 
 @store.route("/<prefix>/<int:id>/images")
-def _item_images(prefix, id):
+def item_images(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
     if not content_type:
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
 
-    return _item_images_page(id, content_type['name'])
+    return item_images_page(id, content_type['name'])
 
-def _item_images_page(id, content_type):
+def item_images_page(id, content_type):
     app = db.get_content(id=id, content_type=content_type)
 
     screenshots = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
@@ -119,12 +119,12 @@ def _item_images_page(id, content_type):
     return render_template("item_images.html", app=app, content_type=db.get_content_type(content_type))
 
 @store.route("/<content_type>/browse")
-def _content_type_browse(content_type):
+def content_type_browse(content_type):
     categories = db.get_categories(content_type)
     return render_template(f"{content_type}_browse.html", categories=categories)
 
 @store.route("/search")
-def _search():
+def search():
 
     query = request.args.get('q')
     if not query:
@@ -140,7 +140,7 @@ def _search():
     total_pages = max(1, math.ceil(len(results) / per_page))
 
     if page_id < 1 or page_id > total_pages:
-        return redirect(url_for('._search', q=query, page=1))
+        return redirect(url_for('.search', q=query, page=1))
 
     ids = list(results.keys())
 
@@ -161,36 +161,36 @@ def _search():
     )
 
 @store.route("/platform")
-def _platform():
+def platform():
     platforms = db.get_platforms()
     return render_template("platform.html", platforms=platforms)
 
 @store.route("/set_platform")
-def _set_platform():
+def set_platform():
     platform = request.args.get('platform')
     if platform is None:
         session['platform'] = None
         session.permanent = True
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
     elif not platform:
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
     elif not db.get_platform(platform):
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
     
     session['platform'] = platform
     session.permanent = True
 
-    return redirect(url_for('._root'))
+    return redirect(url_for('.root'))
 
 @store.route("/<content_type>")
-def _content_type(content_type):
+def content_type(content_type):
 
     if db.get_content_type(name=content_type):
-        return _content(content_type)
+        return content(content_type)
     else:
-        return redirect(url_for('._root'))
+        return redirect(url_for('.root'))
 
-def _content(content_type):
+def content(content_type):
 
     category_id = request.args.get('category_id')
     category_id = int(category_id) if category_id else None
@@ -198,7 +198,7 @@ def _content(content_type):
     category = db.get_category(category_id, content_type) if category_id else None
 
     if category_id and not category:
-        return redirect(url_for('._content_type', content_type=content_type))
+        return redirect(url_for('.content_type', content_type=content_type))
 
     all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])
     if not all_apps:
@@ -212,7 +212,7 @@ def _content(content_type):
         arguments = {'page': 1}
         if category_id:
             arguments['category_id'] = category_id
-        return redirect(url_for('._content_type', content_type=content_type, **arguments))
+        return redirect(url_for('.content_type', content_type=content_type, **arguments))
 
     ids = list(all_apps.keys())
 
@@ -235,7 +235,7 @@ def _content(content_type):
     )
 
 @store.route("/feed.xml")
-def _feed():
+def feed():
 
     now = datetime.now()
     now_string = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
@@ -253,10 +253,10 @@ def _feed():
         xml += f"""
         <item>
             <title>{content['title']}</title>
-            <link>{url_for('._news', _external=True, news_id=content['id'])}</link>
+            <link>{url_for('.news', _external=True, news_id=content['id'])}</link>
             <description></description>
             <pubDate>{content['date']}</pubDate>
-            <guid>{url_for('._news', _external=True, news_id=content['id'])}</guid>
+            <guid>{url_for('.news', _external=True, news_id=content['id'])}</guid>
         </item>"""
 
     xml += """
@@ -266,19 +266,19 @@ def _feed():
     return xml
 
 @store.route("/news/<int:news_id>")
-def _news(news_id):
+def news(news_id):
 
     content = db.get_news(news_id=news_id)[0]
 
-    return render_template("text_page.html", title=content['title'], content=content['content'], share=True)
+    return render_template("news.html", title=content['title'], content=content['content'], share=True)
 
 @store.route("/")
-def __root():
+def _root():
 
-    return redirect(url_for('._root'))
+    return redirect(url_for('.root'))
 
 @store.route("/home")
-def _root():
+def root():
 
     news = db.get_news()
     if not news:
@@ -289,7 +289,7 @@ def _root():
     total_pages = max(1, math.ceil(len(news) / per_page))
 
     if page_id < 1 or page_id > total_pages:
-        return redirect(url_for('._root', page=1))
+        return redirect(url_for('.root', page=1))
 
     first_index = (page_id - 1) * per_page
     last_index = first_index + per_page

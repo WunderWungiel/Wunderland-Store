@@ -59,7 +59,7 @@ def check_platform_id():
             return render_template("auth/banned.html", reason=user['banned_reason'])
 
 @app.route("/robots.txt")
-def _robots():
+def robots():
     return send_from_directory(app.static_folder, "robots.txt")
 
 if __name__ == "__main__":

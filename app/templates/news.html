@@ -3,12 +3,16 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        <title>Select platform | Wunderland Store</title>
+        {% if title is defined %}
+        <title>{{ title }} | Wunderland Store</title>
+        {% else %}
+        <title>Wunderland Store</title>
+        {% endif %}
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
+        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+
     </head>
 
     <body>
@@ -27,45 +31,48 @@
                                 {% set platform_name = get_platform(session['platform'])['name'] %}
                                 {% endif %}
                                 <span><a href="/platform">Platform</a>: <b>{{ platform_name }}</b></span>
-                                {% if session['logged_in'] is defined %}
                                 |
+                                {% if session['logged_in'] is defined %}
                                 {% set username = get_user(session['user_id'])['username'] %}
                                 <span>Logged in as: <a href="/profile">{{ username }}</a></span>
+                                |
                                 {% endif %}
+                                <a href="/search/">Search</a>
                             </td>
                         </tr>
                     </table>
                 </div> <!-- end top -->
+
+                <div id="navigation">
+                    <a class="first" href="/home/">Home</a> <b>|</b>
+                    <a href="/apps/">Apps</a> <b>|</b>
+                    <a href="/games/">Games</a> <b>|</b>
+                    <a href="/themes/">Themes</a>
+                </div> <!-- end navigation -->
             </div> <!-- end header -->
 
             <div id="views">
-                <div class="view">
-                    <div class="contentItem">
-	                    <h2>Platforms</h2>
+                <div class="view">    
+                    <br />
 
-                        <div id="categories">
-                            <a href="{{ url_for('store.set_platform', platform=None) }}">
-                                {% if session['platform'] is none %}
-                                <b>All platforms</b>
-                                {% else %}
-                                All platforms
-                                {% endif %}
-                            </a><br />
-                            {% for platform in platforms %}
-                                <a href="{{ url_for('store.set_platform', platform=platform['id']) }}">
-                                    {% if session['platform'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
-                                </a>{% if not loop.last %}<br />{% endif %}
-                            {% endfor %}
-                        </div> <!-- end categories -->
+                    <div class="viewWrapper">
+                        <div class="noaOviTermsOfService">
+                            <h2>{{ title }}</h2>
+                            {{ content|safe }}
+                        </div>
 
-	                </div> <!-- end content item -->
+                        <br />
 
-                    <div class="beacon"></div>
+                        {% if share is defined and share is not none %}
+                        <h2 class="share">Share: <a href="{{ request.url }}">{{ request.url }}</a> (link)</h2>
+                        {% endif %}    
+
+                    </div>
+
                 </div>
             </div> <!-- end views -->
 
-            <div id="bottom"></div>
-                        
+            <div id="bottom"></div>      
             <div id="footer">
                 {% if session['logged_in'] is not defined %}
                 <a class="accountStatusChange" href="/login">Sign in</a> |

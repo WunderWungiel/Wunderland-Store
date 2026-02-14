@@ -9,12 +9,12 @@ applist = Blueprint('applist', __name__, template_folder="templates")
 
 @applist.route("/aapplist-download.php")
 @applist.route("/applist-download.php")
-def _applist_download():
+def applist_download():
     return "0"
 
 @applist.route("/aapplist.php")
 @applist.route("/applist.php")
-def _applist():
+def php():
     id = request.args.get('id')
     start = request.args.get('start', type=int)
     latest = request.args.get('latest')
@@ -38,10 +38,10 @@ def _applist():
 
 @applist.route("/version.xml")
 @applist.route("/aversion.xml")
-def _version_xml():
+def version():
     return db.version()
 
 @applist.route("/changelog.xml")
 @applist.route("/achangelog.xml")
-def _changelog_xml():
+def changelog():
     return db.changelog()
