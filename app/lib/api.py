@@ -5,7 +5,7 @@ from . import config
 
 api = Blueprint('api', __name__, template_folder="templates", url_prefix=config['api_prefix'])
 
-@api.route("/<content_type>/get_content")
+@api.route("/get_content/<content_type>")
 def _get_content(content_type):
 
     if content_type not in config['content_types']:
@@ -36,7 +36,7 @@ def _get_content(content_type):
 
     return sorted(results, key=lambda x: x['id']) if not "id" in arguments else [results]
 
-@api.route("/<content_type>/get_categories")
+@api.route("/get_categories/<content_type>")
 def _get_categories(content_type):
 
     if content_type not in config['content_types']:
@@ -44,7 +44,7 @@ def _get_categories(content_type):
 
     return db.get_categories(content_type=content_type)
 
-@api.route("/<content_type>/search")
+@api.route("/search/<content_type>")
 def _content_type_search(content_type):
 
     if content_type not in config['content_types']:
@@ -67,7 +67,7 @@ def _get_content_types():
 def _get_platforms():
     return db.get_platforms()
 
-@api.route("/<content_type>/content_visit")
+@api.route("/visit/<content_type>")
 def _content_visit(content_type):
 
     if content_type not in config['content_types']:

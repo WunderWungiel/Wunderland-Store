@@ -1,4 +1,5 @@
-secret_key: ''
+secret_key: ""
+port: 8080
 database:
   host: "localhost"
   name: "ovistore"

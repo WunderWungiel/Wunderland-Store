@@ -63,4 +63,4 @@ def _robots():
     return send_from_directory(app.static_folder, "robots.txt")
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=7000)
+    app.run(debug=True, host='0.0.0.0', port=config['port'])
