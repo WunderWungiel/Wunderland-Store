@@ -30,18 +30,21 @@ app.register_blueprint(qtstore_blueprint)
 @app.context_processor
 def utility_processor():
 
-    def get_natural_size(size):
-        return humanize.naturalsize(size)
-
     def get_user(user_id):
         user = auth_db.get_user(user_id)
         user.pop('password', None)
         return user
 
-    return dict(now=datetime.now(), get_platform=db.get_platform, get_user=get_user, get_natural_size=get_natural_size, get_content_types=db.get_content_types)
+    return dict(
+        now=datetime.now(),
+        get_platform=db.get_platform,
+        get_user=get_user,
+        get_natural_size=humanize.naturalsize,
+        get_content_types=db.get_content_types
+    )
 
 @app.before_request
-def check_platform_id():
+def before_request():
     session.permanent = True
 
     platform_id = session.get('platform')

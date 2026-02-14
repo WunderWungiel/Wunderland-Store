@@ -1,12 +1,15 @@
 import os
 from datetime import datetime
 
-from psycopg import sql
+from psycopg import connect, sql
+from psycopg.rows import dict_row
 from markdown import markdown
 from flask import current_app
 
-from . import connection
 from . import config
+
+uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
+connection = connect(uri, row_factory=dict_row)
 
 def format_results(results, content_type):
 

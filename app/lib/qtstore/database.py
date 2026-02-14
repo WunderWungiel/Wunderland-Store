@@ -3,7 +3,7 @@ import os
 from flask import request, current_app
 from psycopg import sql
 
-from .. import connection
+from ..database import connection
 from .. import config
 
 def generate_content(database, content_name):

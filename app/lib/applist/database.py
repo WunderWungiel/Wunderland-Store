@@ -5,7 +5,7 @@ from xml.etree.ElementTree import Element, SubElement
 from flask import url_for
 from psycopg import sql
 
-from .. import connection
+from ..database import connection
 from .. import config
 
 def version():

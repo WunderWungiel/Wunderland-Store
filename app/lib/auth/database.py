@@ -1,7 +1,7 @@
 import bcrypt
 from psycopg import sql
 
-from .. import connection
+from ..database import connection
 
 def _generate_password(user_password):
     user_password = user_password.encode('utf-8')
