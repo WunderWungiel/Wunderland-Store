@@ -32,32 +32,29 @@ def rate(prefix, id):
         
         db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type['name'])
         return redirect(url_for('.item', prefix=prefix, id=id))
-
+        
 @store.route("/<prefix>/<int:id>")
 def item(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
+
     if not content_type:
         return redirect(url_for('.root'))
 
-    return item_page(id, content_type['name'])
-        
-def item_page(id, content_type):
-
-    app = db.get_content(id=id, content_type=content_type)
+    app = db.get_content(id=id, content_type=content_type['name'])
 
     if app and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
-        db.increment_counter(id, content_type)
+        db.increment_counter(id, content_type['name'])
 
     if not app:
-        return redirect(url_for('.content_type', content_type=content_type))
+        return redirect(url_for('.content_type', content_type=content_type['name']))
 
     try:
         app['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])).st_size
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = db.get_content(content_type=content_type, category_id=app['category_id'], platform_id=session['platform'])
+    recommended = db.get_content(content_type=content_type['name'], category_id=app['category_id'], platform_id=session['platform'])
 
     if recommended:
         recommended = random.choices(list(recommended.values()), k=10)
@@ -71,35 +68,22 @@ def item_page(id, content_type):
     app['description'] = app['description'].replace("\n", "<br>") if app['description'] else None
     app['addon_message'] = app['addon_message'].replace("\n", "<br>") if app['addon_message'] else None
 
-    return render_template("item_page.html", app=app, recommended=recommended, content_type=db.get_content_type(content_type))
+    return render_template("item_page.html", app=app, recommended=recommended, content_type=content_type)
 
 @store.route("/<prefix>/<int:id>/images")
 def item_images(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
+
     if not content_type:
         return redirect(url_for('.root'))
 
-    return item_images_page(id, content_type['name'])
+    app = db.get_content(id=id, content_type=content_type['name'])
 
-def item_images_page(id, content_type):
-    app = db.get_content(id=id, content_type=content_type)
+    if not app['screenshots']:
+        return redirect(url_for('.item', prefix=prefix, id=id))
 
-    screenshots = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
-    if not len(screenshots) > 0:
-        if type == "apps":
-            url = f"/app/{id}/"
-        elif content_type == "games":
-            url = f"/game/{id}/"
-        elif content_type == "themes":
-            url = f"/theme/{id}/"
-        else:
-            abort(400)
-
-        return redirect(url)
-
-    app['screenshots'] = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
-    return render_template("item_images.html", app=app, content_type=db.get_content_type(content_type))
+    return render_template("images.html", app=app, content_type=content_type)
 
 @store.route("/<content_type>/browse")
 def content_type_browse(content_type):
