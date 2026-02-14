@@ -38,7 +38,7 @@ def utility_processor():
         user.pop('password', None)
         return user
 
-    return dict(now=datetime.now(), get_platform=db.get_platform, get_user=get_user, get_natural_size=get_natural_size)
+    return dict(now=datetime.now(), get_platform=db.get_platform, get_user=get_user, get_natural_size=get_natural_size, get_content_types=db.get_content_types)
 
 @app.before_request
 def check_platform_id():

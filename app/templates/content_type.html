@@ -4,12 +4,12 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         {% if category is defined and category is not none %}
-        <title>Games :: {{ category['name'] }}  | Wunderland Store</title>
+        <title>{{ content_type['friendly_name'] }} :: {{ category['name'] }}  | Wunderland Store</title>
         {% else %}
-        <title>Games | Wunderland Store</title>
+        <title>{{ content_type['friendly_name'] }} | Wunderland Store</title>
         {% endif %}
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
+                
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
         <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
@@ -45,36 +45,43 @@
 
                 <div id="navigation">
                     <a class="first" href="/home/">Home</a> <b>|</b>
-                    <a href="/apps/">Apps</a> <b>|</b>
-                    <a href="/games/" class="selected">Games</a> <b>|</b>
-                    <a href="/themes/">Themes</a>
+                    {% for _content_type in get_content_types() %}
+                    <a href="{{ url_for('store._content_type', content_type=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a>
+                    {% if not loop.last %}
+                    <b>|</b>
+                    {% endif %}
+                    {% endfor %}
                 </div> <!-- end navigation -->
-
+                
                 {% if category is not none %}
-                <div id="crumbNav">Games&nbsp;&gt; {{ category['name'] }} &nbsp;<a href="/games/browse/">Change</a></div>
+                <div id="crumbNav">{{ content_type['friendly_name'] }}&nbsp;&gt; {{ category['name'] }} &nbsp;<a href="{{ url_for('store._content_type_browse', content_type=content_type['name']) }}">Change</a></div>
                 {% else %}
-                <div id="crumbNav">Games&nbsp;&gt; All&nbsp;<a href="/games/browse/">Change</a></div>
+                <div id="crumbNav">{{ content_type['friendly_name'] }}&nbsp;&gt; All&nbsp;<a href="{{ url_for('store._content_type_browse', content_type=content_type['name']) }}">Change</a></div>
                 {% endif %}
-
+                
             </div> <!-- end header -->
 
             <div id="views">
                 <div class="view">
-
+                    
                     <table class="contentList" cellspacing="0" width="100%" >
                         {% for app in apps %}
                         <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
-
+                        
+                            {% if content_type['icons'] %}
                             <td class="thumbnail">
                                 <img src="/static/content/icons/{{ app['img'] }}" width="46" height="46" alt="{{ app['title'] }}" />
                             </td>
-
+                            {% else %}
+                            <td class="thumbnail" style="width: 0;"></td>
+                            {% endif %}
+                        
                             <td class="contentType">
                                 <h2 class="title">
-                                    <a href="/game/{{ app['id'] }}/">{{ app['title'] }}</a>
-                                </h2>{% if category is none %}{{ app['category_name'] }}{% endif %}
+                                    <a href="{{ url_for('store._item', prefix=content_type['prefix'], id=app['id']) }}">{{ app['title'] }}</a>
+                                </h2>{% if content_type['categories'] and category is none %}{{ app['category_name'] }}{% endif %}
                             </td>
-
+                        
                             <td class="contentRatingPrice">
                                 <div class="rating">
                                     {% for i in range(app['rating']) %}
@@ -89,27 +96,29 @@
                         </tr>
                     </table>
 
+                </div> <!-- end Content Stream -->
+
                 {% if previous_page is not none or next_page is not none %}
                 <p class="pagination">
                 {% if previous_page is not none %}
                 {% if category_id is not none %}
-                    <a href="/games/?category_id={{ category_id }}&page={{ previous_page }}">Previous</a>
+                    <a href="{{ url_for('store._content_type', content_type=content_type['name'], category_id=category_id, page=previous_page) }}">Previous</a>
                 {% else %}
-                    <a href="/games/?page={{ previous_page }}">Previous</a>
+                    <a href="{{ url_for('store._content_type', content_type=content_type['name'], page=previous_page) }}">Previous</a>
                 {% endif %}
                 {% endif %}
                 {% if next_page is not none %}
                 {% if category_id is not none %}
-                    <a href="/games/?category_id={{ category_id }}&page={{ next_page }}">Next</a>
+                    <a href="{{ url_for('store._content_type', content_type=content_type['name'], category_id=category_id, page=next_page) }}">Next</a>
                 {% else %}
-                    <a href="/games/?page={{ next_page }}">Next</a>
+                    <a href="{{ url_for('store._content_type', content_type=content_type['name'], page=next_page) }}">Next</a>
                 {% endif %}
                 {% endif %}
                 </p>
                 {% endif %}
 
                 <div class="beacon"></div>
-                
+
                 </div>
             </div> <!-- end views -->
 
@@ -126,12 +135,11 @@
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
                     <a href="/home/">Home</a><br />
-                    <a href="/apps/">Apps</a><br />
-                    <a href="/games/" class="selected">Games</a><br />
-                    <a href="/themes/">Themes</a><br />
-                </div> <!-- end navigation -->
+                    {% for _content_type in get_content_types() %}
+                    <a href="{{ url_for('store._content_type', content_type=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a><br />
+                    {% endfor %}
             </div>
-
+                        
             <div id="footer">
                 {% if session['logged_in'] is not defined %}
                 <a class="accountStatusChange" href="/login">Sign in</a> |

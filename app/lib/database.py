@@ -6,6 +6,7 @@ from markdown import markdown
 from flask import current_app
 
 from . import connection
+from . import config
 
 def format_results(results, content_type):
 
@@ -271,3 +272,12 @@ def get_news(news_id=None):
         )
 
     return final_results
+
+def get_content_types():
+    return config['content_types']
+
+def get_content_type(name=None, prefix=None):
+    for content_type in config['content_types']:
+        if (name is not None and content_type['name'] != name) or (prefix is not None and content_type['prefix'] != prefix):
+            continue
+        return content_type
