@@ -46,7 +46,7 @@
                 <div id="navigation">
                     <a class="first" href="/home/">Home</a> <b>|</b>
                     {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content_type', content_type=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a>
+                    <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a>
                     {% if not loop.last %}
                     <b>|</b>
                     {% endif %}
@@ -93,7 +93,7 @@
                     <h3>Browse categories</h3>
                     <a href="/home/">Home</a><br />
                     {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content_type', content_type=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a><br />
+                    <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a><br />
                     {% endfor %}
                 </div> <!-- end navigation -->
             </div>

@@ -47,7 +47,7 @@ def item(prefix, id):
         db.increment_counter(id, content_type['name'])
 
     if not app:
-        return redirect(url_for('.content_type', content_type=content_type['name']))
+        return redirect(url_for('.content', content_type_name=content_type['name']))
 
     try:
         app['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])).st_size
@@ -88,7 +88,7 @@ def images(prefix, id):
 @store.route("/<content_type_name>/browse")
 def browse_categories(content_type_name):
 
-    content_type = db.get_content_type(content_type_name)
+    content_type = db.get_content_type(name=content_type_name)
     categories = db.get_categories(content_type['name'])
 
     return render_template(f"categories.html", categories=categories, content_type=content_type)
@@ -152,27 +152,25 @@ def set_platform():
 
     return redirect(url_for('.root'))
 
-@store.route("/<content_type>")
-def content_type(content_type):
+@store.route("/<content_type_name>")
+def content(content_type_name):
 
-    if db.get_content_type(name=content_type):
-        return content(content_type)
-    else:
+    content_type = db.get_content_type(name=content_type_name)
+
+    if not content_type:
         return redirect(url_for('.root'))
-
-def content(content_type):
 
     category_id = request.args.get('category_id')
     category_id = int(category_id) if category_id else None
 
-    category = db.get_category(category_id, content_type) if category_id else None
+    category = db.get_category(category_id, content_type['name']) if category_id else None
 
     if category_id and not category:
-        return redirect(url_for('.content_type', content_type=content_type))
+        return redirect(url_for('.content', content_type_name=content_type['name']))
 
-    all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])
+    all_apps = db.get_content(category_id=category_id, content_type=content_type['name'], platform_id=session['platform'])
     if not all_apps:
-        return render_template(f"empty.html", category=category, content_type=db.get_content_type(content_type))
+        return render_template(f"empty.html", category=category, content_type=content_type)
     
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
@@ -182,7 +180,7 @@ def content(content_type):
         arguments = {'page': 1}
         if category_id:
             arguments['category_id'] = category_id
-        return redirect(url_for('.content_type', content_type=content_type, **arguments))
+        return redirect(url_for('.content', content_type_name=content_type['name'], **arguments))
 
     ids = list(all_apps.keys())
 
@@ -195,13 +193,13 @@ def content(content_type):
     apps_to_show = [all_apps[app_id] for app_id in ids[first_index:last_index]]
 
     return render_template(
-        f"content_type.html",
+        f"content.html",
         apps=apps_to_show,
         category=category,
         category_id=category_id,
         next_page=next_page,
         previous_page=previous_page,
-        content_type=db.get_content_type(content_type)
+        content_type=content_type
     )
 
 @store.route("/feed.xml")
