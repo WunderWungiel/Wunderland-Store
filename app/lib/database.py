@@ -79,6 +79,8 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
+    query += sql.SQL(" ORDER BY id DESC")
+
     cursor = connection.cursor()
     cursor.execute(query, params)
     results = cursor.fetchall()
