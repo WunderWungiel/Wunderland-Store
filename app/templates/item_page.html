@@ -86,7 +86,7 @@
                         </table>
         
                         <div class="reviewDiv">
-                            {% if session['logged_in'] is defined %}<a href="{{ url_for('store.item_rate', prefix=content_type['prefix'], id=app['id']) }}" class="reviews"> Rate</a>{% endif %}
+                            {% if session['logged_in'] is defined %}<a href="{{ url_for('store.rate', prefix=content_type['prefix'], id=app['id']) }}" class="reviews"> Rate</a>{% endif %}
                             {% for i in range(app['rating']) %}
                             <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                             {% endfor %}

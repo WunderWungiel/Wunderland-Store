@@ -12,38 +12,26 @@ from . import config
 store = Blueprint('store', __name__, template_folder="templates")
 
 @store.route("/<prefix>/<int:id>/rate", methods=['GET', 'POST'])
-def item_rate(prefix, id):
+def rate(prefix, id):
 
     content_type = db.get_content_type(prefix=prefix)
+
     if not content_type:
         return redirect(url_for('.root'))
     
-    if request.method == 'GET':
-        return rate_form(id, content_type['name'])
-    else:
-        return rate(id, content_type['name'])
-
-def rate_form(id, content_type):
-
-    prefix = db.get_content_type(prefix=prefix)['prefix']
-
-    if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
+    if not db.get_content(id=id, content_type=content_type['name']) or not session.get('logged_in'):
         return redirect(url_for('.item', prefix=prefix, id=id))
-    
-    app = db.get_content(id=id, content_type=content_type)
-    return render_template("rate.html", app=app, prefix=prefix)
 
-def rate(id, content_type):
-
-    if not db.get_content(id=id, content_type=content_type) or not session.get('logged_in'):
-        return redirect(url_for('.item', prefix=config['content_types'][content_type]['prefix'], id=id))
-
-    rating = request.form.get('rating')
-    if not rating:
-        return redirect(url_for('.item', prefix=config['content_types'][content_type]['prefix'], id=id))
-    
-    db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type)
-    return redirect(url_for('.item', prefix=config['content_types'][content_type]['prefix'], id=id))
+    if request.method == 'GET':        
+        app = db.get_content(id=id, content_type=content_type['name'])
+        return render_template("rate.html", app=app, prefix=prefix)
+    else:
+        rating = request.form.get('rating')
+        if not rating:
+            return redirect(url_for('.item', prefix=prefix, id=id))
+        
+        db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type['name'])
+        return redirect(url_for('.item', prefix=prefix, id=id))
 
 @store.route("/<prefix>/<int:id>")
 def item(prefix, id):
