@@ -53,7 +53,7 @@
                     {% endfor %}
                 </div> <!-- end navigation -->
                 
-                {% if category is not none %}
+                {% if category is defined and category is not none %}
                 <div id="crumbNav">{{ content_type['friendly_name'] }}&nbsp;&gt; {{ category['name'] }} &nbsp;<a href="{{ url_for('store.content_type_browse', content_type=content_type['name']) }}">Change</a></div>
                 {% else %}
                 <div id="crumbNav">{{ content_type['friendly_name'] }}&nbsp;&gt; All&nbsp;<a href="{{ url_for('store.content_type_browse', content_type=content_type['name']) }}">Change</a></div>

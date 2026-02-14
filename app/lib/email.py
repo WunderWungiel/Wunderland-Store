@@ -3,7 +3,7 @@ import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from .config import config
+from . import config
 
 smtp_address = config['email']['smtp']['address']
 smtp_port = config['email']['smtp']['port']

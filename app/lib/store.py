@@ -69,15 +69,10 @@ def item_page(id, content_type):
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = db.get_content(
-        content_type=content_type,
-        category_id=app['category_id'],
-        platform_id=session['platform']
-    )
+    recommended = db.get_content(content_type=content_type, category_id=app['category_id'], platform_id=session['platform'])
 
     if recommended:
-        recommended = list(recommended.values())
-        recommended = random.choices(recommended, k=10)
+        recommended = random.choices(list(recommended.values()), k=10)
         recommended = [dict(t) for t in {tuple(d.items()) for d in recommended}]
         recommended = [d for d in recommended if d['id'] != app['id']]
         if not recommended:
@@ -133,7 +128,7 @@ def search():
     results = db.search(query, platform_id=session['platform'])
 
     if not results:
-        return render_template("apps_empty.html", category=None)
+        return render_template("content_type_empty.html", category=None, content_type=db.get_content_type('apps'))
     
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
@@ -202,7 +197,7 @@ def content(content_type):
 
     all_apps = db.get_content(category_id=category_id, content_type=content_type, platform_id=session['platform'])
     if not all_apps:
-        return render_template(f"{content_type}_empty.html", category=category)
+        return render_template(f"content_type_empty.html", category=category, content_type=db.get_content_type(content_type))
     
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
