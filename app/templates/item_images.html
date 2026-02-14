@@ -51,14 +51,7 @@
 		                {% endfor %}
     
                         <div class="options">
-                            {% if content_type == 'apps' %}
-                            <a href="/app/{{ app['id'] }}/">
-                            {% elif content_type == 'games' %}
-                            <a href="/game/{{ app['id'] }}/">
-                            {% elif content_type == 'themes' %}
-                            <a href="/theme/{{ app['id'] }}/">
-                            {% endif %}
-                            &lt; Back to {{ app['title'] }}</a>
+                            <a href="{{ url_for('store._item', prefix=content_type['prefix'], id=app['id']) }}">&lt; Back to {{ app['title'] }}</a>
                         </div>
                     </div> <!-- end content -->
                     <div class="beacon"></div>

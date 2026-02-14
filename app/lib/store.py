@@ -116,7 +116,7 @@ def _item_images_page(id, content_type):
         return redirect(url)
 
     app['screenshots'] = [image for image in (app['image1'], app['image2'], app['image3'], app['image4']) if image]
-    return render_template("app_images.html", app=app, content_type=content_type)
+    return render_template("item_images.html", app=app, content_type=db.get_content_type(content_type))
 
 @store.route("/<content_type>/browse")
 def _content_type_browse(content_type):
