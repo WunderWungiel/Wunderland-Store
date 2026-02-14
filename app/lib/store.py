@@ -68,7 +68,7 @@ def item(prefix, id):
     app['description'] = app['description'].replace("\n", "<br>") if app['description'] else None
     app['addon_message'] = app['addon_message'].replace("\n", "<br>") if app['addon_message'] else None
 
-    return render_template("item_page.html", app=app, recommended=recommended, content_type=content_type)
+    return render_template("item.html", app=app, recommended=recommended, content_type=content_type)
 
 @store.route("/<prefix>/<int:id>/images")
 def images(prefix, id):
