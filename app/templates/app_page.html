@@ -90,11 +90,9 @@
                             {% for i in range(app['rating']) %}
                             <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                             {% endfor %}
-                            {% if app['rating'] != 5 %}
                             {% for i in range(app['rating'], 5) %}
                             <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
                             {% endfor %}
-                            {% endif %}
                         </div>
                         
                         {% if app['screenshots']|length > 0 %}
@@ -126,11 +124,8 @@
                             <table class="contentList" cellspacing="0" width="100%" >
                 
                                 {% for app in recommended %}
-                                {% if loop.index % 2 == 0 %}
-                                <tr class="contentItem " id="{{ app['id'] }}">
-                                {% else %}
-                                <tr class="contentItem alt " id="{{ app['id'] }}">
-                                {% endif %}
+                                <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
+
                                     <td class="thumbnail">
                                         <img src="/static/content/icons/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
                                     </td>
@@ -146,11 +141,9 @@
                                             {% for i in range(app['rating']) %}
                                             <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                                             {% endfor %}
-                                            {% if app['rating'] != 5 %}
                                             {% for i in range(app['rating'], 5) %}
                                             <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
                                             {% endfor %}
-                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>

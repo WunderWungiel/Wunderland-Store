@@ -65,12 +65,7 @@
                         <table class="contentList" cellspacing="0" width="100%" >
                             
                             {% for result in results %}
-
-                            {% if loop.index % 2 == 0 %}
-                            <tr class="contentItem ">
-                            {% else %}
-                            <tr class="contentItem alt ">
-                            {% endif %}
+                            <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
             
                                 <td class="thumbnail">
                                     <img src="/static/content/icons/{{ result['img'] }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46" />
@@ -93,11 +88,9 @@
                                         {% for i in range(result['rating']) %}
                                         <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                                         {% endfor %}
-                                        {% if result['rating'] != 5 %}
                                         {% for i in range(result['rating'], 5) %}
                                         <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
                                         {% endfor %}
-                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

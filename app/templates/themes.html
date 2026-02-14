@@ -63,11 +63,7 @@
                     
                     <table class="contentList" cellspacing="0" width="100%" >
                         {% for app in apps %}
-                        {% if loop.index % 2 == 0 %}
-                        <tr class="contentItem ">
-                        {% else %}
-                        <tr class="contentItem  alt">
-                        {% endif %}
+                        <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
                         
                             <td class="thumbnail" style="width: 0;"></td>
                         
@@ -82,11 +78,9 @@
                                     {% for i in range(app['rating']) %}
                                     <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
                                     {% endfor %}
-                                    {% if app['rating'] != 5 %}
                                     {% for i in range(app['rating'], 5) %}
                                     <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
                                     {% endfor %}
-                                    {% endif %}
                                 </div>
                             </td>
                         {% endfor %}

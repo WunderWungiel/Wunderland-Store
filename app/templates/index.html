@@ -54,12 +54,7 @@
                     <table class="contentList" cellspacing="0" width="100%" >
 
                         {% for content in news %}
-
-                        {% if loop.index % 2 == 0 %}
-                        <tr class="contentItem " style="height: 32px;">
-                        {% else %}
-                        <tr class="contentItem  alt" style="height: 32px;">
-                        {% endif %}
+                        <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}" style="height: 32px;">
         
                             <td class="thumbnail" style="width: 0;"></td>
         
