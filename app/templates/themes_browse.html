@@ -46,7 +46,7 @@
                         <div id="categories">
                             <a href="/themes" class="selected">All themes</a><br />
                             {% for category in categories %}
-                            <a href="/themes/?category_id={{ category['id'] }}">{{ category['name'] }}</a>{% if loop.index != categories|length %}<br />{% endif %}
+                            <a href="/themes/?category_id={{ category['id'] }}">{{ category['name'] }}</a>{% if not loop.last %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
 

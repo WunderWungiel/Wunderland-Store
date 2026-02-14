@@ -47,7 +47,7 @@
                         <div id="categories">
                             <a href="/games/" class="selected">All games</a><br />
                             {% for category in categories %}
-                            <a href="/games/?category_id={{ category['id'] }}">{{ category['name'] }}</a>{% if loop.index != categories|length %}<br />{% endif %}
+                            <a href="/games/?category_id={{ category['id'] }}">{{ category['name'] }}</a>{% if not loop.last %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
 
