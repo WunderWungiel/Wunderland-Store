@@ -19,7 +19,7 @@ def description(content_type_name, app):
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type_name)
+    content = db.get_content(app, content_type['name'])
     if not content:
         return abort(404)
 
@@ -31,7 +31,7 @@ def description(content_type_name, app):
         if description:
             description += "<br><br>"
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, screenshot))
+            path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type['name'], screenshot))
             description += f'<img src="{path}" alt="image{i}" width="150"><br><br>'
 
     if content['addon_message']:
@@ -49,7 +49,7 @@ def file(content_type_name, app, ext):
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type_name)
+    content = db.get_content(app, content_type['name'])
     path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
 
     if content and os.path.isfile(path):
@@ -64,8 +64,8 @@ def preview(content_type_name, app):
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type_name)
-    path = os.path.join(current_app.root_path, "static", "content", "icons", content_type_name, content['img'])
+    content = db.get_content(app, content_type['name'])
+    path = os.path.join(current_app.root_path, "static", "content", "icons", content_type['name'], content['img'])
 
     if content and os.path.isfile(path):
         return send_file(path)
