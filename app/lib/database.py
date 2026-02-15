@@ -19,7 +19,7 @@ def format_results(results, content_type_name):
             "id": row['id'],
             "title": row['title'],
             "file": row['file'],
-            "category_name": get_category(row['category'], content_type_name),
+            "category_name": get_category(row['category'], content_type_name)['name'],
             "category_id": row['category'],
             "description": row['description'],
             "publisher": row['publisher'],
