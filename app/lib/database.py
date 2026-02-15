@@ -31,7 +31,7 @@ def format_results(results, content_type_name):
             "image3": row['image3'],
             "image4": row['image4'],
             "img": os.path.join(content_type_name, row['img']),
-            "content_type_name": content_type_name,
+            "content_type": get_content_type(content_type_name),
             "rating": get_rating(row['id'], content_type_name),
             "addon_message": row['addon_message'],
             "addon_file": row['addon_file'],

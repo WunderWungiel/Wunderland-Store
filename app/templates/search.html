@@ -73,13 +73,7 @@
             
                                 <td class="contentType">
                                     <h2 class="title">
-                                        {% if result['content_type'] == 'apps' %}
-                                        <a href="/app/{{ result['id'] }}">
-                                        {% elif result['content_type'] == 'games' %}
-                                        <a href="/game/{{ result['id'] }}">
-                                        {% elif result['content_type'] == 'themes' %}
-                                        <a href="/theme/{{ result['id'] }}">
-                                        {% endif %}{{ result['title'] }}</a>
+                                        <a href="{{ url_for('store.item', prefix=result['content_type']['prefix'], id=result['id']) }}">{{ result['title'] }}</a>
                                     </h2>{{ result['category_name'] }}
                                 </td>
             
