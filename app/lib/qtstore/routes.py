@@ -64,7 +64,7 @@ def preview(content_type_name, app):
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type)
+    content = db.get_content(app, content_type_name)
     path = os.path.join(current_app.root_path, "static", "content", "icons", content_type_name, content['img'])
 
     if content and os.path.isfile(path):
