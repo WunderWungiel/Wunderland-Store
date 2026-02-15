@@ -19,18 +19,18 @@ def rate(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
     
-    if not db.get_content(id=id, content_type=content_type['name']) or not session.get('logged_in'):
+    if not db.get_content(id=id, content_type_name=content_type['name']) or not session.get('logged_in'):
         return redirect(url_for('.item', prefix=prefix, id=id))
 
     if request.method == 'GET':        
-        app = db.get_content(id=id, content_type=content_type['name'])
+        app = db.get_content(id=id, content_type_name=content_type['name'])
         return render_template("rate.html", app=app, prefix=prefix)
     else:
         rating = request.form.get('rating')
         if not rating:
             return redirect(url_for('.item', prefix=prefix, id=id))
         
-        db.rate(rating, user_id=session['user_id'], content_id=id, content_type=content_type['name'])
+        db.rate(rating, user_id=session['user_id'], content_id=id, content_type_name=content_type['name'])
         return redirect(url_for('.item', prefix=prefix, id=id))
         
 @store.route("/<prefix>/<int:id>")
@@ -41,7 +41,7 @@ def item(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    app = db.get_content(id=id, content_type=content_type['name'])
+    app = db.get_content(id=id, content_type_name=content_type['name'])
 
     if app and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
         db.increment_counter(id, content_type['name'])
@@ -54,11 +54,11 @@ def item(prefix, id):
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = db.get_content(content_type=content_type['name'], category_id=app['category_id'], platform_id=session['platform'])
+    recommended = db.get_content(category_id=app['category_id'], content_type_name=content_type['name'], platform_id=session['platform'])
 
     if recommended:
-        recommended = random.choices(list(recommended.values()), k=10)
-        recommended = [dict(t) for t in {tuple(d.items()) for d in recommended}]
+        recommended = list(recommended.values())
+        recommended = random.sample(recommended, k=min(10, len(recommended)))
         recommended = [d for d in recommended if d['id'] != app['id']]
         if not recommended:
             recommended = None
@@ -68,7 +68,7 @@ def item(prefix, id):
     app['description'] = app['description'].replace("\n", "<br>") if app['description'] else None
     app['addon_message'] = app['addon_message'].replace("\n", "<br>") if app['addon_message'] else None
 
-    return render_template("item.html", app=app, recommended=recommended, content_type=content_type)
+    return render_template("item.html", content_type=content_type, app=app, recommended=recommended)
 
 @store.route("/<prefix>/<int:id>/images")
 def images(prefix, id):
@@ -78,7 +78,7 @@ def images(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    app = db.get_content(id=id, content_type=content_type['name'])
+    app = db.get_content(id=id, content_type_name=content_type['name'])
 
     if not app['screenshots']:
         return redirect(url_for('.item', prefix=prefix, id=id))
@@ -89,9 +89,13 @@ def images(prefix, id):
 def browse_categories(content_type_name):
 
     content_type = db.get_content_type(name=content_type_name)
-    categories = db.get_categories(content_type['name'])
 
-    return render_template(f"categories.html", categories=categories, content_type=content_type)
+    if not content_type:
+        return redirect(url_for('.root'))
+
+    categories = db.get_categories(content_type_name)
+
+    return render_template(f"categories.html", content_type=content_type, categories=categories)
 
 @store.route("/search")
 def search():
@@ -122,13 +126,7 @@ def search():
 
     apps_to_show = [results[id] for id in ids[first_index:last_index]]
 
-    return render_template(
-        "search.html",
-        results=apps_to_show,
-        search_query=query,
-        next_page=next_page,
-        previous_page=previous_page
-    )
+    return render_template("search.html", results=apps_to_show, query=query, next_page=next_page, previous_page=previous_page)
 
 @store.route("/platform")
 def platform():
@@ -168,7 +166,7 @@ def content(content_type_name):
     if category_id and not category:
         return redirect(url_for('.content', content_type_name=content_type['name']))
 
-    all_apps = db.get_content(category_id=category_id, content_type=content_type['name'], platform_id=session['platform'])
+    all_apps = db.get_content(category_id=category_id, content_type_name=content_type['name'], platform_id=session['platform'])
     if not all_apps:
         return render_template(f"empty.html", category=category, content_type=content_type)
     
@@ -192,15 +190,7 @@ def content(content_type_name):
 
     apps_to_show = [all_apps[app_id] for app_id in ids[first_index:last_index]]
 
-    return render_template(
-        f"content.html",
-        apps=apps_to_show,
-        category=category,
-        category_id=category_id,
-        next_page=next_page,
-        previous_page=previous_page,
-        content_type=content_type
-    )
+    return render_template(f"content.html", content_type=content_type, apps=apps_to_show, category=category, category_id=category_id, next_page=next_page, previous_page=previous_page)
 
 @store.route("/feed.xml")
 def feed():

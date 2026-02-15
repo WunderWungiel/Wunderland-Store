@@ -11,7 +11,7 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
 connection = connect(uri, row_factory=dict_row)
 
-def format_results(results, content_type):
+def format_results(results, content_type_name):
 
     final_results = {}
     for row in results:
@@ -19,7 +19,7 @@ def format_results(results, content_type):
             "id": row['id'],
             "title": row['title'],
             "file": row['file'],
-            "category_name": get_category(row['category'], content_type)['name'],
+            "category_name": get_category(row['category'], content_type_name),
             "category_id": row['category'],
             "description": row['description'],
             "publisher": row['publisher'],
@@ -30,23 +30,23 @@ def format_results(results, content_type):
             "image2": row['image2'],
             "image3": row['image3'],
             "image4": row['image4'],
-            "img": os.path.join(content_type, row['img']),
-            "content_type": content_type,
-            "rating": get_rating(row['id'], content_type),
+            "img": os.path.join(content_type_name, row['img']),
+            "content_type_name": content_type_name,
+            "rating": get_rating(row['id'], content_type_name),
             "addon_message": row['addon_message'],
             "addon_file": row['addon_file'],
             "uid": row['uid'],
-            "screenshots": tuple([image for image in (
+            "screenshots": [image for image in (
                 row['image1'],
                 row['image2'],
                 row['image3'],
                 row['image4']
-            ) if image])
+            ) if image]
         }
 
     return final_results
 
-def get_content(id=None, category_id=None, content_type=None, platform_id=None):
+def get_content(id=None, category_id=None, content_type_name=None, platform_id=None):
 
     where_clauses = [sql.SQL("visible = TRUE")]
     params = []
@@ -65,13 +65,13 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
             )
             SELECT * FROM {}
-        """).format(sql.Identifier(content_type))
+        """).format(sql.Identifier(content_type_name))
 
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
         params.append(platform_id)
 
     else:
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type_name))
 
     if id is not None:
         where_clauses.append(sql.SQL("id = %s"))
@@ -93,16 +93,16 @@ def get_content(id=None, category_id=None, content_type=None, platform_id=None):
     if not results:
         return None
 
-    results = format_results(results, content_type)
+    results = format_results(results, content_type_name)
 
     if id is not None:
         return results.get(id)
     else:
         return results
 
-def get_rating(content_id, content_type):
+def get_rating(content_id, content_type_name):
     
-    table = f"{content_type}_rating"
+    table = f"{content_type_name}_rating"
     query = sql.SQL("SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM {} WHERE content_id=%s").format(sql.Identifier(table))
 
     cursor = connection.cursor()
@@ -112,9 +112,9 @@ def get_rating(content_id, content_type):
 
     return int(result['rating'])
 
-def rate(rating, user_id, content_id, content_type):
+def rate(rating, user_id, content_id, content_type_name):
 
-    table = f"{content_type}_rating"
+    table = f"{content_type_name}_rating"
     query = sql.SQL("""
         INSERT INTO {} (content_id, user_id, rating)
         VALUES (%s, %s, %s)
@@ -128,9 +128,9 @@ def rate(rating, user_id, content_id, content_type):
     connection.commit()
     cursor.close()
 
-def get_categories(content_type):
+def get_categories(content_type_name):
 
-    table = f"{content_type}_categories"
+    table = f"{content_type_name}_categories"
     query = sql.SQL("SELECT * FROM {} ORDER by name").format(sql.Identifier(table))
 
     cursor = connection.cursor()
@@ -163,9 +163,9 @@ def get_platform(platform_id):
 
     return result
 
-def get_category(category_id, content_type):
+def get_category(category_id, content_type_name):
     
-    table = f"{content_type}_categories"
+    table = f"{content_type_name}_categories"
     query = sql.SQL("SELECT * FROM {} WHERE id=%s").format(sql.Identifier(table))
     params = (category_id,)
 
@@ -227,9 +227,9 @@ def search(search_query, databases=None, platform_id=None):
 
     return results
 
-def increment_counter(id, content_type):
+def increment_counter(id, content_type_name):
 
-    query = sql.SQL("UPDATE {} SET visited_counter=visited_counter + 1 WHERE id=%s").format(sql.Identifier(content_type))
+    query = sql.SQL("UPDATE {} SET visited_counter=visited_counter + 1 WHERE id=%s").format(sql.Identifier(content_type_name))
     params = (id,)
 
     cursor = connection.cursor()

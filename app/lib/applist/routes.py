@@ -32,7 +32,7 @@ def php():
         id = None
 
     if not search:
-        return db.get_content(id=id, start=start, latest=latest, count=count, widget=widget, category=category, content_type="apps")
+        return db.get_content(id=id, start=start, latest=latest, count=count, widget=widget, category=category, content_type_name="apps")
     else:
         return db.search(search, start=start)
 

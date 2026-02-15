@@ -5,7 +5,7 @@ from xml.etree.ElementTree import Element, SubElement
 from flask import url_for
 from psycopg import sql
 
-from ..database import connection
+from .. import database as db
 from .. import config
 
 def version():
@@ -63,7 +63,7 @@ def applist_to_wunderland(category_id):
     return categories.get(category_id)
 
 # !!! Replace left side and comments with YOUR categories' IDs!
-def wunderland_to_applist(category_id, content_type):
+def wunderland_to_applist(category_id, content_type_name):
     categories = {
         'apps': {
             None: 0,  # All apps
@@ -93,9 +93,9 @@ def wunderland_to_applist(category_id, content_type):
         }
     }
 
-    return categories.get(content_type).get(category_id)
+    return categories.get(content_type_name).get(category_id)
 
-def format_results(results, content_type=None, widget=False):
+def format_results(results, content_type_name=None, widget=False):
     root = Element('applist')
     minversion = Element('minversion')
     minversion.text = "1.0.298"
@@ -103,10 +103,10 @@ def format_results(results, content_type=None, widget=False):
 
     for row in results:
 
-        if not content_type:
-            content_type = row['content_type']
+        if not content_type_name:
+            content_type_name = row['content_type_name']
 
-        prefix = config['content_types'][content_type]['prefix']
+        prefix = db.get_content_type(content_type_name)
 
         row = {key: value.strip() if isinstance(value, str) else value for (key, value) in row.items()}
 
@@ -142,7 +142,7 @@ def format_results(results, content_type=None, widget=False):
             uidstore = SubElement(app, 'uidstore')
             uidunsigned = SubElement(app, 'uidunsigned')
             icon = SubElement(app, 'icon')
-            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", content_type, row['img']))
+            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", content_type_name, row['img']))
             version = SubElement(app, 'version')
             version.text = row['version']
             versionstore = SubElement(app, 'versionstore')
@@ -152,7 +152,7 @@ def format_results(results, content_type=None, widget=False):
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
             category = SubElement(app, 'category')
-            category.text = str(wunderland_to_applist(row['category'], content_type))
+            category.text = str(wunderland_to_applist(row['category'], content_type_name))
             language = SubElement(app, 'language')
             language.text = "EN"
             
@@ -183,13 +183,13 @@ def format_results(results, content_type=None, widget=False):
             image4 = SubElement(app, 'image4')
             image5 = SubElement(app, 'image5')
             if row['image1']:
-                image1.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image1']))
+                image1.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image1']))
             if row['image2']:
-                image2.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image2']))
+                image2.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image2']))
             if row['image3']:
-                image3.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image3']))
+                image3.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image3']))
             if row['image4']:
-                image4.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type, row['image4']))
+                image4.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image4']))
             tags = SubElement(app, 'tags')
             changelog = SubElement(app, 'changelog')
             unsignednote = SubElement(app, 'unsignednote')
@@ -210,14 +210,14 @@ def format_results(results, content_type=None, widget=False):
 def search(search_query, start=None):
 
     results = []
-    cursor = connection.cursor()
+    cursor = db.connection.cursor()
 
-    for table in config['content_types'].keys():
+    for content_type in db.get_content_types():
 
         where_clauses = [sql.SQL("visible = true")]
         params = []
 
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
+        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type['name']))
 
         if config['platforms']['applist']:
             query = sql.SQL("""
@@ -249,7 +249,7 @@ def search(search_query, start=None):
         cursor.execute(query, params)
         content_type_results = cursor.fetchall()
         for i, result in enumerate(content_type_results):
-            content_type_results[i]['content_type'] = table
+            content_type_results[i]['content_type_name'] = content_type['name']
 
         results += content_type_results
 
@@ -258,17 +258,17 @@ def search(search_query, start=None):
 
     return xml
 
-def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type=None):
+def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type_name=None):
     
     if category is not None:
-        new_category, content_type = applist_to_wunderland(category) or (None, 'apps')
+        new_category, content_type_name = applist_to_wunderland(category) or (None, 'apps')
     else:
         new_category = None
 
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type_name))
 
     if config['platforms']['applist']:
         query = sql.SQL("""
@@ -305,7 +305,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    cursor = connection.cursor()
+    cursor = db.connection.cursor()
 
     query += sql.SQL(" ORDER BY id DESC")
 
@@ -317,5 +317,5 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
     results = cursor.fetchall()
     cursor.close()
 
-    xml = format_results(results, content_type, widget)
+    xml = format_results(results, content_type_name, widget)
     return xml

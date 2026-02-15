@@ -70,12 +70,12 @@ def index():
 
     return content
 
-def get_content(name, content_type):
+def get_content(name, content_type_name):
 
     where_clauses = [sql.SQL("visible = true")]
     params = []
 
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type))
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type_name))
 
     if config['platforms']['qtstore']:
         query = sql.SQL("""
