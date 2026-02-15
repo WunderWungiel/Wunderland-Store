@@ -48,7 +48,7 @@
                         <div id="searchField">
                             <form action="/search" method="get" id="searchForm">
                                 <fieldset>
-                                    <input type="text" id="search" name="q" size="15" style="width: 63%; max-width: 300px;" title="" value="{{ search_query }}" />
+                                    <input type="text" id="search" name="q" size="15" style="width: 63%; max-width: 300px;" title="" value="{{ query }}" />
                                     <input type="submit" id="searchBtn" value="Search" />
                                 </fieldset>
                             </form>
@@ -65,7 +65,7 @@
                         <table class="contentList" cellspacing="0" width="100%" >
                             
                             {% for result in results %}
-                            <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
+                            <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
             
                                 <td class="thumbnail">
                                     <img src="/static/content/icons/{{ result['img'] }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46" />

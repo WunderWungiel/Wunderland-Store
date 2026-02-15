@@ -66,7 +66,7 @@
                     
                     <table class="contentList" cellspacing="0" width="100%" >
                         {% for app in apps %}
-                        <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
+                        <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
                         
                             {% if content_type['icons'] %}
                             <td class="thumbnail">

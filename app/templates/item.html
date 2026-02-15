@@ -126,7 +126,7 @@
                             <table class="contentList" cellspacing="0" width="100%" >
                 
                                 {% for app in recommended %}
-                                <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
+                                <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
 
                                     <td class="thumbnail">
                                         <img src="/static/content/icons/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
