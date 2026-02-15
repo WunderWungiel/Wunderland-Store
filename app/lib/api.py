@@ -18,9 +18,9 @@ def get_content(content_type_name):
 
     arguments = {}
 
-    arguments['content_type'] = content_type_name
+    arguments['content_type_name'] = content_type_name
 
-    if id and id.isnumeric():
+    if id and id.isdecimal():
         arguments['id'] = id
     if category_id:
         arguments['category_id'] = category_id

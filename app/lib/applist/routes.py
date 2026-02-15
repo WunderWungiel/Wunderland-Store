@@ -24,7 +24,7 @@ def php():
     category = request.args.get('category', type=int)
 
     if id:
-        if id.isdigit():
+        if id.isdecimal():
             id = int(id)
         elif "," in id:
             id = [int(id) for id in id.split(",")]
