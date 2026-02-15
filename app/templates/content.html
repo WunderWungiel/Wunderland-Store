@@ -79,7 +79,7 @@
                             <td class="contentType">
                                 <h2 class="title">
                                     <a href="{{ url_for('store.item', prefix=content_type['prefix'], id=app['id']) }}">{{ app['title'] }}</a>
-                                </h2>{% if content_type['categories'] and category is none %}{{ app['category_name'] }}{% endif %}
+                                </h2>{% if content_type['categories'] and category is none %}{{ app['category']['name'] }}{% endif %}
                             </td>
                         
                             <td class="contentRatingPrice">

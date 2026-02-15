@@ -54,7 +54,7 @@ def item(prefix, id):
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = db.get_content(category_id=app['category_id'], content_type_name=content_type['name'], platform_id=session['platform'])
+    recommended = db.get_content(category_id=app['category']['id'], content_type_name=content_type['name'], platform_id=session['platform'])
 
     if recommended:
         recommended = list(recommended.values())

@@ -13,19 +13,18 @@ connection = connect(uri, row_factory=dict_row)
 
 def format_results(results, content_type_name):
 
-    final_results = {}
+    formatted_results = {}
+
     for row in results:
-        final_results[row['id']] = {
+        formatted_results[row['id']] = {
             "id": row['id'],
             "title": row['title'],
             "file": row['file'],
-            "category_name": get_category(row['category'], content_type_name)['name'],
-            "category_id": row['category'],
+            "category": get_category(row['category'], content_type_name),
             "description": row['description'],
             "publisher": row['publisher'],
             "version": row['version'],
-            "platform": row['platform'],
-            "platform_name": get_platform(row['platform'])['name'] if row['platform'] is not None else None,
+            "platform": get_platform(row['platform']) if row['platform'] is not None else None,
             "image1": row['image1'],
             "image2": row['image2'],
             "image3": row['image3'],
@@ -44,7 +43,7 @@ def format_results(results, content_type_name):
             ) if image]
         }
 
-    return final_results
+    return formatted_results
 
 def get_content(id=None, category_id=None, content_type_name=None, platform_id=None):
 
@@ -249,7 +248,7 @@ def get_news(news_id=None):
     if not results:
         return None
 
-    final_results = []
+    formatted_results = []
 
     for row in results:
         file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
@@ -265,7 +264,7 @@ def get_news(news_id=None):
         file_timestamp = os.path.getmtime(file_path)
         file_date = datetime.fromtimestamp(file_timestamp).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
-        final_results.append(
+        formatted_results.append(
             {
                 'id': row['id'],
                 'title': row['title'],
@@ -274,7 +273,7 @@ def get_news(news_id=None):
             }
         )
 
-    return final_results
+    return formatted_results
 
 def get_content_types():
     return config['content_types']

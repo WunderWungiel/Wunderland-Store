@@ -74,7 +74,7 @@
                                 <td class="contentType">
                                     <h2 class="title">
                                         <a href="{{ url_for('store.item', prefix=result['content_type']['prefix'], id=result['id']) }}">{{ result['title'] }}</a>
-                                    </h2>{{ result['category_name'] }}
+                                    </h2>{{ result['category']['name'] }}
                                 </td>
             
                                 <td class="contentRatingPrice">

@@ -42,7 +42,7 @@
                                 
                 <div id="crumbNav">
                     <a href="{{ url_for('store.content', content_type_name=content_type['name']) }}" id="crumbNavContentArea">{{ content_type['friendly_name'] }}</a>
-                        &gt; <a href="{{ url_for('store.content', content_type_name=content_type['name'], category_id=app['category_id']) }}" id="crumbNavContentArea">{{ app['category_name'] }}</a>
+                        &gt; <a href="{{ url_for('store.content', content_type_name=content_type['name'], category_id=app['category']['id']) }}" id="crumbNavContentArea">{{ app['category']['name'] }}</a>
                         &gt; {{ app['title'] }}
                 </div>
             </div> <!-- end header -->
@@ -62,8 +62,8 @@
                                     <div>
                                         <p class="type">
                                             <b>Size: </b>{{ get_natural_size(app['size']) }}<br />
-                                            {% if app['platform_name'] is not none %}
-                                            <b>Platform</b>: {{ app['platform_name'] }}<br />
+                                            {% if app['platform'] is not none %}
+                                            <b>Platform</b>: {{ app['platform']['name'] }}<br />
                                             {% endif %}
                                             <b>Publisher</b>: {{ app['publisher'] }}<br />
                                             <b>Version</b>: {{ app['version'] }}
@@ -126,7 +126,7 @@
                             <table class="contentList" cellspacing="0" width="100%" >
                 
                                 {% for app in recommended %}
-                                <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
+                                <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
 
                                     <td class="thumbnail">
                                         <img src="/static/content/icons/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
