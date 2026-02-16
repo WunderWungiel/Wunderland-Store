@@ -80,6 +80,9 @@ def images(prefix, id):
 
     app = db.get_content(id=id, content_type_name=content_type['name'])
 
+    if not app:
+    	return redirect(url_for('.content', content_type_name=content_type['name']))
+    
     if not app['screenshots']:
         return redirect(url_for('.item', prefix=prefix, id=id))
 
