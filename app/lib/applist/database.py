@@ -254,7 +254,6 @@ def search(search_query, start=None):
 
         results += content_type_results
 
-    cursor.close()
     xml = format_results(results)
 
     return xml
