@@ -84,10 +84,9 @@ def get_content(id=None, category_id=None, content_type_name=None, platform_id=N
 
     query += sql.SQL(" ORDER BY id DESC")
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    results = cursor.fetchall()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        results = cursor.fetchall()
 
     if not results:
         return None
@@ -96,18 +95,18 @@ def get_content(id=None, category_id=None, content_type_name=None, platform_id=N
 
     if id is not None:
         return results.get(id)
-    else:
-        return results
+    
+    return results
 
 def get_rating(content_id, content_type_name):
     
     table = f"{content_type_name}_rating"
     query = sql.SQL("SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM {} WHERE content_id=%s").format(sql.Identifier(table))
+    params = (content_id,)
 
-    cursor = connection.cursor()
-    cursor.execute(query, (content_id,))
-    result = cursor.fetchone()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
 
     return int(result['rating'])
 
@@ -122,20 +121,19 @@ def rate(rating, user_id, content_id, content_type_name):
     """).format(sql.Identifier(table))
     params = (content_id, user_id, rating)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+
     connection.commit()
-    cursor.close()
 
 def get_categories(content_type_name):
 
     table = f"{content_type_name}_categories"
     query = sql.SQL("SELECT * FROM {} ORDER by name").format(sql.Identifier(table))
 
-    cursor = connection.cursor()
-    cursor.execute(query)
-    results = cursor.fetchall()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        results = cursor.fetchall()
 
     return results
 
@@ -143,10 +141,9 @@ def get_platforms():
 
     query = sql.SQL("SELECT * FROM platforms ORDER by name")
 
-    cursor = connection.cursor()
-    cursor.execute(query)
-    results = cursor.fetchall()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        results = cursor.fetchall()
 
     return results
 
@@ -154,11 +151,10 @@ def get_platform(platform_id):
     
     query = sql.SQL("SELECT * FROM platforms WHERE id=%s")
     params = (platform_id,)
-
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    result = cursor.fetchone()
-    cursor.close()
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
 
     return result
 
@@ -168,10 +164,9 @@ def get_category(category_id, content_type_name):
     query = sql.SQL("SELECT * FROM {} WHERE id=%s").format(sql.Identifier(table))
     params = (category_id,)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    result = cursor.fetchone()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
 
     return result
 
@@ -217,10 +212,9 @@ def search(search_query, databases=None, platform_id=None):
 
         query += sql.SQL(" ORDER BY title")
         
-        cursor = connection.cursor()
-        cursor.execute(query, params)
-        database_results = cursor.fetchall()
-        cursor.close()
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            database_results = cursor.fetchall()
 
         results = results | format_results(database_results, database)
 
@@ -231,20 +225,30 @@ def increment_counter(id, content_type_name):
     query = sql.SQL("UPDATE {} SET visited_counter=visited_counter + 1 WHERE id=%s").format(sql.Identifier(content_type_name))
     params = (id,)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+    
     connection.commit()
-    cursor.close()
 
 def get_news(news_id=None):
     
-    cursor = connection.cursor()
-    if news_id is None:
-        cursor.execute(sql.SQL("SELECT * FROM news ORDER BY id DESC"))
-    else:
-        cursor.execute(sql.SQL("SELECT * FROM news WHERE id=%s"), (news_id,))
-    results = cursor.fetchall()
-    cursor.close()
+    query = sql.SQL("SELECT * FROM news")
+    where_clauses = []
+    params = []
+
+    if news_id is not None:
+        where_clauses.append(sql.SQL("WHERE id=%s"))
+        params.append(news_id)
+    
+    if where_clauses:
+        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+
+    query += sql.SQL(" ORDER BY id DESC")
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        results = cursor.fetchall()
+    
     if not results:
         return None
 

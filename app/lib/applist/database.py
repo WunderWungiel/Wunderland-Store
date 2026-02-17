@@ -210,7 +210,6 @@ def format_results(results, content_type_name=None, widget=False):
 def search(search_query, start=None):
 
     results = []
-    cursor = db.connection.cursor()
 
     for content_type in db.get_content_types():
 
@@ -246,8 +245,10 @@ def search(search_query, start=None):
         if where_clauses:
             query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-        cursor.execute(query, params)
-        content_type_results = cursor.fetchall()
+        with db.connection.cursor() as cursor:
+            cursor.execute(query, params)
+            content_type_results = cursor.fetchall()
+
         for i, result in enumerate(content_type_results):
             content_type_results[i]['content_type_name'] = content_type['name']
 
@@ -305,17 +306,15 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    cursor = db.connection.cursor()
-
     query += sql.SQL(" ORDER BY id DESC")
 
     if latest is not None and count is not None:
         query += sql.SQL(" LIMIT %s")
         params.append(count)
 
-    cursor.execute(query, params)
-    results = cursor.fetchall()
-    cursor.close()
+    with db.connection.cursor() as cursor:
+        cursor.execute(query, params)
+        results = cursor.fetchall()
 
     xml = format_results(results, content_type_name, widget)
     return xml

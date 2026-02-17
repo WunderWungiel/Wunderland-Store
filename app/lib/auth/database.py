@@ -30,10 +30,9 @@ def get_user(id=None, username=None, email=None):
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    result = cursor.fetchone()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
 
     return result
 
@@ -42,10 +41,10 @@ def confirm_user(email):
     query = sql.SQL("UPDATE users SET confirmed=true WHERE email=%s")
     params = (email,)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+
     connection.commit()
-    cursor.close()
 
 def user_exists(id=None, username=None, email=None):
 
@@ -58,10 +57,10 @@ def register(email, user_password, username):
     query = sql.SQL("INSERT INTO users (email, password, username, confirmed) VALUES (%s, %s, %s, false)")
     params = (email, hashed_password, username)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+    
     connection.commit()
-    cursor.close()
 
 def change_password(id, new_password):
 
@@ -69,10 +68,10 @@ def change_password(id, new_password):
     query = sql.SQL("UPDATE users SET password=%s WHERE id=%s")
     params = (hashed_password, id)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+    
     connection.commit()
-    cursor.close()
 
 def check_credentials(email, user_password):
     if not user_exists(email=email):
@@ -81,11 +80,9 @@ def check_credentials(email, user_password):
     query = sql.SQL("SELECT password FROM users WHERE email=%s AND active=true")
     params = (email,)
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    
-    result = cursor.fetchone()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
 
     hashed_password = result['password'].encode('utf-8')
     user_password = user_password.encode('utf-8')

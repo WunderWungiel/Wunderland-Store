@@ -37,10 +37,9 @@ def generate_content(database, content_name):
     
     query += sql.SQL(" ORDER BY id DESC")
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    results = cursor.fetchall()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        results = cursor.fetchall()
 
     for row in results:
 
@@ -101,10 +100,9 @@ def get_content(name, content_type_name):
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
     query += sql.SQL(" LIMIT 1")
 
-    cursor = connection.cursor()
-    cursor.execute(query, params)
-    result = cursor.fetchone()
-    cursor.close()
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
 
     if result:
         result['screenshots'] = [image for image in (result['image1'], result['image2'], result['image3'], result['image4']) if image]
