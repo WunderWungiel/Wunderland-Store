@@ -237,7 +237,7 @@ def get_news(news_id=None):
     params = []
 
     if news_id is not None:
-        where_clauses.append(sql.SQL("WHERE id=%s"))
+        where_clauses.append(sql.SQL("id=%s"))
         params.append(news_id)
     
     if where_clauses:
