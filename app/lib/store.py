@@ -96,7 +96,7 @@ def browse_categories(content_type_name):
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_name)
+    categories = db.get_categories(content_type_name, platform_id=session['platform'])
 
     return render_template(f"categories.html", content_type=content_type, categories=categories)
 

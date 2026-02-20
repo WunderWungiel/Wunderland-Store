@@ -126,13 +126,26 @@ def rate(rating, user_id, content_id, content_type_name):
 
     connection.commit()
 
-def get_categories(content_type_name):
+def get_categories(content_type_name, platform_id=None):
 
     table = f"{content_type_name}_categories"
-    query = sql.SQL("SELECT * FROM {} ORDER by name").format(sql.Identifier(table))
+    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
+    params = []
+
+    if platform_id is not None:
+        query = sql.SQL("""
+            SELECT DISTINCT category.* FROM {} AS category
+            JOIN {} AS content ON category.id = content.category
+            WHERE content.platform = %s
+        """).format(sql.Identifier(table), sql.Identifier(content_type_name))
+        params.append(platform_id)
+
+    query += sql.SQL(" ORDER BY name")
+
+    print(query.as_string(connection))
 
     with connection.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, params)
         results = cursor.fetchall()
 
     return results
