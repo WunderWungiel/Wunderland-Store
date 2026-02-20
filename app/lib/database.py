@@ -142,8 +142,6 @@ def get_categories(content_type_name, platform_id=None):
 
     query += sql.SQL(" ORDER BY name")
 
-    print(query.as_string(connection))
-
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         results = cursor.fetchall()
