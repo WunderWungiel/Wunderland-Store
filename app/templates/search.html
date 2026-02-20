@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        <title>Search | Wunderland Store</title>
+        <title>Search • Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
@@ -74,7 +74,7 @@
                                 <td class="contentType">
                                     <h2 class="title">
                                         <a href="{{ url_for('store.item', prefix=result['content_type']['prefix'], id=result['id']) }}">{{ result['title'] }}</a>
-                                    </h2>{{ result['category']['name'] }}
+                                    </h2>{{ result['content_type']['friendly_name'] }} • {{ result['category']['name'] }}
                                 </td>
             
                                 <td class="contentRatingPrice">
