@@ -106,7 +106,7 @@ def format_results(results, content_type_name=None, widget=False):
         if not content_type_name:
             content_type_name = row['content_type_name']
 
-        prefix = db.get_content_type(content_type_name)
+        content_type = db.get_content_type(content_type_name)
 
         row = {key: value.strip() if isinstance(value, str) else value for (key, value) in row.items()}
 
@@ -162,7 +162,7 @@ def format_results(results, content_type_name=None, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, 'mail')
             website = SubElement(app, 'website')
-            website.text = url_for('store.item', _external=True, prefix=prefix, id=row['id'])
+            website.text = url_for('store.item', _external=True, prefix=content_type['prefix'], id=row['id'])
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:
