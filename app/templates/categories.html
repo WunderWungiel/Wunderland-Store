@@ -47,7 +47,7 @@
                         <div id="categories">
                             <a href="{{ url_for('store.content', content_type_name=content_type['name']) }}" class="selected">All {{ content_type['friendly_name'].lower() }}</a><br />
                             {% for category in categories %}
-                            <a href="{{ url_for('store.content', content_type_name=content_type['name'], category_id=category['id']) }}">{{ category['name'] }}</a>{% if not loop.last %}<br />{% endif %}
+                            <a href="{{ url_for('store.content', content_type_name=content_type['name'], category=category['id']) }}">{{ category['name'] }}</a>{% if not loop.last %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
 

@@ -42,7 +42,7 @@
                                 
                 <div id="crumbNav">
                     <a href="{{ url_for('store.content', content_type_name=content_type['name']) }}" id="crumbNavContentArea">{{ content_type['friendly_name'] }}</a>
-                        &gt; <a href="{{ url_for('store.content', content_type_name=content_type['name'], category_id=app['category']['id']) }}" id="crumbNavContentArea">{{ app['category']['name'] }}</a>
+                        &gt; <a href="{{ url_for('store.content', content_type_name=content_type['name'], category=app['category']['id']) }}" id="crumbNavContentArea">{{ app['category']['name'] }}</a>
                         &gt; {{ app['title'] }}
                 </div>
             </div> <!-- end header -->

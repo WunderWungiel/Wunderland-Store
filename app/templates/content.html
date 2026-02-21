@@ -102,14 +102,14 @@
                 <p class="pagination">
                 {% if previous_page is not none %}
                 {% if category_id is not none %}
-                    <a href="{{ url_for('store.content', content_type_name=content_type['name'], category_id=category_id, page=previous_page) }}">Previous</a>
+                    <a href="{{ url_for('store.content', content_type_name=content_type['name'], category=category_id, page=previous_page) }}">Previous</a>
                 {% else %}
                     <a href="{{ url_for('store.content', content_type_name=content_type['name'], page=previous_page) }}">Previous</a>
                 {% endif %}
                 {% endif %}
                 {% if next_page is not none %}
                 {% if category_id is not none %}
-                    <a href="{{ url_for('store.content', content_type_name=content_type['name'], category_id=category_id, page=next_page) }}">Next</a>
+                    <a href="{{ url_for('store.content', content_type_name=content_type['name'], category=category_id, page=next_page) }}">Next</a>
                 {% else %}
                     <a href="{{ url_for('store.content', content_type_name=content_type['name'], page=next_page) }}">Next</a>
                 {% endif %}

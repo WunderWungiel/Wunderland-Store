@@ -161,8 +161,7 @@ def content(content_type_name):
     if not content_type:
         return redirect(url_for('.root'))
 
-    category_id = request.args.get('category_id')
-    category_id = int(category_id) if category_id else None
+    category_id = request.args.get('category', type=int)
 
     category = db.get_category(category_id, content_type['name']) if category_id else None
 
