@@ -11,9 +11,9 @@ from .. import config
 def version():
     root = Element('xml')
     message = Element('message')
-    message.text = "Changelog for AppList 1.0 Build 298: *Minor fixes for app changelog display and version selection"
+    message.text = "Changelog for Wunderland 2.00(0): *Initial release based on AppList source code*"
     url = Element('url')
-    url.text = "http://repo.applist.schumi1331.de/AppList.sis"
+    url.text = "http://ovi.wunderwungiel.pl/static/content/files/WunderlandStore.sis"
     root.append(message)
     root.append(url)
 
@@ -24,9 +24,16 @@ def version():
 def changelog():
     root = Element('xml')
     message = Element('message')
-    message.text = """Changelog for Wunderland Store 1.0 Build 1:
-* Using AppList as base app
-* Supports: apps, icons, downloading"""
+    message.text = """Changelog for Wunderland 2.00(0):
+* Initial release based on AppList source code
+* Supports all content types
+* The categories list is equal to server
+* Supports icons, addon files, UIDs, feed
+* Most references and strings are migrated to Wunderland
+* Icons are migrated
+* Unused settings entries are removed
+* UID and project name is changed
+* Widget appears to be working"""
     url = Element('url')
     root.append(message)
     root.append(url)
@@ -36,64 +43,58 @@ def changelog():
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
 # !!! Replace right side and comments with YOUR categories' IDs!
-def applist_to_wunderland(category_id):
-    categories = {
-        0: (None, 'apps'),  # All apps
-        1: (2, 'apps'),  # Weather & GPS
-        2: (3, 'apps'),  # Office
-        3: (4, 'apps'),  # Camera, photos, videos
-        4: (11, 'apps'),  # Emulator
-        5: (5, 'apps'),  # File manager & cloud
-        6: (1, 'themes'),  # Themes
-        7: (7, 'apps'),  # Internet
-        8: (8, 'apps'),  # Music
-        10: (9, 'apps'),  # Social
-        11: (12, 'apps'),  # Extras
-        12: (10, 'apps'),  # Tools
-        13: (1, 'apps'),  # Other apps
-        20: (None, 'games'),  # All games
-        21: (2, 'games'),  # Action
-        22: (3, 'games'),  # Adventure
-        23: (6, 'games'),  # Puzzles & cards
-        24: (5, 'games'),  # Strategy (represented as Tactic in AppList)
-        25: (4, 'games'),  #  Sports (represented as Extra in AppList)
-        26: (1, 'games')  # Other games
-    }
-
-    return categories.get(category_id)
+applist_to_wunderland = {
+    0: (None, 'apps'),  # All apps
+    1: (4, 'apps'),  # Camera, photos, videos
+    2: (11, 'apps'),  # Emulator
+    3: (12, 'apps'),  # Extras
+    4: (5, 'apps'),  # File manager & cloud
+    5: (7, 'apps'),  # Internet
+    6: (8, 'apps'),  # Music
+    7: (3, 'apps'),  # Office
+    8: (1, 'apps'),  # Other apps
+    9: (9, 'apps'),  # Social
+    10: (10, 'apps'),  # Tools
+    11: (2, 'apps'),  # Weather & GPS
+    12: (None, 'games'),  # All games
+    13: (2, 'games'),  # Action
+    14: (3, 'games'),  # Adventure
+    15: (1, 'games'),  # Other games
+    16: (6, 'games'),  # Puzzles & cards
+    17: (4, 'games'),  # Sports
+    18: (5, 'games'),  # Strategy
+    19: (1, 'themes')  # Themes
+}
 
 # !!! Replace left side and comments with YOUR categories' IDs!
-def wunderland_to_applist(category_id, content_type_name):
-    categories = {
-        'apps': {
-            None: 0,  # All apps
-            2: 1,  # Weather & GPS
-            3: 2,  # Camera, photos, videos
-            4: 3,  # Emulator
-            5: 5,  # File manager & cloud
-            7: 7,  # Internet
-            8: 8,  # Music
-            9: 10,  # Social
-            10: 12,  # Tools
-            11: 4,  # Emulator
-            12: 11,  # Extras
-            1: 13  # Other apps
-        },
-        'games': {
-            None: 20,  # All games
-            2: 21,  # Action
-            3: 22,  # Adventure
-            6: 23,  # Puzzles & cards
-            5: 24,  # Strategy (represented as Tactic in AppList)
-            4: 25,  # Sports (represented as Extra in AppList)
-            1: 26  # Other games
-        },
-        'themes': {
-            1: 6  # Themes
-        }
+wunderland_to_applist = {
+    'apps': {
+        None: 0,  # All apps
+        4: 1,  # Camera, photos, videos
+        11: 2,  # Emulator
+        12: 3,  # Extras
+        5: 4,  # File manager & cloud
+        7: 5,  # Internet
+        8: 6,  # Music
+        3: 7,  # Office
+        1: 8,  # Other apps
+        9: 9,  # Social
+        10: 10,  # Tools
+        2: 11  # Weather & GPS
+    },
+    'games': {
+        None: 12,  # All games
+        2: 13,  # Action
+        3: 14,  # Adventure
+        1: 15,  # Other games
+        6: 16,  # Puzzles & cards
+        4: 17,  # Sports
+        5: 18  # Strategy
+    },
+    'themes': {
+        1: 19  # Themes
     }
-
-    return categories.get(content_type_name).get(category_id)
+}
 
 def format_results(results, content_type_name=None, widget=False):
     root = Element('applist')
@@ -152,7 +153,7 @@ def format_results(results, content_type_name=None, widget=False):
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
             category = SubElement(app, 'category')
-            category.text = str(wunderland_to_applist(row['category'], content_type_name))
+            category.text = str(wunderland_to_applist[content_type_name][row['category']])
             language = SubElement(app, 'language')
             language.text = "EN"
             
@@ -261,7 +262,7 @@ def search(search_query, start=None):
 def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type_name=None):
     
     if category is not None:
-        new_category, content_type_name = applist_to_wunderland(category) or (None, 'apps')
+        new_category, content_type_name = applist_to_wunderland.get(category) or (None, 'apps')
     else:
         new_category = None
 
