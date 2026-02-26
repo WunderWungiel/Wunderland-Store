@@ -103,9 +103,9 @@
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
                     <a href="/home/" class="selected">Home</a><br />
-                    <a href="/apps/">Apps</a><br />
-                    <a href="/games/">Games</a><br />
-                    <a href="/themes/">Themes</a><br />
+                    {% for _content_type in get_content_types() %}
+                    <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}">{{ _content_type['friendly_name'] }}</a><br />
+                    {% endfor %}
                 </div> <!-- end navigation -->
             </div>
 
