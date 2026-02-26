@@ -6,9 +6,9 @@
         <title>Confirm email • Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon"/>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
     </head>
 
     <body>
@@ -18,7 +18,7 @@
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id="logoImg" href="/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                         </tr>
                     </table>

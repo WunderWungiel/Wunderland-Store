@@ -7,9 +7,9 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="description" content="{{ app['description'] }}" />
         
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
     </head>
 
     <body>   
@@ -19,7 +19,7 @@
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id="logoImg" href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
                                 {% if session['platform'] is none %}
@@ -27,14 +27,14 @@
                                 {% else %}
                                 {% set platform_name = get_platform(session['platform'])['name'] %}
                                 {% endif %}
-                                <span><a href="/platform">Platform</a>: <b>{{ platform_name }}</b></span>
+                                <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
                                 |
                                 {% if session['logged_in'] is defined %}
                                 {% set username = get_user(session['user_id'])['username'] %}
-                                <span>Logged in as: <a href="/profile">{{ username }}</a></span>
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
                                 |
                                 {% endif %}
-                                <a href="/search/">Search</a>
+                                <a href="{{ url_for('store.search') }}">Search</a>
                             </td>
                         </tr>
                     </table>
@@ -54,7 +54,7 @@
                             <tr>
                                 {% if content_type['icons'] %}
                                 <td class="feature">
-                                    <img src="/static/content/icons/{{ app['img'] }}" alt="{{ app['title'] }}" width="66" height="66" />
+                                    <img src="{{ url_for('static', filename='content/icons/' ~ app['img']) }}" alt="{{ app['title'] }}" width="66" height="66" />
                                 </td>
                                 {% endif %}
                                 <td class="meta item">
@@ -78,7 +78,7 @@
                                 <td align="right">
                                     <div class="buy">
                                         <div class="buttons">
-                                            <a href="/static/content/files/{{ app['file'] }}" class="lite" target="_blank">Download</a>
+                                            <a href="{{ url_for('static', filename='content/files/' ~ app['file']) }}" class="lite" target="_blank">Download</a>
                                         </div> <!-- end buttons -->
                                     </div> <!-- end buy info -->
                                 </td>
@@ -88,10 +88,10 @@
                         <div class="reviewDiv">
                             {% if session['logged_in'] is defined %}<a href="{{ url_for('store.rate', prefix=content_type['prefix'], id=app['id']) }}" class="reviews"> Rate</a>{% endif %}
                             {% for i in range(app['rating']) %}
-                            <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
+                            <img src="{{ url_for('static', filename='img/star_p.png') }}" alt="{{ i+1 }} star" />
                             {% endfor %}
                             {% for i in range(app['rating'], 5) %}
-                            <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
+                            <img src="{{ url_for('static', filename='img/star_g.png') }}" alt="{{ i+1 }} star" />
                             {% endfor %}
                         </div>
                         
@@ -112,7 +112,7 @@
                             Extra file: {{ app['addon_message']|safe }}
                             {% if app['addon_file'] is not none %}
                             <div class="buttons smallButtons">
-                                <a href="/static/content/files/{{ app['addon_file'] }}" class="lite" target="_blank">Download</a>
+                                <a href="{{ url_for('static', filename='content/files/' ~ app['addon_file']) }}" class="lite" target="_blank">Download</a>
                             </div>
                             {% endif %}
                         </div>
@@ -129,7 +129,7 @@
                                 <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
 
                                     <td class="thumbnail">
-                                        <img src="/static/content/icons/{{ app['img'] }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
+                                        <img src="{{ url_for('static', filename='content/icons/' ~ app['img']) }}" alt="thumbnail of {{ app['title'] }}" width="46" height="46" />
                                     </td>
                                     
                                     <td class="contentType">
@@ -141,10 +141,10 @@
                                     <td class="contentRatingPrice">
                                         <div class="rating"><!-- Rating -->
                                             {% for i in range(app['rating']) %}
-                                            <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
+                                            <img src="{{ url_for('static', filename='img/star_p.png') }}" alt="{{ i+1 }} star" />
                                             {% endfor %}
                                             {% for i in range(app['rating'], 5) %}
-                                            <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
+                                            <img src="{{ url_for('static', filename='img/star_g.png') }}" alt="{{ i+1 }} star" />
                                             {% endfor %}
                                         </div>
                                     </td>
@@ -172,7 +172,7 @@
 
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
-                    <a href="/home/">Home</a><br />
+                    <a href="{{ url_for('store.root') }}">Home</a><br />
                     {% for _content_type in get_content_types() %}
                     <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}" class="{% if content_type['name'] == _content_type['name'] %}selected{% endif %}">{{ _content_type['friendly_name'] }}</a><br />
                     {% endfor %}
@@ -181,9 +181,9 @@
                         
             <div id="footer">
                 {% if session['logged_in'] is not defined %}
-                <a class="accountStatusChange" href="/login">Sign in</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a> |
                 {% else %}
-                <a class="accountStatusChange" href="/logout">Log out</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a> |
                 {% endif %}
                 <a href="/help/faqs">Help</a><br/>
             © Wunder Wungiel {{ now.year }}</div>

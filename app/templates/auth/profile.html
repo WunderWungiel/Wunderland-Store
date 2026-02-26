@@ -6,11 +6,11 @@
         <title>Profile • Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
 
-        <script src="/static/js/script.js"></script>
+        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
     </head>
 
@@ -21,11 +21,11 @@
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id="logoImg" href="/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
                                 {% set username = get_user(session['user_id'])['username'] %}
-                                <span>Logged in as: <a href="/profile">{{ username }}</a></span>
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
                             </td>
                         </tr>
                     </table>
@@ -75,7 +75,7 @@
             <div id="bottom"></div>
                         
             <div id="footer">
-                <a class="accountStatusChange" href="/logout">Log out</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a> |
                 <a href="/help/faqs">Help</a><br/>
             © Wunder Wungiel {{ now.year }}</div>
         </div> <!-- end wrapper -->

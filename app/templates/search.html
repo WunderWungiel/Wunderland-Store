@@ -6,9 +6,9 @@
         <title>Search • Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/global-min.css" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="/static/css/style.css" />
-        <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
     </head>
 
     <body>
@@ -18,7 +18,7 @@
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id="logoImg" href="/home/"><img src="/static/img/logo_wunderland.png" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
                                 {% if session['platform'] is none %}
@@ -26,11 +26,11 @@
                                 {% else %}
                                 {% set platform_name = get_platform(session['platform'])['name'] %}
                                 {% endif %}
-                                <span><a href="/platform">Platform</a>: <b>{{ platform_name }}</b></span>
+                                <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
                                 {% if session['logged_in'] is defined %}
                                 |
                                 {% set username = get_user(session['user_id'])['username'] %}
-                                <span>Logged in as: <a href="/profile">{{ username }}</a></span>
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -68,7 +68,7 @@
                             <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
             
                                 <td class="thumbnail">
-                                    <img src="/static/content/icons/{{ result['img'] }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46" />
+                                    <img src="{{ url_for('static', filename='content/icons/' ~ result['img']) }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46" />
                                 </td>
             
                                 <td class="contentType">
@@ -80,10 +80,10 @@
                                 <td class="contentRatingPrice">
                                     <div class="rating">
                                         {% for i in range(result['rating']) %}
-                                        <img src="/static/img/star_p.png" alt="{{ i+1 }} star" />
+                                        <img src="{{ url_for('static', filename='img/star_p.png') }}" alt="{{ i+1 }} star" />
                                         {% endfor %}
                                         {% for i in range(result['rating'], 5) %}
-                                        <img src="/static/img/star_g.png" alt="{{ i+1 }} star" />
+                                        <img src="{{ url_for('static', filename='img/star_g.png') }}" alt="{{ i+1 }} star" />
                                         {% endfor %}
                                     </div>
                                 </td>
@@ -97,10 +97,10 @@
                     {% if previous_page is not none or next_page is not none %}
                     <p class="pagination">
                     {% if previous_page is not none %}
-                        <a href="/search/?q={{ search_query}}&page={{ previous_page }}">Previous</a>
+                        <a href="{{ url_for('search', q=search_query, page=previous_page) }}">Previous</a>
                     {% endif %}
                     {% if next_page is not none %}
-                        <a href="/search/?q={{ search_query}}&page={{ next_page }}">Next</a>
+                        <a href="{{ url_for('search', q=search_query, page=next_page) }}">Next</a>
                     {% endif %}
                     </p>
                     {% endif %}
@@ -109,7 +109,7 @@
                     {% endif %}
 
                     <div class="homeLink">
-                        <a href="/home/">Home</a>
+                        <a href="{{ url_for('store.root') }}">Home</a>
                     </div>
 
                     <div class="beacon"></div>
@@ -120,9 +120,9 @@
                         
             <div id="footer">
                 {% if session['logged_in'] is not defined %}
-                <a class="accountStatusChange" href="/login">Sign in</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a> |
                 {% else %}
-                <a class="accountStatusChange" href="/logout">Log out</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a> |
                 {% endif %}
                 <a href="/help/faqs">Help</a><br/>
             © Wunder Wungiel {{ now.year }}</div>
