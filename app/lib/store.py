@@ -228,7 +228,9 @@ def feed():
 @store.route("/news/<int:news_id>")
 def news(news_id):
 
-    content = db.get_news(news_id=news_id)[0]
+    content = db.get_news(news_id=news_id)
+    if not content:
+        return redirect(url_for('.root'))
 
     return render_template("news.html", title=content['title'], content=content['content'], share=True)
 
