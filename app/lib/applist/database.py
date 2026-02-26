@@ -12,8 +12,8 @@ def version():
     root = Element('xml')
     message = Element('message')
 
-    message.text = """Changelog for Wunderland 2.00(1):
-*Added Turkish translation"""
+    message.text = """Changelog for Wunderland 2.00(2):
+*Fixed a typo causing Turkish to be the default language"""
 
     url = Element('url')
     url.text = "http://ovi.wunderwungiel.pl/static/content/files/Wunderland.sis"
@@ -28,7 +28,10 @@ def changelog():
     root = Element('xml')
     message = Element('message')
 
-    message.text = """Changelog for Wunderland 2.00(1):
+    message.text = """Changelog for Wunderland 2.00(2):
+*Fixed a typo causing Turkish to be the default language
+    
+Changelog for Wunderland 2.00(1):
 *Added Turkish translation
     
 Changelog for Wunderland 2.00(0):
