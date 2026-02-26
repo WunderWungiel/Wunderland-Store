@@ -31,7 +31,7 @@
                 <div class="view">
                     <div class="contentItem">
                         <div id="loginField">
-                            <form action="/login/" method="POST" id="loginForm" onsubmit="return validateLoginForm()">
+                            <form action="{{ url_for('auth.login') }}" method="POST" id="loginForm" onsubmit="return validateLoginForm()">
                                 <fieldset>
 
                                     {% if message is not none %}
@@ -53,7 +53,7 @@
 
                                     <br /><br />
                                     <label for="loginBtn">Don't have an account yet?&nbsp;</label>
-                                    <input type="button" class="Btn" value="Register" onclick="window.location.href='/register'"/>
+                                    <input type="button" class="Btn" value="Register" onclick="window.location.href='{{ url_for('auth.register') }}'"/>
                                 </fieldset>
                             </form>
                         </div> <!-- end login -->

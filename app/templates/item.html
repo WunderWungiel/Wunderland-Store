@@ -161,7 +161,7 @@
 
             <div id="bottom">
                 <div id="searchContent">
-                    <form action="/search" method="get" id="searchForm">
+                    <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                         <fieldset id="searchField">
                             <label for="search">Search</label>
                             <input type="text" id="search" name="q" title="" value="" />
