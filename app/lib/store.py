@@ -194,6 +194,10 @@ def content(content_type_name):
 
     return render_template(f"content.html", content_type=content_type, apps=apps_to_show, category=category, category_id=category_id, next_page=next_page, previous_page=previous_page)
 
+@store.route("/download")
+def download():
+    return ""
+
 @store.route("/feed.xml")
 def feed():
 

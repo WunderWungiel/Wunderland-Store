@@ -61,12 +61,13 @@
             <div id="bottom"></div>
                         
             <div id="footer">
+                <a href="{{ url_for('store.download') }}"><b>Download</b></a> |
                 {% if session['logged_in'] is not defined %}
-                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
-                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
                 {% endif %}
-                <a href="/help/faqs">Help</a><br/>
+                <br/>
             © Wunder Wungiel {{ now.year }}</div>
         </div> <!-- end wrapper -->
     </body>

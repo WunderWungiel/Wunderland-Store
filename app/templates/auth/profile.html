@@ -75,8 +75,9 @@
             <div id="bottom"></div>
                         
             <div id="footer">
-                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a> |
-                <a href="/help/faqs">Help</a><br/>
+                <a href="{{ url_for('store.download') }}"><b>Download</b></a> |
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
+                <br />
             © Wunder Wungiel {{ now.year }}</div>
         </div> <!-- end wrapper -->
     </body>
