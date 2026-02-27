@@ -67,7 +67,7 @@
             <div id="bottom"></div>
                         
             <div id="footer">
-                <a href="{{ url_for('store.download') }}"><b>Download</b></a> |
+                <a href="{{ url_for('store.download') }}">Download</a> |
                 {% if session['logged_in'] is not defined %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
