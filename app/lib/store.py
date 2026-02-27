@@ -196,7 +196,16 @@ def content(content_type_name):
 
 @store.route("/download")
 def download():
-    return ""
+
+    if not config['clients']:
+        return redirect(url_for('.root'))
+    
+    apps = [db.get_content(id=client['id'], content_type_name=client['content_type_name']) for client in config['clients']]
+    apps = [app for app in apps if app is not None]
+    
+    content_type = db.get_content_type('apps')
+    
+    return render_template("download.html", content_type=content_type, apps=apps)
 
 @store.route("/feed.xml")
 def feed():

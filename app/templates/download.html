@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor" />
+        <title>Download • Wunderland Store</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="description" content="Download Wunderland" />
+        
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
+    </head>
+
+    <body>   
+        <div id="wrapper">
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
+                            </td>
+                            <td id="searchLink">
+                                {% if session['platform'] is none %}
+                                {% set platform_name = "All" %}
+                                {% else %}
+                                {% set platform_name = get_platform(session['platform'])['name'] %}
+                                {% endif %}
+                                <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
+                                |
+                                {% if session['logged_in'] is defined %}
+                                {% set username = get_user(session['user_id'])['username'] %}
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
+                                |
+                                {% endif %}
+                                <a href="{{ url_for('store.search') }}">Search</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div> <!-- end top -->
+                                
+                <div id="crumbNav">
+                    <a href="{{ url_for('store.content', content_type_name=content_type['name']) }}" id="crumbNavContentArea">{{ content_type['friendly_name'] }}</a>
+                        &gt; Download
+                </div>
+            </div> <!-- end header -->
+
+            <div id="views">
+                <div class="view">
+                    {% for app in apps %}
+                    <div class="contentItem">
+                        <table class="contentInfo hreview-aggregate">
+                            <tr>
+                                <td class="feature">
+                                    <img src="{{ url_for('static', filename='content/icons/' ~ app['img']) }}" alt="{{ app['title'] }}" width="66" height="66" />
+                                </td>
+                                <td class="meta item">
+                                    <div class="title"><h2 class="fn nokia-gray">Wunderland</h2></div>
+                                    <div>
+                                        <p class="type">
+                                            {% if app['platform'] is not none %}
+                                            <b>Platform</b>: {{ app['platform']['name'] }}<br />
+                                            {% endif %}
+                                            <b>Version</b>: {{ app['version'] }}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="buy">
+                            <div class="buttons">
+                                <a href="{{ url_for('store.item', prefix='app', id=16) }}" class="lite">Download</a>
+                            </div> <!-- end buttons -->
+                        </div> <!-- end buy info -->
+                    </div> <!-- end content item -->
+                    {% endfor %}
+
+                    <div class="beacon"></div>
+                </div>
+            </div> <!-- end views -->
+
+            <div id="bottom">
+                <div id="searchContent">
+                    <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
+                        <fieldset id="searchField">
+                            <label for="search">Search</label>
+                            <input type="text" id="search" name="q" title="" value="" />
+                            <input type="submit" id="searchBtn" value="Search" />
+                        </fieldset>
+                    </form>
+                </div> <!-- end search -->
+
+                <div id="bottomNavigation">
+                    <h3>Browse categories</h3>
+                    <a href="{{ url_for('store.root') }}">Home</a><br />
+                    {% for _content_type in get_content_types() %}
+                    <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}" >{{ _content_type['friendly_name'] }}</a><br />
+                    {% endfor %}
+                </div> <!-- end navigation -->
+            </div>
+                        
+            <div id="footer">
+                <a href="{{ url_for('store.download') }}"><b>Download</b></a> |
+                {% if session['logged_in'] is not defined %}
+                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
+                {% else %}
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
+                {% endif %}
+                <br />
+            © Wunder Wungiel {{ now.year }}</div>
+        </div> <!-- end wrapper -->
+    </body>
+</html>

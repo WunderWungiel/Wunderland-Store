@@ -29,3 +29,8 @@ content_types:
     prefix: "game"
   themes:
     prefix: "theme
+clients:
+  - id: 16
+    content_type_name: 'apps'
+  - id: 192
+    content_type_name: 'apps'
