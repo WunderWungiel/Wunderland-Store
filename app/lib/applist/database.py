@@ -304,11 +304,8 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
         params.append(new_category)
 
     if id is not None:
-        if isinstance(id, int):
-            where_clauses.append(sql.SQL("id = %s"))
-        elif isinstance(id, list) and id:
-            where_clauses.append(sql.SQL("id = ANY(%s)"))
-        params.append(id) # Append regardless of type
+        where_clauses.append(sql.SQL("id = ANY(%s)"))
+        params.append(id)
 
     if start is not None:
         where_clauses.append(sql.SQL("id > %s"))
