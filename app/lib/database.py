@@ -288,6 +288,9 @@ def get_news(news_id=None):
             }
         )
 
+    if news_id is not None:
+        return formatted_results[0]
+
     return formatted_results
 
 def get_content_types():
