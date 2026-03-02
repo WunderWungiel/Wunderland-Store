@@ -97,10 +97,10 @@
                     {% if previous_page is not none or next_page is not none %}
                     <p class="pagination">
                     {% if previous_page is not none %}
-                        <a href="{{ url_for('search', q=search_query, page=previous_page) }}">Previous</a>
+                        <a href="{{ url_for('store.search', q=search_query, page=previous_page) }}">Previous</a>
                     {% endif %}
                     {% if next_page is not none %}
-                        <a href="{{ url_for('search', q=search_query, page=next_page) }}">Next</a>
+                        <a href="{{ url_for('store.search', q=search_query, page=next_page) }}">Next</a>
                     {% endif %}
                     </p>
                     {% endif %}
