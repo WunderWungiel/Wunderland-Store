@@ -55,7 +55,9 @@ def item(prefix, id):
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = db.get_content(category_id=app['category']['id'], content_type_name=content_type['name'], platforms=[session['platform']])
+    platform_id = session.get('platform')
+
+    recommended = db.get_content(category_id=app['category']['id'], content_type_name=content_type['name'], platforms=[platform_id] if platform_id else None)
 
     if recommended:
         recommended = list(recommended.values())
@@ -169,7 +171,9 @@ def content(content_type_name):
     if category_id and not category:
         return redirect(url_for('.content', content_type_name=content_type['name']))
 
-    all_apps = db.get_content(category_id=category_id, content_type_name=content_type['name'], platforms=[session['platform']])
+    platform_id = session['platform']
+
+    all_apps = db.get_content(category_id=category_id, content_type_name=content_type['name'], platforms=[platform_id] if platform_id else None)
     if not all_apps:
         return render_template(f"empty.html", category=category, content_type=content_type)
     
