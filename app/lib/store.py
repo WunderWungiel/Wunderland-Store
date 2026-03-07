@@ -19,11 +19,12 @@ def rate(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
     
-    if not db.get_content(id=id, content_type_name=content_type['name']) or not session.get('logged_in'):
+    app = db.get_content(id=id, content_type_name=content_type['name'])
+
+    if not app or not session.get('logged_in'):
         return redirect(url_for('.item', prefix=prefix, id=id))
 
     if request.method == 'GET':        
-        app = db.get_content(id=id, content_type_name=content_type['name'])
         return render_template("rate.html", app=app, prefix=prefix)
     else:
         rating = request.form.get('rating')
@@ -54,7 +55,7 @@ def item(prefix, id):
     except FileNotFoundError:
         app['size'] = 0
 
-    recommended = db.get_content(category_id=app['category']['id'], content_type_name=content_type['name'], platform_id=session['platform'])
+    recommended = db.get_content(category_id=app['category']['id'], content_type_name=content_type['name'], platforms=[session['platform']])
 
     if recommended:
         recommended = list(recommended.values())
@@ -168,7 +169,7 @@ def content(content_type_name):
     if category_id and not category:
         return redirect(url_for('.content', content_type_name=content_type['name']))
 
-    all_apps = db.get_content(category_id=category_id, content_type_name=content_type['name'], platform_id=session['platform'])
+    all_apps = db.get_content(category_id=category_id, content_type_name=content_type['name'], platforms=[session['platform']])
     if not all_apps:
         return render_template(f"empty.html", category=category, content_type=content_type)
     

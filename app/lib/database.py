@@ -45,17 +45,17 @@ def format_results(results, content_type_name):
 
     return formatted_results
 
-def get_content(id=None, category_id=None, content_type_name=None, platform_id=None):
+def get_content(id=None, category_id=None, content_type_name=None, platforms=None):
 
     where_clauses = [sql.SQL("visible = TRUE")]
     params = []
 
-    if platform_id is not None:
+    if platforms is not None:
         query = sql.SQL("""
             WITH RECURSIVE platform_tree AS (
                 SELECT id, parent_id
                 FROM platforms
-                WHERE id = %s
+                WHERE id = ANY(%s)
 
                 UNION ALL
 
@@ -67,7 +67,7 @@ def get_content(id=None, category_id=None, content_type_name=None, platform_id=N
         """).format(sql.Identifier(content_type_name))
 
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
-        params.append(platform_id)
+        params.append(platforms)
 
     else:
         query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type_name))
