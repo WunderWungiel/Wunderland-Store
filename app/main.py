@@ -48,8 +48,9 @@ def before_request():
     session.permanent = True
 
     platform_id = session.get('platform')
-    if not platform_id:
+    if not platform_id or not db.get_platform(platform_id):
         session['platform'] = None
+
     user_id = session.get('user_id')
 
     if not user_id:
