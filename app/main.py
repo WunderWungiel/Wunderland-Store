@@ -62,9 +62,10 @@ def before_request():
             session_logout()
             return render_template("auth/banned.html", reason=user['banned_reason'])
 
-@app.route("/robots.txt")
-def robots():
-    return send_from_directory(app.static_folder, "robots.txt")
+if not config['allow_indexing']:
+    @app.route("/robots.txt")
+    def robots():
+        return send_from_directory(app.static_folder, "robots.txt")
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=config['port'])

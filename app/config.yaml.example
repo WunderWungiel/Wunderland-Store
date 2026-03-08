@@ -14,6 +14,7 @@ email:
 admin_usernames:
   - ADMIN_USERNAME
 proxy: false
+allow_indexing: true
 api_prefix: "/api/v1"
 platforms:
   qtstore:
