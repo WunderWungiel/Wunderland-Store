@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2cNb0QGIMLrFArVcEFFKS16vwdFrZQMOEHDKLkJ5p7EbpOUq6H6jikmoeNv3mgi
+\restrict VADbd1OLt4j1J7d8KYSfm9Z4Uc8W7HKnfZ17itZEVlSXqu8AE1bpyZeoeqyJQHm
 
--- Dumped from database version 18.1
--- Dumped by pg_dump version 18.1
+-- Dumped from database version 18.3
+-- Dumped by pg_dump version 18.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -41,11 +41,9 @@ CREATE TABLE public.apps (
     addon_message character varying,
     addon_file character varying,
     uid character varying,
-    image1 character varying,
-    image2 character varying,
-    image3 character varying,
-    image4 character varying,
-    visited_counter integer DEFAULT 0 NOT NULL
+    visited_counter integer DEFAULT 0 NOT NULL,
+    screenshot_prefix character varying,
+    screenshot_count integer DEFAULT 0 CONSTRAINT apps_image_count_not_null NOT NULL
 );
 
 
@@ -149,11 +147,9 @@ CREATE TABLE public.games (
     addon_message character varying,
     addon_file character varying,
     uid character varying,
-    image1 character varying,
-    image2 character varying,
-    image3 character varying,
-    image4 character varying,
-    visited_counter integer DEFAULT 0 NOT NULL
+    visited_counter integer DEFAULT 0 NOT NULL,
+    screenshot_prefix character varying,
+    screenshot_count integer DEFAULT 0 NOT NULL
 );
 
 
@@ -299,11 +295,9 @@ CREATE TABLE public.themes (
     addon_message character varying,
     addon_file character varying,
     uid character varying,
-    image1 character varying,
-    image2 character varying,
-    image3 character varying,
-    image4 character varying,
-    visited_counter integer DEFAULT 0 NOT NULL
+    visited_counter integer DEFAULT 0 NOT NULL,
+    screenshot_prefix character varying,
+    screenshot_count integer DEFAULT 0 NOT NULL
 );
 
 
@@ -559,6 +553,14 @@ ALTER TABLE ONLY public.games_rating
 
 
 --
+-- Name: games_rating games_rating_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.games_rating
+    ADD CONSTRAINT games_rating_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: news news_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -596,6 +598,14 @@ ALTER TABLE ONLY public.themes
 
 ALTER TABLE ONLY public.themes_rating
     ADD CONSTRAINT themes_rating_content_id_user_id_key UNIQUE (content_id, user_id);
+
+
+--
+-- Name: themes_rating themes_rating_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.themes_rating
+    ADD CONSTRAINT themes_rating_pkey PRIMARY KEY (id);
 
 
 --
@@ -690,5 +700,5 @@ ALTER TABLE ONLY public.themes_rating
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2cNb0QGIMLrFArVcEFFKS16vwdFrZQMOEHDKLkJ5p7EbpOUq6H6jikmoeNv3mgi
+\unrestrict VADbd1OLt4j1J7d8KYSfm9Z4Uc8W7HKnfZ17itZEVlSXqu8AE1bpyZeoeqyJQHm
 
