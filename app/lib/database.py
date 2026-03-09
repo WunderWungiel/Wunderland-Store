@@ -25,27 +25,18 @@ def format_results(results, content_type_name):
             'publisher': row['publisher'],
             'version': row['version'],
             'platform': get_platform(row['platform']) if row['platform'] is not None else None,
-            'image1': row['image1'],
-            'image2': row['image2'],
-            'image3': row['image3'],
-            'image4': row['image4'],
             'img': os.path.join(content_type_name, row['img']),
             'content_type': get_content_type(content_type_name),
             'rating': get_rating(row['id'], content_type_name),
             'addon_message': row['addon_message'],
             'addon_file': row['addon_file'],
             'uid': row['uid'],
-            'screenshots': [image for image in (
-                row['image1'],
-                row['image2'],
-                row['image3'],
-                row['image4']
-            ) if image]
+            'screenshots': [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
         }
 
     return formatted_results
 
-def get_content(id=None, category_id=None, content_type_name=None, platforms=None):
+def get_content(content_type_name, id=None, category_id=None, platforms=None):
 
     where_clauses = [sql.SQL("visible = TRUE")]
     params = []

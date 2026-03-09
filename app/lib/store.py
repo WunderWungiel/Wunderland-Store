@@ -19,7 +19,7 @@ def rate(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
     
-    app = db.get_content(id=id, content_type_name=content_type['name'])
+    app = db.get_content(content_type['name'], id=id)
 
     if not app or not session.get('logged_in'):
         return redirect(url_for('.item', prefix=prefix, id=id))
@@ -42,7 +42,7 @@ def item(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    app = db.get_content(id=id, content_type_name=content_type['name'])
+    app = db.get_content(content_type['name'], id=id)
 
     if app and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
         db.increment_counter(id, content_type['name'])
@@ -57,7 +57,7 @@ def item(prefix, id):
 
     platform_id = session.get('platform')
 
-    recommended = db.get_content(category_id=app['category']['id'], content_type_name=content_type['name'], platforms=[platform_id] if platform_id else None)
+    recommended = db.get_content(content_type['name'], category_id=app['category']['id'], platforms=[platform_id] if platform_id else None)
 
     if recommended:
         recommended = list(recommended.values())
@@ -81,7 +81,7 @@ def images(prefix, id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    app = db.get_content(id=id, content_type_name=content_type['name'])
+    app = db.get_content(content_type['name'], id=id)
 
     if not app:
         return redirect(url_for('.content', content_type_name=content_type['name']))
@@ -173,7 +173,7 @@ def content(content_type_name):
 
     platform_id = session['platform']
 
-    all_apps = db.get_content(category_id=category_id, content_type_name=content_type['name'], platforms=[platform_id] if platform_id else None)
+    all_apps = db.get_content(content_type['name'], category_id=category_id, platforms=[platform_id] if platform_id else None)
     if not all_apps:
         return render_template(f"empty.html", category=category, content_type=content_type)
     
@@ -205,7 +205,7 @@ def download():
     if not config['clients']:
         return redirect(url_for('.root'))
     
-    apps = [db.get_content(id=client['id'], content_type_name=client['content_type_name']) for client in config['clients']]
+    apps = [db.get_content(client['content_type_name'], id=client['id']) for client in config['clients']]
     apps = [app for app in apps if app is not None]
     
     content_type = db.get_content_type('apps')

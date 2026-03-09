@@ -189,19 +189,15 @@ def format_results(results, content_type_name=None, widget=False):
 
             if row['addon_message']:
                 description.text += f"\n\nExtra file: {row['addon_message']}"
-            image1 = SubElement(app, 'image1')
-            image2 = SubElement(app, 'image2')
-            image3 = SubElement(app, 'image3')
-            image4 = SubElement(app, 'image4')
-            image5 = SubElement(app, 'image5')
-            if row['image1']:
-                image1.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image1']))
-            if row['image2']:
-                image2.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image2']))
-            if row['image3']:
-                image3.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image3']))
-            if row['image4']:
-                image4.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, row['image4']))
+
+            screenshots = [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
+
+            for i in range(5): # 5 - 1
+                image = SubElement(app, f'image{i + 1}')
+                if len(screenshots) >= i + 1:
+                    image.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, screenshots[i]))
+                    print("")
+
             tags = SubElement(app, 'tags')
             changelog = SubElement(app, 'changelog')
             unsignednote = SubElement(app, 'unsignednote')

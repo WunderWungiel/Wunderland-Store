@@ -32,7 +32,7 @@ def description(content_type_name, app):
             description += "<br><br>"
         for i, screenshot in enumerate(content['screenshots'], start=1):
             path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type['name'], screenshot))
-            description += f'<img src="{path}" alt="image{i}" width="150"><br><br>'
+            description += f'<img src="{path}" alt="screenshot{i}" width="150"><br><br>'
 
     if content['addon_message']:
         description += f"<br><br>Extra file: {content['addon_message']}"
