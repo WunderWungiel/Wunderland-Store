@@ -18,22 +18,22 @@ def rate(prefix, id):
 
     if not content_type:
         return redirect(url_for('.root'))
-    
+
     app = db.get_content(content_type['name'], id=id)
 
     if not app or not session.get('logged_in'):
         return redirect(url_for('.item', prefix=prefix, id=id))
 
-    if request.method == 'GET':        
+    if request.method == 'GET':
         return render_template("rate.html", app=app, prefix=prefix)
     else:
         rating = request.form.get('rating')
         if not rating:
             return redirect(url_for('.item', prefix=prefix, id=id))
-        
+
         db.rate(rating, user_id=session['user_id'], content_id=id, content_type_name=content_type['name'])
         return redirect(url_for('.item', prefix=prefix, id=id))
-        
+
 @store.route("/<prefix>/<int:id>")
 def item(prefix, id):
 
@@ -109,12 +109,12 @@ def search():
     query = request.args.get('q')
     if not query:
         return render_template("search.html")
-    
+
     results = db.search(query, platform_id=session['platform'])
 
     if not results:
         return render_template("empty.html", category=None, content_type=db.get_content_type('apps'))
-    
+
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
     total_pages = max(1, math.ceil(len(results) / per_page))
@@ -150,7 +150,7 @@ def set_platform():
         return redirect(url_for('.root'))
     elif not db.get_platform(platform):
         return redirect(url_for('.root'))
-    
+
     session['platform'] = platform
     session.permanent = True
 
@@ -176,7 +176,7 @@ def content(content_type_name):
     all_apps = db.get_content(content_type['name'], category_id=category_id, platforms=[platform_id] if platform_id else None)
     if not all_apps:
         return render_template(f"empty.html", category=category, content_type=content_type)
-    
+
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
     total_pages = max(1, math.ceil(len(all_apps) / per_page))
@@ -204,12 +204,12 @@ def download():
 
     if not config['clients']:
         return redirect(url_for('.root'))
-    
+
     apps = [db.get_content(client['content_type_name'], id=client['id']) for client in config['clients']]
     apps = [app for app in apps if app is not None]
-    
+
     content_type = db.get_content_type('apps')
-    
+
     return render_template("download.html", content_type=content_type, apps=apps)
 
 @store.route("/feed.xml")
@@ -226,7 +226,7 @@ def feed():
         <description>News, content and programs for retro devices.</description>
         <link>http://ovi.wunderwungiel.pl/</link>
         <lastBuildDate>{now_string}</lastBuildDate>"""
-    
+
     for content in news:
         xml += f"""
         <item>
@@ -263,7 +263,7 @@ def root():
     news = db.get_news()
     if not news:
         return render_template("index.html", news=[], next_page=None, previous_page=None)
-    
+
     page_id = request.args.get('page', default=1, type=int)
     per_page = 10
     total_pages = max(1, math.ceil(len(news) / per_page))
@@ -278,5 +278,5 @@ def root():
     previous_page = page_id - 1 if page_id > 1 else None
 
     news_to_show = news[first_index:last_index]
-    
+
     return render_template("index.html", news=news_to_show, next_page=next_page, previous_page=previous_page)

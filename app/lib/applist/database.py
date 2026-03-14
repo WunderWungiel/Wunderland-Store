@@ -30,10 +30,10 @@ def changelog():
 
     message.text = """Changelog for Wunderland 2.00(2):
 *Fixed a typo causing Turkish to be the default language
-    
+
 Changelog for Wunderland 2.00(1):
 *Added Turkish translation
-    
+
 Changelog for Wunderland 2.00(0):
 *Initial release based on AppList source code
 *Supports all content types
@@ -125,7 +125,7 @@ def format_results(results, content_type_name=None, widget=False):
         app = Element('app')
 
         if widget:
-            
+
             id = SubElement(app, 'id')
             id.text = str(row['id'])
             uid = SubElement(app, 'uid')
@@ -167,7 +167,7 @@ def format_results(results, content_type_name=None, widget=False):
             category.text = str(wunderland_to_applist[content_type_name][row['category']])
             language = SubElement(app, 'language')
             language.text = "EN"
-            
+
             os_element = SubElement(app, 'os')
             os_element.text = "5.2,5.3,5.4,5.5"
             developer = SubElement(app, 'developer')
@@ -249,7 +249,7 @@ def search(search_query, start=None):
         if start is not None:
             where_clauses.append(sql.SQL("id > %s"))
             params.append(start)
-    
+
         if where_clauses:
             query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
@@ -267,7 +267,7 @@ def search(search_query, start=None):
     return xml
 
 def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type_name=None):
-    
+
     if category is not None:
         new_category, content_type_name = applist_to_wunderland.get(category) or (None, 'apps')
     else:
@@ -289,7 +289,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
 
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
         """) + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))

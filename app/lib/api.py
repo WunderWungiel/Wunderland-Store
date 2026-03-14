@@ -50,7 +50,7 @@ def content_type_search(content_type_name):
         return {
             'error': "No query provided"
         }
-    
+
     databases = [content_type_name]
 
     results = db.search(query, databases=databases).values()
@@ -70,7 +70,7 @@ def content_visit(content_type_name):
 
     if not db.get_content_type(content_type_name):
         return {'error': "Wrong content type"}
-    
+
     id = request.args.get('id', type=int)
     if id is not None:
         db.increment_counter(id, content_type_name)
@@ -85,7 +85,7 @@ def search():
         return {
             'error': "No query provided"
         }
-    
+
     results = db.search(query).values()
 
     return sorted(results, key=lambda x: x['id'])

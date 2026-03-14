@@ -26,7 +26,7 @@ def generate_content(database, content_name):
 
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
         """) + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
@@ -34,7 +34,7 @@ def generate_content(database, content_name):
 
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
-    
+
     query += sql.SQL(" ORDER BY id DESC")
 
     with connection.cursor() as cursor:
@@ -87,7 +87,7 @@ def get_content(name, content_type_name):
 
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
         """) + query
         where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))

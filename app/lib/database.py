@@ -52,7 +52,7 @@ def get_content(content_type_name, id=None, category_id=None, platforms=None):
 
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
             SELECT * FROM {}
         """).format(sql.Identifier(content_type_name))
@@ -86,11 +86,11 @@ def get_content(content_type_name, id=None, category_id=None, platforms=None):
 
     if id is not None:
         return results.get(id)
-    
+
     return results
 
 def get_rating(content_id, content_type_name):
-    
+
     table = f"{content_type_name}_rating"
     query = sql.SQL("SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM {} WHERE content_id=%s").format(sql.Identifier(table))
     params = (content_id,)
@@ -150,10 +150,10 @@ def get_platforms():
     return results
 
 def get_platform(platform_id):
-    
+
     query = sql.SQL("SELECT * FROM platforms WHERE id=%s")
     params = (platform_id,)
-    
+
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         result = cursor.fetchone()
@@ -161,7 +161,7 @@ def get_platform(platform_id):
     return result
 
 def get_category(category_id, content_type_name):
-    
+
     table = f"{content_type_name}_categories"
     query = sql.SQL("SELECT * FROM {} WHERE id=%s").format(sql.Identifier(table))
     params = (category_id,)
@@ -195,7 +195,7 @@ def search(search_query, databases=None, platform_id=None):
 
                     SELECT parent.id, parent.parent_id
                     FROM platforms parent
-                    JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
+                    JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
                 )
                 SELECT * FROM {}
             """).format(sql.Identifier(database))
@@ -213,7 +213,7 @@ def search(search_query, databases=None, platform_id=None):
             query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
         query += sql.SQL(" ORDER BY title")
-        
+
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             database_results = cursor.fetchall()
@@ -229,11 +229,11 @@ def increment_counter(id, content_type_name):
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-    
+
     connection.commit()
 
 def get_news(news_id=None):
-    
+
     query = sql.SQL("SELECT * FROM news")
     where_clauses = []
     params = []
@@ -241,7 +241,7 @@ def get_news(news_id=None):
     if news_id is not None:
         where_clauses.append(sql.SQL("id=%s"))
         params.append(news_id)
-    
+
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
@@ -250,7 +250,7 @@ def get_news(news_id=None):
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         results = cursor.fetchall()
-    
+
     if not results:
         return None
 
