@@ -2,56 +2,17 @@ import os
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
-from flask import url_for
+from flask import url_for, current_app, send_from_directory
 from psycopg import sql
 
 from .. import database as db
 from .. import config
 
 def version():
-    root = Element('xml')
-    message = Element('message')
-
-    message.text = """Changelog for Wunderland 2.00(2):
-*Fixed a typo causing Turkish to be the default language"""
-
-    url = Element('url')
-    url.text = "http://ovi.wunderwungiel.pl/static/content/files/Wunderland.sis"
-    root.append(message)
-    root.append(url)
-
-    ET.indent(root)
-
-    return ET.tostring(root, encoding='unicode', short_empty_elements=False)
+    return send_from_directory(current_app.static_folder, os.path.join("applist", "version.xml"))
 
 def changelog():
-    root = Element('xml')
-    message = Element('message')
-
-    message.text = """Changelog for Wunderland 2.00(2):
-*Fixed a typo causing Turkish to be the default language
-
-Changelog for Wunderland 2.00(1):
-*Added Turkish translation
-
-Changelog for Wunderland 2.00(0):
-*Initial release based on AppList source code
-*Supports all content types
-*The categories list is equal to server
-*Supports icons, addon files, UIDs, feed
-*Most references and strings are migrated to Wunderland
-*Icons are migrated
-*Unused settings entries are removed
-*UID and project name is changed
-*Widget appears to be working"""
-
-    url = Element('url')
-    root.append(message)
-    root.append(url)
-
-    ET.indent(root)
-
-    return ET.tostring(root, encoding='unicode', short_empty_elements=False)
+    return send_from_directory(current_app.static_folder, os.path.join("applist", "changelog.xml"))
 
 # !!! Replace right side and comments with YOUR categories' IDs!
 applist_to_wunderland = {
