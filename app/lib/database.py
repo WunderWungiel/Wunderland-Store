@@ -11,7 +11,7 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
 connection = connect(uri, row_factory=dict_row)
 
-def format_results(results, content_type_name):
+def format_results(results):
 
     formatted_results = {}
 
@@ -20,14 +20,13 @@ def format_results(results, content_type_name):
             'id': row['id'],
             'title': row['title'],
             'file': row['file'],
-            'category': get_category(row['category'], content_type_name),
+            'category': get_category(row['category']),
             'description': row['description'],
             'publisher': row['publisher'],
             'version': row['version'],
             'platform': get_platform(row['platform']) if row['platform'] is not None else None,
-            'img': os.path.join(content_type_name, row['img']),
-            'content_type': get_content_type(content_type_name),
-            'rating': get_rating(row['id'], content_type_name),
+            'icon': row['icon'],
+            'rating': get_rating(row['id']),
             'addon_message': row['addon_message'],
             'addon_file': row['addon_file'],
             'uid': row['uid'],
@@ -36,13 +35,13 @@ def format_results(results, content_type_name):
 
     return formatted_results
 
-def get_content(content_type_name, id=None, category_id=None, platforms=None):
+def get_content(id=None, type_id=None, category_id=None, platforms=None):
 
-    where_clauses = [sql.SQL("visible = TRUE")]
+    where_clauses = ["visible = TRUE"]
     params = []
 
     if platforms is not None:
-        query = sql.SQL("""
+        query = """
             WITH RECURSIVE platform_tree AS (
                 SELECT id, parent_id
                 FROM platforms
@@ -54,178 +53,145 @@ def get_content(content_type_name, id=None, category_id=None, platforms=None):
                 FROM platforms parent
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
-            SELECT * FROM {}
-        """).format(sql.Identifier(content_type_name))
-
-        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+            SELECT * FROM content
+        """
+        where_clauses.append("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)")
         params.append(platforms)
 
     else:
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type_name))
+        query = "SELECT * FROM apps"
 
     if id is not None:
-        where_clauses.append(sql.SQL("id = %s"))
+        where_clauses.append("id = %s")
         params.append(id)
+
     if category_id is not None:
-        where_clauses.append(sql.SQL("category = %s"))
+        where_clauses.append("category = %s")
         params.append(category_id)
 
     if where_clauses:
-        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+        query += " WHERE " + " AND ".join(where_clauses)
 
-    query += sql.SQL(" ORDER BY id DESC")
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
-
-    if not results:
-        return None
-
-    results = format_results(results, content_type_name)
-
-    if id is not None:
-        return results.get(id)
-
-    return results
-
-def get_rating(content_id, content_type_name):
-
-    table = f"{content_type_name}_rating"
-    query = sql.SQL("SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM {} WHERE content_id=%s").format(sql.Identifier(table))
-    params = (content_id,)
+    query += " ORDER BY id DESC"
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        result = cursor.fetchone()
+        return format_results(cursor.fetchall()) if id is not None else cursor.fetchone()
 
-    return int(result['rating'])
+def get_rating(content_id):
 
-def rate(rating, user_id, content_id, content_type_name):
+    query = "SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM rating WHERE content_id = %s"
+    params = [content_id]
 
-    table = f"{content_type_name}_rating"
-    query = sql.SQL("""
-        INSERT INTO {} (content_id, user_id, rating)
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return int(cursor.fetchone()['rating'])
+
+def rate(rating, user_id, content_id):
+
+    query = """
+        INSERT INTO rating (content_id, rating, user_id)
         VALUES (%s, %s, %s)
         ON CONFLICT (content_id, user_id)
         DO UPDATE SET rating = EXCLUDED.rating
-    """).format(sql.Identifier(table))
-    params = (content_id, user_id, rating)
+    """
+    params = (content_id, rating, user_id)
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
 
     connection.commit()
 
-def get_categories(content_type_name, platform_id=None):
+def get_categories(platform_id=None):
 
-    table = f"{content_type_name}_categories"
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table))
+    if platform_id is not None:
+        query = """
+            SELECT DISTINCT category.* FROM categories AS category
+            JOIN content ON category.id = content.category_id
+            WHERE content.platform = %s
+        """
+        params = [platform_id]
+    else:
+        query = "SELECT * FROM categories"
+        params = []
+
+    query += " ORDER BY name"
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return cursor.fetchall()
+
+def get_platforms(platform_id=None):
+
+    query = "SELECT * FROM platforms"
+    where_clauses = []
     params = []
 
     if platform_id is not None:
-        query = sql.SQL("""
-            SELECT DISTINCT category.* FROM {} AS category
-            JOIN {} AS content ON category.id = content.category
-            WHERE content.platform = %s
-        """).format(sql.Identifier(table), sql.Identifier(content_type_name))
+        where_clauses.append("id = %s")
         params.append(platform_id)
 
-    query += sql.SQL(" ORDER BY name")
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
-
-    return results
-
-def get_platforms():
-
-    query = sql.SQL("SELECT * FROM platforms ORDER by name")
+    query += " ORDER BY name"
 
     with connection.cursor() as cursor:
         cursor.execute(query)
-        results = cursor.fetchall()
+        return cursor.fetchall() if platform_id is not None else cursor.fetchone()
 
-    return results
+def get_category(category_id):
 
-def get_platform(platform_id):
-
-    query = sql.SQL("SELECT * FROM platforms WHERE id=%s")
-    params = (platform_id,)
+    query = "SELECT * FROM categories WHERE id=%s"
+    params = [category_id]
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        result = cursor.fetchone()
+        return cursor.fetchone()
 
-    return result
+def search(search_query, platform_id=None):
 
-def get_category(category_id, content_type_name):
+    where_clauses = ["visible = TRUE"]
+    params = []
 
-    table = f"{content_type_name}_categories"
-    query = sql.SQL("SELECT * FROM {} WHERE id=%s").format(sql.Identifier(table))
-    params = (category_id,)
+    if platform_id is not None:
+        query = """
+            WITH RECURSIVE platform_tree AS (
+                SELECT id, parent_id
+                FROM platforms
+                WHERE id = %s
+
+                UNION ALL
+
+                SELECT parent.id, parent.parent_id
+                FROM platforms parent
+                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
+            )
+            SELECT * FROM content
+        """
+
+        where_clauses.append("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)")
+        params.append(platform_id)
+
+    else:
+        query = "SELECT * FROM {}"
+
+    where_clauses.append("LOWER(title) LIKE %s")
+    params.append(f"%{search_query.lower()}%")
+
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+
+    query += " ORDER BY title"
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        result = cursor.fetchone()
+        return format_results(cursor.fetchall())
 
-    return result
+def increment_counter(content_id):
 
-def search(search_query, databases=None, platform_id=None):
-
-    if not databases:
-        databases = ("apps", "games", "themes")
-
-    results = {}
-
-    for database in databases:
-
-        where_clauses = [sql.SQL("visible = TRUE")]
-        params = []
-
-        if platform_id is not None:
-            query = sql.SQL("""
-                WITH RECURSIVE platform_tree AS (
-                    SELECT id, parent_id
-                    FROM platforms
-                    WHERE id = %s
-
-                    UNION ALL
-
-                    SELECT parent.id, parent.parent_id
-                    FROM platforms parent
-                    JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
-                )
-                SELECT * FROM {}
-            """).format(sql.Identifier(database))
-
-            where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
-            params.append(platform_id)
-
-        else:
-            query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(database))
-
-        where_clauses.append(sql.SQL("LOWER(title) LIKE %s"))
-        params.append(f"%{search_query.lower()}%")
-
-        if where_clauses:
-            query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
-
-        query += sql.SQL(" ORDER BY title")
-
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            database_results = cursor.fetchall()
-
-        results = results | format_results(database_results, database)
-
-    return results
-
-def increment_counter(id, content_type_name):
-
-    query = sql.SQL("UPDATE {} SET visited_counter=visited_counter + 1 WHERE id=%s").format(sql.Identifier(content_type_name))
-    params = (id,)
+    query = "UPDATE content SET visited_counter=visited_counter + 1 WHERE id=%s"
+    params = [content_id]
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
@@ -234,25 +200,22 @@ def increment_counter(id, content_type_name):
 
 def get_news(news_id=None):
 
-    query = sql.SQL("SELECT * FROM news")
+    query = "SELECT * FROM news"
     where_clauses = []
     params = []
 
     if news_id is not None:
-        where_clauses.append(sql.SQL("id=%s"))
+        where_clauses.append("id = %s")
         params.append(news_id)
 
     if where_clauses:
-        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+        query += " WHERE " + " AND ".join(where_clauses)
 
-    query += sql.SQL(" ORDER BY id DESC")
+    query += " ORDER BY id DESC"
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         results = cursor.fetchall()
-
-    if not results:
-        return None
 
     formatted_results = []
 
@@ -279,16 +242,33 @@ def get_news(news_id=None):
             }
         )
 
-    if news_id is not None:
+    if news_id is not None and results:
         return formatted_results[0]
 
     return formatted_results
 
 def get_content_types():
-    return config['content_types']
+
+    query = "SELECT * FROM content_types"
+
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        return cursor.fetchall()
 
 def get_content_type(name=None, prefix=None):
-    for content_type in config['content_types']:
-        if (name is not None and content_type['name'] != name) or (prefix is not None and content_type['prefix'] != prefix):
-            continue
-        return content_type
+
+    query = "SELECT * FROM content_types"
+    where_clauses = []
+    params = []
+
+    if name is not None:
+        where_clauses.append("name = %s")
+        params.append(name)
+
+    if prefix is not None:
+        where_clauses.append("prefix = %s")
+        params.append(prefix)
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return cursor.fetchone()
