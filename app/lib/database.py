@@ -13,7 +13,7 @@ connection = connect(uri, row_factory=dict_row)
 
 def get_content(id=None, type_id=None, category_id=None, platforms=None):
 
-    where_clauses = ["visible = TRUE"]
+    where_clauses = ["content.visible = TRUE"]
     params = []
 
     if platforms is not None:
@@ -22,43 +22,71 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
                 SELECT id, parent_id
                 FROM platforms
                 WHERE id = ANY(%s)
-
                 UNION ALL
-
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
-            SELECT * FROM content
+            SELECT
+                content.*,
+                category.name AS category_name,
+                category.type_id AS category_type_id,
+                platform.name AS platform_name,
+                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
+            FROM content
         """
-        where_clauses.append("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)")
+        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
         params.append(platforms)
-
     else:
-        query = "SELECT * FROM content"
+        query = """
+            SELECT
+                content.*,
+                category.name AS category_name,
+                category.type_id AS category_type_id,
+                platform.name AS platform_name,
+                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
+            FROM content
+        """
+
+    query += """
+        LEFT JOIN categories AS category ON content.category_id = category.id
+        LEFT JOIN platforms AS platform ON content.platform = platform.id
+        LEFT JOIN rating ON content.id = rating.content_id
+    """
 
     if id is not None:
-        where_clauses.append("id = %s")
+        where_clauses.append("content.id = %s")
         params.append(id)
 
     if category_id is not None:
-        where_clauses.append("category_id = %s")
+        where_clauses.append("content.category_id = %s")
         params.append(category_id)
 
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    query += " ORDER BY id DESC"
+    query += " GROUP BY content.id, category.name, category.type_id, platform.name"
+    query += " ORDER BY content.id DESC"
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         results = cursor.fetchall()
 
     for i, result in enumerate(results):
-        result['category'] = get_category(result['category_id'])
-        result['platform'] = get_platforms(platform_id=result['platform']) if result['platform'] is not None else None
-        result['rating'] = get_rating(result['id'])
+
+        result['category'] = {
+            'id': result['category_id'],
+            'name': result.pop('category_name'),
+            'type_id': result.pop('category_type_id'),
+        }
+
+        result['platform'] = {
+            'id': result['platform'],
+            'name': result.pop('platform_name'),
+        } if result['platform'] is not None else None
+
         result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(1, result['screenshot_count'] + 1)]
+
         results[i] = result
 
     return results if id is None else (results[0] if results else None)
@@ -136,8 +164,11 @@ def get_category(category_id):
 
 def search(search_query, platform_id=None):
 
-    where_clauses = ["visible = TRUE"]
+    where_clauses = ["content.visible = TRUE"]
     params = []
+
+    where_clauses.append("LOWER(content.title) LIKE %s")
+    params.append(f"%{search_query.lower()}%")
 
     if platform_id is not None:
         query = """
@@ -145,39 +176,63 @@ def search(search_query, platform_id=None):
                 SELECT id, parent_id
                 FROM platforms
                 WHERE id = %s
-
                 UNION ALL
-
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
-            SELECT * FROM content
+            SELECT
+                content.*,
+                category.name AS category_name,
+                category.type_id AS category_type_id,
+                platform.name AS platform_name,
+                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
+            FROM content
+        """
+        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        params.insert(0, platform_id)
+    else:
+        query = """
+            SELECT
+                content.*,
+                category.name AS category_name,
+                category.type_id AS category_type_id,
+                platform.name AS platform_name,
+                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
+            FROM content
         """
 
-        where_clauses.append("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)")
-        params.append(platform_id)
-
-    else:
-        query = "SELECT * FROM content"
-
-    where_clauses.append("LOWER(title) LIKE %s")
-    params.append(f"%{search_query.lower()}%")
+    query += """
+        LEFT JOIN categories AS category ON content.category_id = category.id
+        LEFT JOIN platforms AS platform ON content.platform = platform.id
+        LEFT JOIN rating ON content.id = rating.content_id
+    """
 
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    query += " ORDER BY title"
+    query += " GROUP BY content.id, category.name, category.type_id, platform.name"
+    query += " ORDER BY content.title"
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         results = cursor.fetchall()
 
     for i, result in enumerate(results):
-        result['category'] = get_category(result['category_id'])
-        result['platform'] = get_platforms(platform_id=result['platform']) if result['platform'] is not None else None
-        result['rating'] = get_rating(result['id'])
+
+        result['category'] = {
+            'id': result['category_id'],
+            'name': result.pop('category_name'),
+            'type_id': result.pop('category_type_id'),
+        }
+
+        result['platform'] = {
+            'id': result['platform'],
+            'name': result.pop('platform_name'),
+        } if result['platform'] is not None else None
+
         result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(1, result['screenshot_count'] + 1)]
+
         results[i] = result
 
     return results
