@@ -11,30 +11,6 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
 connection = connect(uri, row_factory=dict_row)
 
-def format_results(results):
-
-    formatted_results = {}
-
-    for row in results:
-        formatted_results[row['id']] = {
-            'id': row['id'],
-            'title': row['title'],
-            'file': row['file'],
-            'category': get_category(row['category_id']),
-            'description': row['description'],
-            'publisher': row['publisher'],
-            'version': row['version'],
-            'platform': get_platforms(platform_id=row['platform']) if row['platform'] is not None else None,
-            'icon': row['icon'],
-            'rating': get_rating(row['id']),
-            'addon_text': row['addon_text'],
-            'addon_file': row['addon_file'],
-            'uid': row['uid'],
-            'screenshots': [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
-        }
-
-    return formatted_results
-
 def get_content(id=None, type_id=None, category_id=None, platforms=None):
 
     where_clauses = ["visible = TRUE"]
@@ -76,7 +52,16 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return format_results(cursor.fetchall()) if id is None else cursor.fetchone()
+        results = cursor.fetchall()
+
+    for i, result in enumerate(results):
+        result['category'] = get_category(result['category_id'])
+        result['platform'] = get_platforms(platform_id=result['platform']) if result['platform'] is not None else None
+        result['rating'] = get_rating(result['id'])
+        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(1, result['screenshot_count'] + 1)]
+        results[i] = result
+
+    return results if id is None else (results[0] if results else None)
 
 def get_rating(content_id):
 
@@ -186,7 +171,16 @@ def search(search_query, platform_id=None):
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return format_results(cursor.fetchall())
+        results = cursor.fetchall()
+
+    for i, result in enumerate(results):
+        result['category'] = get_category(result['category_id'])
+        result['platform'] = get_platforms(platform_id=result['platform']) if result['platform'] is not None else None
+        result['rating'] = get_rating(result['id'])
+        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(1, result['screenshot_count'] + 1)]
+        results[i] = result
+
+    return results
 
 def increment_counter(content_id):
 
