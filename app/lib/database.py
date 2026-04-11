@@ -20,14 +20,14 @@ def format_results(results):
             'id': row['id'],
             'title': row['title'],
             'file': row['file'],
-            'category': get_category(row['category']),
+            'category': get_category(row['category_id']),
             'description': row['description'],
             'publisher': row['publisher'],
             'version': row['version'],
-            'platform': get_platform(row['platform']) if row['platform'] is not None else None,
+            'platform': get_platforms(platform_id=row['platform']) if row['platform'] is not None else None,
             'icon': row['icon'],
             'rating': get_rating(row['id']),
-            'addon_message': row['addon_message'],
+            'addon_text': row['addon_text'],
             'addon_file': row['addon_file'],
             'uid': row['uid'],
             'screenshots': [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
@@ -59,14 +59,14 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
         params.append(platforms)
 
     else:
-        query = "SELECT * FROM apps"
+        query = "SELECT * FROM content"
 
     if id is not None:
         where_clauses.append("id = %s")
         params.append(id)
 
     if category_id is not None:
-        where_clauses.append("category = %s")
+        where_clauses.append("category_id = %s")
         params.append(category_id)
 
     if where_clauses:
@@ -76,7 +76,7 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return format_results(cursor.fetchall()) if id is not None else cursor.fetchone()
+        return format_results(cursor.fetchall()) if id is None else cursor.fetchone()
 
 def get_rating(content_id):
 
@@ -137,8 +137,8 @@ def get_platforms(platform_id=None):
     query += " ORDER BY name"
 
     with connection.cursor() as cursor:
-        cursor.execute(query)
-        return cursor.fetchall() if platform_id is not None else cursor.fetchone()
+        cursor.execute(query, params)
+        return cursor.fetchall() if platform_id is None else cursor.fetchone()
 
 def get_category(category_id):
 
@@ -174,7 +174,7 @@ def search(search_query, platform_id=None):
         params.append(platform_id)
 
     else:
-        query = "SELECT * FROM {}"
+        query = "SELECT * FROM content"
 
     where_clauses.append("LOWER(title) LIKE %s")
     params.append(f"%{search_query.lower()}%")
@@ -190,7 +190,7 @@ def search(search_query, platform_id=None):
 
 def increment_counter(content_id):
 
-    query = "UPDATE content SET visited_counter=visited_counter + 1 WHERE id=%s"
+    query = "UPDATE content SET counter=counter + 1 WHERE id=%s"
     params = [content_id]
 
     with connection.cursor() as cursor:
@@ -268,6 +268,9 @@ def get_content_type(name=None, prefix=None):
     if prefix is not None:
         where_clauses.append("prefix = %s")
         params.append(prefix)
+
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
