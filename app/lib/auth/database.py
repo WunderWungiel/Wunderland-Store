@@ -1,34 +1,37 @@
 import bcrypt
+from psycopg.errors import UniqueViolation
 from psycopg import sql
 
 from ..database import pool
 
-def _generate_password(user_password):
-    user_password = user_password.encode('utf-8')
+def generate_password(password):
+    password = password.encode('utf-8')
     salt = bcrypt.gensalt()
 
-    hashed_password = bcrypt.hashpw(user_password, salt)
-    return hashed_password.decode('utf-8')
+    password_hash = bcrypt.hashpw(password, salt)
+    return password_hash.decode('utf-8')
 
 
-def get_user(id=None, username=None, email=None):
+def get_user(user_id=None, username=None, email=None):
 
-    query = sql.SQL("SELECT * FROM users")
-    where_clauses = [sql.SQL("active = true")]
+    query = "SELECT * FROM users"
+    where_clauses = []
     params = []
 
-    if id is not None:
-        where_clauses.append(sql.SQL("id = %s"))
-        params.append(id)
+    if user_id is not None:
+        where_clauses.append("user_id = %s")
+        params.append(user_id)
+
     if username is not None:
-        where_clauses.append(sql.SQL("username = %s"))
+        where_clauses.append("username = %s")
         params.append(username)
+
     if email is not None:
-        where_clauses.append(sql.SQL("email = %s"))
+        where_clauses.append("email = %s")
         params.append(email)
 
     if where_clauses:
-        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+        query += " WHERE " + " AND ".join(where_clauses)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -38,54 +41,53 @@ def get_user(id=None, username=None, email=None):
 
 def confirm_user(email):
 
-    query = sql.SQL("UPDATE users SET confirmed=true WHERE email=%s")
-    params = (email,)
+    query = "UPDATE users SET confirmed=true WHERE email=%s"
+    params = [email]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
-
-
-def user_exists(id=None, username=None, email=None):
-
-    result = get_user(id=id, username=username, email=email)
-    return True if result else False
 
 
 def register(email, user_password, username):
 
-    hashed_password = _generate_password(user_password)
-    query = sql.SQL("INSERT INTO users (email, password, username, confirmed) VALUES (%s, %s, %s, false)")
-    params = (email, hashed_password, username)
+    query = "INSERT INTO users (email, username, password, confirmed) VALUES (%s, %s, %s, %s) RETURNING id, email, username"
+    params = [email, generate_password(user_password), username, False]
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            try:
+                cursor.execute(query, params)
+            except UniqueViolation:
+                return None
+
+            return cursor.fetchone()
+
+
+def change_password(user_id, password):
+
+    password_hash = generate_password(password)
+    query = "UPDATE users SET password = %s WHERE id = %s"
+    params = (password_hash, user_id)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
 
+def check_credentials(email, password):
 
-def change_password(id, new_password):
-
-    hashed_password = _generate_password(new_password)
-    query = sql.SQL("UPDATE users SET password=%s WHERE id=%s")
-    params = (hashed_password, id)
-
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-
-def check_credentials(email, user_password):
-    if not user_exists(email=email):
-        return False
-
-    query = sql.SQL("SELECT password FROM users WHERE email=%s AND active=true")
-    params = (email,)
+    query = "SELECT password FROM users WHERE email = %s"
+    params = [email]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             result = cursor.fetchone()
 
-    hashed_password = result['password'].encode('utf-8')
-    user_password = user_password.encode('utf-8')
+    if not result:
+        return False
 
-    return bcrypt.checkpw(user_password, hashed_password)
+    password_hash = result['password'].encode('utf-8')
+    password = password.encode('utf-8')
+
+    return bcrypt.checkpw(password, password_hash)
