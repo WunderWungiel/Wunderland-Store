@@ -5,7 +5,7 @@
         <meta name="navigation" content="cursor" />
         <title>Select platform • Wunderland Store</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
+
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
@@ -21,10 +21,10 @@
                                 <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
-                                {% if session['platform'] is none %}
+                                {% if session['platform_id'] is none %}
                                 {% set platform_name = "All" %}
                                 {% else %}
-                                {% set platform_name = get_platform(session['platform'])['name'] %}
+                                {% set platform_name = get_platform(session['platform_id'])['name'] %}
                                 {% endif %}
                                 <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
                                 {% if session['logged_in'] is defined %}
@@ -45,15 +45,15 @@
 
                         <div id="categories">
                             <a href="{{ url_for('store.set_platform', platform=None) }}">
-                                {% if session['platform'] is none %}
+                                {% if session['platform_id'] is none %}
                                 <b>All platforms</b>
                                 {% else %}
                                 All platforms
                                 {% endif %}
                             </a><br />
                             {% for platform in platforms %}
-                                <a href="{{ url_for('store.set_platform', platform=platform['id']) }}">
-                                    {% if session['platform'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
+                                <a href="{{ url_for('store.set_platform', platform_id=platform['id']) }}">
+                                    {% if session['platform_id'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
                                 </a>{% if not loop.last %}<br />{% endif %}
                             {% endfor %}
                         </div> <!-- end categories -->
@@ -65,7 +65,7 @@
             </div> <!-- end views -->
 
             <div id="bottom"></div>
-                        
+
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
                 {% if session['logged_in'] is not defined %}

@@ -48,17 +48,11 @@ def item(content_id):
     except FileNotFoundError:
         item['size'] = 0
 
-    platform_id = session.get('platform')
+    platform_id = session.get('platform_id')
     recommended = db.get_content(type_id="apps", category_id=item['category']['id'], platforms=[platform_id] if platform_id else None) # TODO
 
-    if recommended:
-        recommended = list(recommended.values())
-        recommended = random.sample(recommended, k=min(10, len(recommended)))
-        recommended = [d for d in recommended if d['id'] != item['id']]
-        if not recommended:
-            recommended = None
-    else:
-        recommended = None
+    recommended = [d for d in recommended.values() if d['id'] != item['id']] if recommended else []
+    recommended = random.sample(recommended, k=min(10, len(recommended))) or None
 
     item['description'] = item['description'].replace("\n", "<br>") if item['description'] else None
     item['addon_message'] = item['addon_message'].replace("\n", "<br>") if item['addon_message'] else None
@@ -88,7 +82,7 @@ def browse_categories(content_type_name):
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_name, platform_id=session['platform'])
+    categories = db.get_categories(content_type_name, platform_id=session['platform_id'])
 
     return render_template(f"categories.html", content_type=content_type, categories=categories)
 
@@ -99,7 +93,7 @@ def search():
     if not query:
         return render_template("search.html")
 
-    results = db.search(query, platform_id=session['platform'])
+    results = db.search(query, platform_id=session['platform_id'])
 
     if not results:
         return render_template("empty.html", category=None, content_type=db.get_content_type('apps'))
@@ -130,17 +124,18 @@ def platform():
 
 @store.route("/set_platform")
 def set_platform():
-    platform = request.args.get('platform')
-    if platform is None:
-        session['platform'] = None
+
+    platform_id = request.args.get('platform_id')
+    if platform_id is None:
+        session['platform_id'] = None
         session.permanent = True
         return redirect(url_for('.root'))
-    elif not platform:
+    elif not platform_id:
         return redirect(url_for('.root'))
-    elif not db.get_platform(platform):
+    elif not db.get_platforms(platform_id):
         return redirect(url_for('.root'))
 
-    session['platform'] = platform
+    session['platform_id'] = platform_id
     session.permanent = True
 
     return redirect(url_for('.root'))
@@ -160,7 +155,7 @@ def content(content_type_name):
     if category_id and not category:
         return redirect(url_for('.content', content_type_name=content_type['name']))
 
-    platform_id = session['platform']
+    platform_id = session['platform_id']
 
     all_apps = db.get_content(content_type['name'], category_id=category_id, platforms=[platform_id] if platform_id else None)
     if not all_apps:

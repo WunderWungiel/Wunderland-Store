@@ -45,9 +45,9 @@ def utility_processor():
 def before_request():
     session.permanent = True
 
-    platform_id = session.get('platform')
+    platform_id = session.get('platform_id')
     if not platform_id or not db.get_platform(platform_id):
-        session['platform'] = None
+        session['platform_id'] = None
 
     user_id = session.get('user_id')
 

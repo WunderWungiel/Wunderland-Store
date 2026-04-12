@@ -21,10 +21,10 @@
                                 <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
-                                {% if session['platform'] is none %}
+                                {% if session['platform_id'] is none %}
                                 {% set platform_name = "All" %}
                                 {% else %}
-                                {% set platform_name = get_platform(session['platform'])['name'] %}
+                                {% set platform_name = get_platform(session['platform_id'])['name'] %}
                                 {% endif %}
                                 <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
                                 |
