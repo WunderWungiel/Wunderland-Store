@@ -3,10 +3,11 @@ import random
 import math
 from datetime import datetime
 
-from flask import Blueprint, request, session, current_app, render_template, redirect, url_for
+from flask import Blueprint, request, session, current_app, flash, render_template, redirect, url_for
 
 from . import config
 from . import database as db
+from . import utils
 from .auth import database as auth_db
 
 store = Blueprint('store', __name__, template_folder="templates")
@@ -14,8 +15,7 @@ store = Blueprint('store', __name__, template_folder="templates")
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):
 
-    items = db.get_content(content_id=content_id)
-    item = items[0] if items else None
+    item = db.get_one_content(content_id=content_id)
 
     if not item or not session.get('logged_in'):
         return redirect(url_for('.item', content_id=content_id)) # TODO
@@ -34,8 +34,7 @@ def rate(content_id):
 @store.route("/content/<int:content_id>")
 def item(content_id):
 
-    items = db.get_content(content_id=content_id)
-    item = items[0] if items else None
+    item = db.get_one_content(content_id=content_id)
 
     if item and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
         db.increment_counter(content_id)
@@ -63,8 +62,7 @@ def item(content_id):
 @store.route("/content/<int:content_id>/images")
 def images(content_id):
 
-    items = db.get_content(content_id=content_id)
-    item = items[0] if items else None
+    item = db.get_one_content(content_id=content_id)
 
     if not item:
         return redirect(url_for('.root')) # TODO
@@ -74,114 +72,102 @@ def images(content_id):
 
     return render_template("images.html", item=item)
 
-@store.route("/<content_type_name>/browse")
-def browse_categories(content_type_name):
+@store.route("/content/<content_type_id>/browse")
+def browse_categories(content_type_id):
 
-    content_type = db.get_content_type(name=content_type_name)
+    content_type = db.get_content_type(type_id=content_type_id)
 
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_name, platform_id=session['platform_id'])
+    categories = db.get_categories(content_type_id=content_type_id, platform_id=session['platform_id'])
 
-    return render_template(f"categories.html", content_type=content_type, categories=categories)
+    return render_template("categories.html", content_type=content_type, categories=categories)
 
 @store.route("/search")
 def search():
 
-    query = request.args.get('q')
+    query = request.args.get('query')
+    page = request.args.get('page', 1, type=int)
+
     if not query:
+        flash("Search query not provided.")
         return render_template("search.html")
 
-    results = db.search(query, platform_id=session['platform_id'])
+    if page < 1:
+        flash("Invalid page. Redirected to the first page.", 'danger')
+        return redirect(url_for('.search', **request.view_args, **request.args, page=1))
+
+    offset = (page - 1) * config['per_page']
+
+    results, total = db.search(query, platform_id=session['platform_id'], offset=offset, limit=config['per_page'])
 
     if not results:
         return render_template("empty.html", category=None, content_type=db.get_content_type('apps'))
 
-    page_id = request.args.get('page', default=1, type=int)
-    per_page = 10
-    total_pages = max(1, math.ceil(len(results) / per_page))
+    total_pages = max(1, math.ceil(total / config['per_page']))
 
-    if page_id < 1 or page_id > total_pages:
-        return redirect(url_for('.search', q=query, page=1))
+    if page > total_pages:
+        flash("Invalid page. Redirected to the last page.", 'danger')
+        return redirect(url_for('.search', **request.view_args, **request.args, page=total_pages))
 
-    ids = list(results.keys())
+    return render_template("search.html", results=results, query=query, pages=utils.generate_pages(page, total_pages))
 
-    first_index = (page_id - 1) * per_page
-    last_index = first_index + per_page
-
-    next_page = page_id + 1 if page_id < total_pages else None
-    previous_page = page_id - 1 if page_id > 1 else None
-
-    apps_to_show = [results[id] for id in ids[first_index:last_index]]
-
-    return render_template("search.html", results=apps_to_show, query=query, next_page=next_page, previous_page=previous_page)
-
-@store.route("/platform")
-def platform():
-    platforms = db.get_platforms()
-    return render_template("platform.html", platforms=platforms)
-
-@store.route("/set_platform")
-def set_platform():
+@store.route("/platforms", methods=['GET', 'POST'])
+def platforms():
+    
+    if request.method == 'GET':
+        platforms = db.get_platforms()
+        return render_template("platform.html", platforms=platforms)
 
     platform_id = request.args.get('platform_id')
+
     if platform_id is None:
         session['platform_id'] = None
-        session.permanent = True
-        return redirect(url_for('.root'))
     elif not platform_id:
-        return redirect(url_for('.root'))
+        pass
     elif not db.get_platforms(platform_id):
-        return redirect(url_for('.root'))
-
-    session['platform_id'] = platform_id
+        pass
+    else:
+        session['platform_id'] = platform_id
+    
     session.permanent = True
-
     return redirect(url_for('.root'))
 
-@store.route("/<content_type_name>")
-def content(content_type_name):
 
-    content_type = db.get_content_type(name=content_type_name)
+@store.route("/content/<content_type_id>")
+def content(content_type_id):
 
-    if not content_type:
-        return redirect(url_for('.root'))
+    content_type = db.get_content_type(type_id=content_type_id)
 
     category_id = request.args.get('category', type=int)
-
-    category = db.get_category(category_id, content_type['name']) if category_id else None
-
-    if category_id and not category:
-        return redirect(url_for('.content', content_type_name=content_type['name']))
-
+    page = request.args.get('page', 1, type=int)
     platform_id = session['platform_id']
 
-    all_apps = db.get_content(content_type['name'], category_id=category_id, platforms=[platform_id] if platform_id else None)
-    if not all_apps:
+    category = db.get_category(category_id=category_id) if category_id else None
+
+    if category_id and not category:
+        flash("Invalid category.", 'danger')
+        return redirect(url_for('.content', content_type_id=content_type_id))
+
+    if page < 1:
+        flash("Invalid page. Redirected to the first page.", 'danger')
+        return redirect(url_for('.content', **request.view_args, **request.args, page=1))
+
+    offset = (page - 1) * config['per_page']
+
+    results, total = db.get_content(content_type['name'], category_id=category_id, platforms=[platform_id] if platform_id else None, offset=offset, limit=config['per_page'])
+
+    if not results:
         return render_template(f"empty.html", category=category, content_type=content_type)
 
-    page_id = request.args.get('page', default=1, type=int)
-    per_page = 10
-    total_pages = max(1, math.ceil(len(all_apps) / per_page))
+    total_pages = max(1, math.ceil(total / config['per_page']))
 
-    if page_id < 1 or page_id > total_pages:
-        arguments = {'page': 1}
-        if category_id:
-            arguments['category_id'] = category_id
-        return redirect(url_for('.content', content_type_name=content_type['name'], **arguments))
+    if page > total_pages:
+        flash("Invalid page. Redirected to the last page.", 'danger')
+        return redirect(url_for('.content', **request.view_args, **request.args, page=total_pages))
 
-    ids = list(all_apps.keys())
-
-    first_index = (page_id - 1) * per_page
-    last_index = first_index + per_page
-
-    next_page = page_id + 1 if page_id < total_pages else None
-    previous_page = page_id - 1 if page_id > 1 else None
-
-    apps_to_show = [all_apps[app_id] for app_id in ids[first_index:last_index]]
-
-    return render_template(f"content.html", content_type=content_type, apps=apps_to_show, category=category, category_id=category_id, next_page=next_page, previous_page=previous_page)
+    return render_template(f"content.html", content_type=content_type, results=results, category=category, pages=utils.generate_pages(page, total_pages))
 
 @store.route("/download")
 def download():
@@ -189,52 +175,50 @@ def download():
     if not config['clients']:
         return redirect(url_for('.root'))
 
-    apps = [db.get_content(client['content_type_name'], id=client['id']) for client in config['clients']]
-    apps = [app for app in apps if app is not None]
+    results = [db.get_content(client['content_type_name'], id=client['id']) for client in config['clients']]
+    results = [item for item in results if item is not None]
 
     content_type = db.get_content_type('apps')
 
-    return render_template("download.html", content_type=content_type, apps=apps)
+    return render_template("download.html", content_type=content_type, results=results)
 
 @store.route("/feed.xml")
 def feed():
 
-    now = datetime.now()
-    now_string = now.strftime("%a, %d %b %Y %H:%M:%S GMT")
-    news = db.get_news()
-
-    xml = f"""<?xml version="1.0" encoding="windows-1252"?>
-<rssversion="2.0">
-    <channel>
+    xml = f"""
+        <?xml version="1.0" encoding="windows-1252"?>
+        <rssversion="2.0">
+        <channel>
         <title>Wunderland Store</title>
         <description>News, content and programs for retro devices.</description>
         <link>http://ovi.wunderwungiel.pl/</link>
-        <lastBuildDate>{now_string}</lastBuildDate>"""
+        <lastBuildDate>{datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT")}</lastBuildDate>
+    """
 
-    for content in news:
+    for content in db.get_news():
         xml += f"""
-        <item>
-            <title>{content['title']}</title>
-            <link>{url_for('.news', _external=True, news_id=content['id'])}</link>
-            <description></description>
-            <pubDate>{content['date']}</pubDate>
-            <guid>{url_for('.news', _external=True, news_id=content['id'])}</guid>
-        </item>"""
+            <item>
+                <title>{content['title']}</title>
+                <link>{url_for('.news', _external=True, news_id=content['id'])}</link>
+                <description></description>
+                <pubDate>{content['date']}</pubDate>
+                <guid>{url_for('.news', _external=True, news_id=content['id'])}</guid>
+            </item>
+        """
 
-    xml += """
-    </channel>
-</rss>"""
+    xml += "</channel></rss>"
 
     return xml
 
 @store.route("/news/<int:news_id>")
 def news(news_id):
 
-    content = db.get_news(news_id=news_id)
-    if not content:
+    news = db.get_one_news(news_id=news_id)
+
+    if not news:
         return redirect(url_for('.root'))
 
-    return render_template("news.html", title=content['title'], content=content['content'], share=True)
+    return render_template("news.html", news=news, share=True)
 
 @store.route("/")
 def _root():
@@ -244,23 +228,20 @@ def _root():
 @store.route("/home")
 def root():
 
-    news = db.get_news()
-    if not news:
-        return render_template("index.html", news=[], next_page=None, previous_page=None)
+    page = request.args.get('page', 1, type=int)
 
-    page_id = request.args.get('page', default=1, type=int)
-    per_page = 10
-    total_pages = max(1, math.ceil(len(news) / per_page))
+    if page < 1:
+        flash("Invalid page. Redirected to the first page.", 'danger')
+        return redirect(url_for('.root', **request.view_args, **request.args, page=1))
 
-    if page_id < 1 or page_id > total_pages:
-        return redirect(url_for('.root', page=1))
+    offset = (page - 1) * config['per_page']
+    
+    news, total = db.get_news(offset=offset, limit=config['per_page'])
 
-    first_index = (page_id - 1) * per_page
-    last_index = first_index + per_page
+    total_pages = max(1, math.ceil(total / config['per_page']))
 
-    next_page = page_id + 1 if page_id < total_pages else None
-    previous_page = page_id - 1 if page_id > 1 else None
+    if page > total_pages:
+        flash("Invalid page. Redirected to the last page.", 'danger')
+        return redirect(url_for('.root', **request.view_args, **request.args, page=total_pages))
 
-    news_to_show = news[first_index:last_index]
-
-    return render_template("index.html", news=news_to_show, next_page=next_page, previous_page=previous_page)
+    return render_template("index.html", news=news, pages=utils.generate_pages(page, total_pages))

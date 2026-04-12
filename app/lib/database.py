@@ -17,7 +17,8 @@ CONTENT_SELECT = """
         category.name AS category_name,
         category.type_id AS category_type_id,
         platform.name AS platform_name,
-        COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
+        COALESCE(ROUND(AVG(rating.rating)), 0) AS rating,
+        COUNT(*) OVER() AS total
     FROM content
     LEFT JOIN categories AS category ON content.category_id = category.id
     LEFT JOIN platforms AS platform ON content.platform = platform.id
@@ -39,6 +40,8 @@ CONTENT_GROUP_BY = " GROUP BY content.id, category.name, category.type_id, platf
 
 def _format_content(results):
 
+    total = results[0]['total'] if results else 0
+
     for i, result in enumerate(results):
 
         result['category'] = {
@@ -57,12 +60,35 @@ def _format_content(results):
             for n in range(1, result['screenshot_count'] + 1)
         ]
 
+        result.pop('total')
+
         results[i] = result
 
-    return results
+    return results, total
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None):
+def get_one_content(content_id):
+    results, _ = get_content(content_id=content_id)
+    return results[0] if results else None
+
+def get_one_news(news_id):
+    results, _ = get_news(news_id=news_id)
+    return results[0] if results else None
+
+def get_content_type(type_id=None, name=None, prefix=None):
+    results = get_content_types(type_id=type_id, name=name, prefix=prefix)
+    return results[0] if results else None
+
+def get_category(category_id):
+    results = get_categories(category_id=category_id)
+    return results[0] if results else None
+
+def get_platform(platform_id):
+    results = get_platforms(platform_id=platform_id)
+    return results[0] if results else None
+
+
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, limit=None, offset=None):
 
     where_clauses = ["content.visible = TRUE"]
     params = []
@@ -86,9 +112,15 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         where_clauses.append("content.category_id = %s")
         params.append(category_id)
 
-    query += " WHERE " + " AND ".join(where_clauses)
+    where = " WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+    query += where
     query += CONTENT_GROUP_BY
-    query += " ORDER BY content.id DESC"
+    query += " ORDER BY content.title"
+
+    if None not in (limit, offset):
+        query += " LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -96,7 +128,7 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             return _format_content(cursor.fetchall())
 
 
-def search(search_query, platform_id=None):
+def search(search_query, platform_id=None, limit=None, offset=None):
     where_clauses = ["content.visible = TRUE", "LOWER(content.title) LIKE %s"]
     params = [f"%{search_query.lower()}%"]
 
@@ -107,9 +139,15 @@ def search(search_query, platform_id=None):
     else:
         query = CONTENT_SELECT
 
-    query += " WHERE " + " AND ".join(where_clauses)
+    where = " WHERE " + " AND ".join(where_clauses) if where_clauses else None
+
+    query += where
     query += CONTENT_GROUP_BY
-    query += " ORDER BY content.title"
+    query += " ORDER BY content.id DESC"
+
+    if None not in (limit, offset):
+        query += " LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -149,7 +187,7 @@ def increment_counter(content_id):
             )
 
 
-def get_categories(content_type_id=None, platform_id=None):
+def get_categories(category_id=None, content_type_id=None, platform_id=None):
     where_clauses = []
     params = []
 
@@ -163,9 +201,13 @@ def get_categories(content_type_id=None, platform_id=None):
     else:
         query = "SELECT * FROM categories"
 
+    if category_id is not None:
+        where_clauses.append("category.id = %s")
+        params.append(category_id)
+
     if content_type_id is not None:
-        col = "category.type_id" if platform_id is not None else "type_id"
-        where_clauses.append(f"{col} = %s")
+        column = "category.type_id" if platform_id is not None else "type_id"
+        where_clauses.append(f"{column} = %s")
         params.append(content_type_id)
 
     if where_clauses:
@@ -221,7 +263,7 @@ def get_content_types(type_id=None, name=None, prefix=None):
             return cursor.fetchall()
 
 
-def get_news(news_id=None):
+def get_news(news_id=None, limit=None, offset=None):
     query = "SELECT * FROM news"
     params = []
 
@@ -231,12 +273,17 @@ def get_news(news_id=None):
 
     query += " ORDER BY id DESC"
 
+    if limit is not None and offset is not None:
+        query += " LIMIT %s OFFSET %s"
+        params.extend([limit, offset])
+
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
     results = []
+
     for row in rows:
         file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
 
@@ -255,4 +302,4 @@ def get_news(news_id=None):
             ).strftime("%a, %d %b %Y %H:%M:%S GMT")
         })
 
-    return results
+    return results, len(results)
