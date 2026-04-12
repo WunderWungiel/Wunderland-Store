@@ -20,7 +20,6 @@ if config['proxy']:
     )
 
 app.register_blueprint(applist)
-app.register_blueprint(api)
 app.register_blueprint(auth)
 app.register_blueprint(legacy_store)
 app.register_blueprint(store)
