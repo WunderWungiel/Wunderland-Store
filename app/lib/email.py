@@ -13,11 +13,6 @@ email_password = config['email']['password']
 
 def send_email(subject, text_message, html_message, receiver_email):
 
-    context = ssl.create_default_context()
-
-    server = smtplib.SMTP_SSL(smtp_address, smtp_port, context=context)
-    server.login(email_address, email_password)
-
     message = MIMEMultipart("alternative")
     message['Subject'] = subject
     message['From'] = email_address
@@ -29,8 +24,9 @@ def send_email(subject, text_message, html_message, receiver_email):
     message.attach(part1)
     message.attach(part2)
 
-    server.sendmail(
-        email_address, receiver_email, message.as_string()
-    )
+    context = ssl.create_default_context()
 
-    server.close()
+    with smtplib.SMTP_SSL(smtp_address, smtp_port, context=context) as server:
+        server.login(email_address, email_password)
+        server.sendmail(email_address, receiver_email, message.as_string())
+        server.close()

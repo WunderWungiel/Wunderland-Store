@@ -255,4 +255,4 @@ def get_news(news_id=None):
             ).strftime("%a, %d %b %Y %H:%M:%S GMT")
         })
 
-    return results[0] if (news_id is not None and results) else results
+    return results
