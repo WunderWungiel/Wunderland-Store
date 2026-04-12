@@ -214,9 +214,10 @@ def search(search_query, start=None):
         if where_clauses:
             query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-        with db.connection.cursor() as cursor:
-            cursor.execute(query, params)
-            content_type_results = cursor.fetchall()
+        with db.pool.connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                content_type_results = cursor.fetchall()
 
         for i, result in enumerate(content_type_results):
             content_type_results[i]['content_type_name'] = content_type['name']
@@ -277,9 +278,10 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
         query += sql.SQL(" LIMIT %s")
         params.append(count)
 
-    with db.connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+    with db.pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            results = cursor.fetchall()
 
     xml = format_results(results, content_type_name, widget)
     return xml

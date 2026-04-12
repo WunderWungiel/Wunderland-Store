@@ -1,15 +1,15 @@
 import os
 from datetime import datetime
 
-from psycopg import connect
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 from markdown import markdown
 from flask import current_app
 
 from . import config
 
-uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
-connection = connect(uri, row_factory=dict_row)
+uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}:{config['database']['port']}/{config['database']['name']}"
+pool = ConnectionPool(uri, kwargs={"row_factory": dict_row})
 
 CONTENT_SELECT = """
     SELECT
@@ -90,9 +90,10 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     query += CONTENT_GROUP_BY
     query += " ORDER BY content.id DESC"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return _format_content(cursor.fetchall())
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return _format_content(cursor.fetchall())
 
 
 def search(search_query, platform_id=None):
@@ -110,37 +111,42 @@ def search(search_query, platform_id=None):
     query += CONTENT_GROUP_BY
     query += " ORDER BY content.title"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return _format_content(cursor.fetchall())
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return _format_content(cursor.fetchall())
 
 
 def get_legacy_content_id(old_id, content_type_id):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT new_id FROM content_legacy WHERE old_id = %s AND type_id = %s",
-            [old_id, content_type_id]
-        )
-        result = cursor.fetchone()
-        return result['new_id'] if result else None
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT new_id FROM content_legacy WHERE old_id = %s AND type_id = %s",
+                [old_id, content_type_id]
+            )
+            result = cursor.fetchone()
+            return result['new_id'] if result else None
 
 
 def rate(rating, content_id, user_id):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            INSERT INTO rating (content_id, rating, user_id) VALUES (%s, %s, %s)
-            ON CONFLICT (content_id, user_id) DO UPDATE SET rating = EXCLUDED.rating
-        """, [content_id, rating, user_id])
-    connection.commit()
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO rating (content_id, rating, user_id) VALUES (%s, %s, %s)
+                ON CONFLICT (content_id, user_id) DO UPDATE SET rating = EXCLUDED.rating
+            """, [content_id, rating, user_id])
 
 
 def increment_counter(content_id):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "UPDATE content SET counter = counter + 1 WHERE id = %s",
-            [content_id]
-        )
-    connection.commit()
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE content SET counter = counter + 1 WHERE id = %s",
+                [content_id]
+            )
 
 
 def get_categories(content_type_id=None, platform_id=None):
@@ -167,9 +173,10 @@ def get_categories(content_type_id=None, platform_id=None):
 
     query += " ORDER BY name"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return cursor.fetchall()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
 
 
 def get_platforms(platform_id=None):
@@ -182,9 +189,10 @@ def get_platforms(platform_id=None):
 
     query += " ORDER BY name"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return cursor.fetchall()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
 
 
 def get_content_types(type_id=None, name=None, prefix=None):
@@ -207,9 +215,11 @@ def get_content_types(type_id=None, name=None, prefix=None):
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return cursor.fetchall()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
+
 
 def get_news(news_id=None):
     query = "SELECT * FROM news"
@@ -221,9 +231,10 @@ def get_news(news_id=None):
 
     query += " ORDER BY id DESC"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
 
     results = []
     for row in rows:

@@ -3,7 +3,7 @@ import os
 from flask import request, current_app
 from psycopg import sql
 
-from ..database import connection
+from ..database import pool
 from .. import config
 
 def generate_content(database, content_name):
@@ -37,9 +37,10 @@ def generate_content(database, content_name):
 
     query += sql.SQL(" ORDER BY id DESC")
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            results = cursor.fetchall()
 
     for row in results:
 
@@ -100,9 +101,10 @@ def get_content(name, content_type_name):
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
     query += sql.SQL(" LIMIT 1")
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        result = cursor.fetchone()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            result = cursor.fetchone()
 
     if result:
         result['screenshots'] = [f"{result['screenshot_prefix']}{i}.jpg" for i in range(1, result['screenshot_count'] + 1)]

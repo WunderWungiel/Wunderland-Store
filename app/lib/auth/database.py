@@ -1,7 +1,7 @@
 import bcrypt
 from psycopg import sql
 
-from ..database import connection
+from ..database import pool
 
 def _generate_password(user_password):
     user_password = user_password.encode('utf-8')
@@ -30,26 +30,27 @@ def get_user(id=None, username=None, email=None):
     if where_clauses:
         query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        result = cursor.fetchone()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchone()
 
-    return result
 
 def confirm_user(email):
 
     query = sql.SQL("UPDATE users SET confirmed=true WHERE email=%s")
     params = (email,)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
 
-    connection.commit()
 
 def user_exists(id=None, username=None, email=None):
 
     result = get_user(id=id, username=username, email=email)
     return True if result else False
+
 
 def register(email, user_password, username):
 
@@ -57,10 +58,10 @@ def register(email, user_password, username):
     query = sql.SQL("INSERT INTO users (email, password, username, confirmed) VALUES (%s, %s, %s, false)")
     params = (email, hashed_password, username)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-    
-    connection.commit()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+
 
 def change_password(id, new_password):
 
@@ -68,10 +69,9 @@ def change_password(id, new_password):
     query = sql.SQL("UPDATE users SET password=%s WHERE id=%s")
     params = (hashed_password, id)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-    
-    connection.commit()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
 
 def check_credentials(email, user_password):
     if not user_exists(email=email):
@@ -80,9 +80,10 @@ def check_credentials(email, user_password):
     query = sql.SQL("SELECT password FROM users WHERE email=%s AND active=true")
     params = (email,)
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        result = cursor.fetchone()
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            result = cursor.fetchone()
 
     hashed_password = result['password'].encode('utf-8')
     user_password = user_password.encode('utf-8')
