@@ -24,7 +24,7 @@ def get_legacy_content_id(old_id, content_type_id):
         return result['new_id'] if result else None
 
 
-def get_content(content_id=None, type_id=None, category_id=None, platforms=None):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None):
 
     where_clauses = ["content.visible = TRUE"]
     params = []
@@ -95,8 +95,6 @@ def get_content(content_id=None, type_id=None, category_id=None, platforms=None)
             'type_id': result.pop('category_type_id'),
         }
 
-        result['type'] = get_content_type(result['category']['type_id'])
-
         result['platform'] = {
             'id': result['platform'],
             'name': result.pop('platform_name'),
@@ -136,18 +134,28 @@ def rate(rating, content_id, user_id):
     connection.commit()
 
 
-def get_categories(platform_id=None):
+def get_categories(content_type_id=None, platform_id=None):
+
+    where_clauses = []
+    params = []
 
     if platform_id is not None:
         query = """
             SELECT DISTINCT category.* FROM categories AS category
             JOIN content ON category.id = content.category_id
-            WHERE content.platform = %s
         """
-        params = [platform_id]
+        where_clauses.append("content.platform = %s")
+        params.append(platform_id)
     else:
         query = "SELECT * FROM categories"
-        params = []
+
+    if content_type_id is not None:
+        column = "category.type_id" if platform_id is not None else "type_id"
+        where_clauses.append(f"{column} = %s")
+        params.append(content_type_id)
+
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
 
     query += " ORDER BY name"
 
@@ -251,8 +259,6 @@ def search(search_query, platform_id=None):
             'type_id': result.pop('category_type_id'),
         }
 
-        result['type'] = get_content_type(result['category']['type_id'])
-
         result['platform'] = {
             'id': result['platform'],
             'name': result.pop('platform_name'),
@@ -329,20 +335,15 @@ def get_news(news_id=None):
     return formatted_results
 
 
-def get_content_types():
-
-    query = "SELECT * FROM content_types"
-
-    with connection.cursor() as cursor:
-        cursor.execute(query)
-        return cursor.fetchall()
-
-
-def get_content_type(name=None, prefix=None):
+def get_content_types(type_id=None, name=None, prefix=None):
 
     query = "SELECT * FROM content_types"
     where_clauses = []
     params = []
+
+    if type_id is not None:
+        where_clauses.append("id = %s")
+        params.append(type_id)
 
     if name is not None:
         where_clauses.append("name = %s")
