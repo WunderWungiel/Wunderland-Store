@@ -1,126 +1,109 @@
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
-        <meta name="navigation" content="cursor" />
+        <meta name="navigation" content="cursor"/>
         <title>Home • Wunderland Store</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
     </head>
 
     <body>
         <div id="wrapper">
+
             <div id="header">
                 <div id="top">
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="{{ url_for('store.root') }}">
+                                    <img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store"/>
+                                </a>
                             </td>
                             <td id="searchLink">
-                                {% if session['platform_id'] is none %}
-                                {% set platform_name = "All" %}
-                                {% else %}
-                                {% set platform_name = get_platform(session['platform_id'])['name'] %}
-                                {% endif %}
-                                <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
+                                <span>
+                                    <a href="{{ url_for('store.platforms') }}">Platform</a>:
+                                    <b>{{ get_platform(session['platform_id'])['name'] if session['platform_id'] else 'All' }}</b>
+                                </span>
                                 |
-                                {% if session['logged_in'] is defined %}
-                                {% set username = get_user(session['user_id'])['username'] %}
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
+                                {% if session.logged_in is defined %}
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ get_user(session['user_id'])['username'] }}</a></span>
                                 |
                                 {% endif %}
                                 <a href="{{ url_for('store.search') }}">Search</a>
                             </td>
                         </tr>
                     </table>
-                </div> <!-- end top -->
+                </div>
 
                 <div id="navigation">
                     <a class="first selected" href="{{ url_for('store.root') }}">Home</a> <b>|</b>
-                    {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}">{{ _content_type['friendly_name'] }}</a>
-                    {% if not loop.last %}
-                    <b>|</b>
-                    {% endif %}
+                    {% for content_type in get_content_types() %}
+                    <a href="{{ url_for('store.content', content_type_id=content_type['id']) }}">{{ content_type['name'] }}</a>
+                    {% if not loop.last %}<b>|</b>{% endif %}
                     {% endfor %}
-                </div> <!-- end navigation -->
-            
-            </div> <!-- end header -->
+                </div>
+            </div>
 
             <div id="views">
                 <div class="view">
-
-                    <table class="contentList" cellspacing="0" width="100%" >
-
-                        {% for content in news %}
+                    <table class="contentList" cellspacing="0" width="100%">
+                        {% for item in news %}
                         <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}" style="height: 32px;">
-        
                             <td class="thumbnail" style="width: 0;"></td>
-        
                             <td class="contentType">
                                 <h2 class="title">
-                                    <a href="{{ url_for('store.news', news_id=content['id']) }}">{{ content['title'] }}</a>
+                                    <a href="{{ url_for('store.news', news_id=item['id']) }}">{{ item['title'] }}</a>
                                 </h2>
                             </td>
                             <td class="contentRatingPrice"></td>
                         </tr>
-
                         {% endfor %}
-
                     </table>
 
-                <!-- </div> end Content Stream -->
-
-                    {% if previous_page is not none and next_page is not none %}
+                    {% if pages.previous or pages.next %}
                     <p class="pagination">
-                    {% if previous_page is not none %}
-                        <a href="{{ url_for('store.root', page=previous_page) }}">Previous</a>
-                    {% endif %}
-                    {% if next_page is not none %}
-                        <a href="{{ url_for('store.root', page=next_page) }}">Next</a>
-                    {% endif %}
+                        {% if pages.previous %}<a href="{{ url_for('store.root', page=pages.previous) }}">Previous</a>{% endif %}
+                        {% if pages.next %}<a href="{{ url_for('store.root', page=pages.next) }}">Next</a>{% endif %}
                     </p>
                     {% endif %}
-                <!-- end results -->
 
-
-                <div class="beacon"></div>
-
+                    <div class="beacon"></div>
                 </div>
-            </div> <!-- end views -->
+            </div>
 
             <div id="bottom">
                 <div id="searchContent">
                     <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                         <fieldset id="searchField">
                             <label for="search">Search</label>
-                            <input type="text" id="search" name="q" title="" value="" /> <input type="submit" id="searchBtn" value="Search" />
+                            <input type="text" id="search" name="q" title="" value=""/>
+                            <input type="submit" id="searchBtn" value="Search"/>
                         </fieldset>
                     </form>
-                </div> <!-- end search -->
+                </div>
 
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
-                    <a href="{{ url_for('store.root') }}" class="selected">Home</a><br />
-                    {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content', content_type_name=_content_type['name']) }}">{{ _content_type['friendly_name'] }}</a><br />
+                    <a href="{{ url_for('store.root') }}" class="selected">Home</a><br/>
+                    {% for content_type in get_content_types() %}
+                    <a href="{{ url_for('store.content', content_type_id=content_type['id']) }}">{{ content_type['name'] }}</a><br/>
                     {% endfor %}
-                </div> <!-- end navigation -->
+                </div>
             </div>
 
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
-                {% if session['logged_in'] is not defined %}
+                {% if session.logged_in is not defined %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
                 <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
                 {% endif %}
-                <br />
-            © Wunder Wungiel {{ now.year }}</div>
-        </div> <!-- end wrapper -->
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+
+        </div>
     </body>
 </html>

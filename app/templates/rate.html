@@ -26,7 +26,7 @@
                                 {% else %}
                                 {% set platform_name = get_platform(session['platform_id'])['name'] %}
                                 {% endif %}
-                                <span><a href="{{ url_for('store.platform') }}">Platform</a>: <b>{{ platform_name }}</b></span>
+                                <span><a href="{{ url_for('store.platforms') }}">Platform</a>: <b>{{ platform_name }}</b></span>
                                 |
                                 {% if session['logged_in'] is defined %}
                                 {% set username = get_user(session['user_id'])['username'] %}
