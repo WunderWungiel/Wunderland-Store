@@ -1,9 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, session, url_for, current_app, session
+from flask import Blueprint, request, session, current_app, render_template, redirect, url_for
 from itsdangerous import URLSafeTimedSerializer
 import re
 
-from .. import email as email_system
 from . import database as db
+from ..email import send_email
 
 auth = Blueprint('auth', __name__, template_folder="templates")
 
@@ -44,14 +44,14 @@ def login():
 
         if not email or not password:
             return redirect(url_for('.login'))
-        
+
         result = db.check_credentials(email, password)
         user = db.get_user(email=email)
 
         if result:
             if not user['confirmed']:
                 return redirect(url_for('.login', message="Account not confirmed."))
-            
+
             if user['banned']:
                 session_logout()
                 return render_template("auth/banned.html", reason=user['banned_reason'])
@@ -60,7 +60,7 @@ def login():
             session['user_id'] = db.get_user(email=email)['id']
             session.permanent = True
             return redirect(url_for('store.root'))
-        
+
         else:
             session_logout()
             return redirect(url_for('.login', message="Wrong e-mail/password!", color="red"))
@@ -69,7 +69,7 @@ def login():
 def register():
     if session.get('logged_in') is True:
         return redirect(url_for('store.root'))
-    
+
     if request.method == 'GET':
         return render_template("auth/register.html", message=request.args.get('message'))
     else:
@@ -82,7 +82,7 @@ def register():
 
         if not re.match(r"^[\w]{6,}$", username):
             return redirect(url_for('.register', message="Wrong username. It should contain only letters and numbers and be 7-letters long or longer."))
-        
+
         if not re.match(r'^(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$', email):
             return redirect(url_for('.register', message="Wrong e-mail address."))
 
@@ -109,7 +109,7 @@ def register():
         """
 
         try:
-            email_system.send_email("Confirm your account", text_message, html_message, email)
+            send_email("Confirm your account", text_message, html_message, email)
         except:
             return redirect(url_for('.register', message="Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username."))
 
@@ -134,7 +134,7 @@ def confirm_email(token):
             "auth/confirm_email.html",
             message="""You have confirmed your account. Thanks! <br /><br /> <input type="button" class="Btn" onclick="window.location.href='/'" value="Return to home page"></input>"""
         )
-    
+
 @auth.route("/change_password", methods=['POST'])
 def change_password():
 
@@ -146,13 +146,13 @@ def change_password():
 
     if not current_password or not new_password:
         return redirect(url_for('.profile', message="Fill in the form!"))
-    
+
     user_id = session['user_id']
 
     email = db.get_user(id=user_id)['email']
     if not db.check_credentials(email, current_password):
         return redirect(url_for('.profile', message="Wrong current password!"))
-    
+
     db.change_password(user_id, new_password)
 
     return redirect(url_for('.profile', message="Password changed!"))
@@ -162,7 +162,7 @@ def profile():
     if not session.get('logged_in'):
         session_logout()
         return redirect(url_for('.login'))
-    
+
     return render_template("auth/profile.html", message=request.args.get('message'))
 
 @auth.route("/logout")

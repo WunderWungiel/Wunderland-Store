@@ -209,4 +209,39 @@ def get_content_types(type_id=None, name=None, prefix=None):
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return cursor
+        return cursor.fetchall()
+
+def get_news(news_id=None):
+    query = "SELECT * FROM news"
+    params = []
+
+    if news_id is not None:
+        query += " WHERE id = %s"
+        params.append(news_id)
+
+    query += " ORDER BY id DESC"
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+    results = []
+    for row in rows:
+        file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
+
+        if not os.path.isfile(file_path):
+            continue
+
+        with open(file_path, "r") as f:
+            html_content = markdown(f.read())
+
+        results.append({
+            'id': row['id'],
+            'title': row['title'],
+            'content': html_content,
+            'date': datetime.fromtimestamp(
+                os.path.getmtime(file_path)
+            ).strftime("%a, %d %b %Y %H:%M:%S GMT")
+        })
+
+    return results[0] if (news_id is not None and results) else results

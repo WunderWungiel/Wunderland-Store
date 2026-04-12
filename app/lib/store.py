@@ -3,14 +3,13 @@ import random
 import math
 from datetime import datetime
 
-from flask import Blueprint, render_template, request, redirect, url_for, session, current_app, abort
+from flask import Blueprint, request, session, current_app, render_template, redirect, url_for
 
+from . import config
 from . import database as db
 from .auth import database as auth_db
-from . import config
 
 store = Blueprint('store', __name__, template_folder="templates")
-
 
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):

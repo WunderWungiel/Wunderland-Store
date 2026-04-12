@@ -1,9 +1,9 @@
 from flask import Blueprint, request
 
+from . import api
 from . import database as db
-from . import config
 
-api = Blueprint('api', __name__, template_folder="templates", url_prefix=config['api_prefix'])
+api = Blueprint('api', __name__, template_folder="templates")
 
 @api.route("/get_content/<content_type_name>")
 def get_content(content_type_name):
