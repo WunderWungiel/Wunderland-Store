@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from psycopg import connect, sql
+from psycopg import connect
 from psycopg.rows import dict_row
 from markdown import markdown
 from flask import current_app
@@ -11,81 +11,33 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
 connection = connect(uri, row_factory=dict_row)
 
+CONTENT_SELECT = """
+    SELECT
+        content.*,
+        category.name AS category_name,
+        category.type_id AS category_type_id,
+        platform.name AS platform_name,
+        COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
+    FROM content
+    LEFT JOIN categories AS category ON content.category_id = category.id
+    LEFT JOIN platforms AS platform ON content.platform = platform.id
+    LEFT JOIN rating ON content.id = rating.content_id
+"""
 
-def get_legacy_content_id(old_id, content_type_id):
+CONTENT_SELECT_WITH_PLATFORM_TREE = """
+    WITH RECURSIVE platform_tree AS (
+        SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
+        UNION ALL
+        SELECT parent.id, parent.parent_id
+        FROM platforms parent
+        JOIN platform_tree ON parent.id = platform_tree.parent_id
+    )
+""" + CONTENT_SELECT
 
-    query = """SELECT new_id FROM content_legacy WHERE old_id = %s AND type_id = %s"""
-    params = [old_id, content_type_id]
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        result = cursor.fetchone()
-
-        return result['new_id'] if result else None
+CONTENT_GROUP_BY = " GROUP BY content.id, category.name, category.type_id, platform.name"
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None):
-
-    where_clauses = ["content.visible = TRUE"]
-    params = []
-
-    if platforms is not None:
-        query = """
-            WITH RECURSIVE platform_tree AS (
-                SELECT id, parent_id
-                FROM platforms
-                WHERE id = ANY(%s)
-                UNION ALL
-                SELECT parent.id, parent.parent_id
-                FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
-            )
-            SELECT
-                content.*,
-                category.name AS category_name,
-                category.type_id AS category_type_id,
-                platform.name AS platform_name,
-                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
-            FROM content
-        """
-        where_clauses.append("""
-            (content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)
-        """)
-        params.append(platforms)
-    else:
-        query = """
-            SELECT
-                content.*,
-                category.name AS category_name,
-                category.type_id AS category_type_id,
-                platform.name AS platform_name,
-                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
-            FROM content
-        """
-
-    query += """
-        LEFT JOIN categories AS category ON content.category_id = category.id
-        LEFT JOIN platforms AS platform ON content.platform = platform.id
-        LEFT JOIN rating ON content.id = rating.content_id
-    """
-
-    if content_id is not None:
-        where_clauses.append("content.id = %s")
-        params.append(content_id)
-
-    if category_id is not None:
-        where_clauses.append("content.category_id = %s")
-        params.append(category_id)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " GROUP BY content.id, category.name, category.type_id, platform.name"
-    query += " ORDER BY content.id DESC"
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
+def _format_content(results):
 
     for i, result in enumerate(results):
 
@@ -100,42 +52,98 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             'name': result.pop('platform_name'),
         } if result['platform'] is not None else None
 
-        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(
-            1, result['screenshot_count'] + 1)]
+        result['screenshots'] = [
+            f"{result['screenshot_prefix']}{n}.jpg"
+            for n in range(1, result['screenshot_count'] + 1)
+        ]
 
         results[i] = result
 
     return results
 
 
-def get_rating(content_id):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None):
 
-    query = "SELECT COALESCE(ROUND(AVG(rating)), 0) as rating FROM rating WHERE content_id = %s"
-    params = [content_id]
+    where_clauses = ["content.visible = TRUE"]
+    params = []
+
+    if platforms is not None:
+        query = CONTENT_SELECT_WITH_PLATFORM_TREE
+        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        params.append(platforms)
+    else:
+        query = CONTENT_SELECT
+
+    if content_id is not None:
+        where_clauses.append("content.id = %s")
+        params.append(content_id)
+
+    if content_type_id is not None:
+        where_clauses.append("category.type_id = %s")
+        params.append(content_type_id)
+
+    if category_id is not None:
+        where_clauses.append("content.category_id = %s")
+        params.append(category_id)
+
+    query += " WHERE " + " AND ".join(where_clauses)
+    query += CONTENT_GROUP_BY
+    query += " ORDER BY content.id DESC"
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return int(cursor.fetchone()['rating'])
+        return _format_content(cursor.fetchall())
+
+
+def search(search_query, platform_id=None):
+    where_clauses = ["content.visible = TRUE", "LOWER(content.title) LIKE %s"]
+    params = [f"%{search_query.lower()}%"]
+
+    if platform_id is not None:
+        query = CONTENT_SELECT_WITH_PLATFORM_TREE.replace("ANY(%s)", "%s")
+        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        params.insert(0, platform_id)
+    else:
+        query = CONTENT_SELECT
+
+    query += " WHERE " + " AND ".join(where_clauses)
+    query += CONTENT_GROUP_BY
+    query += " ORDER BY content.title"
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        return _format_content(cursor.fetchall())
+
+
+def get_legacy_content_id(old_id, content_type_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT new_id FROM content_legacy WHERE old_id = %s AND type_id = %s",
+            [old_id, content_type_id]
+        )
+        result = cursor.fetchone()
+        return result['new_id'] if result else None
 
 
 def rate(rating, content_id, user_id):
-
-    query = """
-        INSERT INTO rating (content_id, rating, user_id)
-        VALUES (%s, %s, %s)
-        ON CONFLICT (content_id, user_id)
-        DO UPDATE SET rating = EXCLUDED.rating
-    """
-    params = (content_id, rating, user_id)
-
     with connection.cursor() as cursor:
-        cursor.execute(query, params)
+        cursor.execute("""
+            INSERT INTO rating (content_id, rating, user_id) VALUES (%s, %s, %s)
+            ON CONFLICT (content_id, user_id) DO UPDATE SET rating = EXCLUDED.rating
+        """, [content_id, rating, user_id])
+    connection.commit()
 
+
+def increment_counter(content_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "UPDATE content SET counter = counter + 1 WHERE id = %s",
+            [content_id]
+        )
     connection.commit()
 
 
 def get_categories(content_type_id=None, platform_id=None):
-
     where_clauses = []
     params = []
 
@@ -150,8 +158,8 @@ def get_categories(content_type_id=None, platform_id=None):
         query = "SELECT * FROM categories"
 
     if content_type_id is not None:
-        column = "category.type_id" if platform_id is not None else "type_id"
-        where_clauses.append(f"{column} = %s")
+        col = "category.type_id" if platform_id is not None else "type_id"
+        where_clauses.append(f"{col} = %s")
         params.append(content_type_id)
 
     if where_clauses:
@@ -165,17 +173,12 @@ def get_categories(content_type_id=None, platform_id=None):
 
 
 def get_platforms(platform_id=None):
-
     query = "SELECT * FROM platforms"
-    where_clauses = []
     params = []
 
     if platform_id is not None:
-        where_clauses.append("id = %s")
+        query += " WHERE id = %s"
         params.append(platform_id)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
 
     query += " ORDER BY name"
 
@@ -184,160 +187,7 @@ def get_platforms(platform_id=None):
         return cursor.fetchall()
 
 
-def get_category(category_id):
-
-    query = "SELECT * FROM categories WHERE id=%s"
-    params = [category_id]
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        return cursor.fetchone()
-
-
-def search(search_query, platform_id=None):
-
-    where_clauses = ["content.visible = TRUE"]
-    params = []
-
-    where_clauses.append("LOWER(content.title) LIKE %s")
-    params.append(f"%{search_query.lower()}%")
-
-    if platform_id is not None:
-        query = """
-            WITH RECURSIVE platform_tree AS (
-                SELECT id, parent_id
-                FROM platforms
-                WHERE id = %s
-                UNION ALL
-                SELECT parent.id, parent.parent_id
-                FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
-            )
-            SELECT
-                content.*,
-                category.name AS category_name,
-                category.type_id AS category_type_id,
-                platform.name AS platform_name,
-                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
-            FROM content
-        """
-        where_clauses.append(
-            "(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
-        params.insert(0, platform_id)
-    else:
-        query = """
-            SELECT
-                content.*,
-                category.name AS category_name,
-                category.type_id AS category_type_id,
-                platform.name AS platform_name,
-                COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
-            FROM content
-        """
-
-    query += """
-        LEFT JOIN categories AS category ON content.category_id = category.id
-        LEFT JOIN platforms AS platform ON content.platform = platform.id
-        LEFT JOIN rating ON content.id = rating.content_id
-    """
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " GROUP BY content.id, category.name, category.type_id, platform.name"
-    query += " ORDER BY content.title"
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
-
-    for i, result in enumerate(results):
-
-        result['category'] = {
-            'id': result['category_id'],
-            'name': result.pop('category_name'),
-            'type_id': result.pop('category_type_id'),
-        }
-
-        result['platform'] = {
-            'id': result['platform'],
-            'name': result.pop('platform_name'),
-        } if result['platform'] is not None else None
-
-        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(
-            1, result['screenshot_count'] + 1)]
-
-        results[i] = result
-
-    return results
-
-
-def increment_counter(content_id):
-
-    query = "UPDATE content SET counter=counter + 1 WHERE id=%s"
-    params = [content_id]
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-
-    connection.commit()
-
-
-def get_news(news_id=None):
-
-    query = "SELECT * FROM news"
-    where_clauses = []
-    params = []
-
-    if news_id is not None:
-        where_clauses.append("id = %s")
-        params.append(news_id)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " ORDER BY id DESC"
-
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        results = cursor.fetchall()
-
-    formatted_results = []
-
-    for row in results:
-        file_path = os.path.join(
-            current_app.static_folder, "content", "news", row['file'])
-
-        if not os.path.isfile(file_path):
-            continue
-
-        f = open(file_path, "r")
-        markdown_content = f.read()
-        html_content = markdown(markdown_content)
-        f.close()
-
-        file_timestamp = os.path.getmtime(file_path)
-        file_date = datetime.fromtimestamp(
-            file_timestamp).strftime("%a, %d %b %Y %H:%M:%S GMT")
-
-        formatted_results.append(
-            {
-                'id': row['id'],
-                'title': row['title'],
-                'content': html_content,
-                'date': file_date
-            }
-        )
-
-    if news_id is not None and results:
-        return formatted_results[0]
-
-    return formatted_results
-
-
 def get_content_types(type_id=None, name=None, prefix=None):
-
-    query = "SELECT * FROM content_types"
     where_clauses = []
     params = []
 
@@ -353,9 +203,10 @@ def get_content_types(type_id=None, name=None, prefix=None):
         where_clauses.append("prefix = %s")
         params.append(prefix)
 
+    query = "SELECT * FROM content_types"
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return cursor.fetchone()
+        return cursor
