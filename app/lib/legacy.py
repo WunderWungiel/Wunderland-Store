@@ -2,9 +2,9 @@ from flask import Blueprint, request, redirect, url_for
 
 from . import database as db
 
-legacy_store = Blueprint('legacy_store', __name__, template_folder="templates")
+legacy = Blueprint('legacy_store', __name__, template_folder="templates")
 
-@legacy_store.route("/<prefix>/<int:legacy_id>/rate", methods=['GET', 'POST'])
+@legacy.route("/<prefix>/<int:legacy_id>/rate", methods=['GET', 'POST'])
 def rate(prefix, legacy_id):
 
     content_type = db.get_content_type(prefix=prefix)
@@ -16,7 +16,7 @@ def rate(prefix, legacy_id):
 
     return redirect(url_for('store.rate', content_id=content_id, **request.args), code=307)
 
-@legacy_store.route("/<prefix>/<int:legacy_id>")
+@legacy.route("/<prefix>/<int:legacy_id>")
 def item(prefix, legacy_id):
 
     content_type = db.get_content_type(prefix=prefix)
@@ -28,7 +28,7 @@ def item(prefix, legacy_id):
 
     return redirect(url_for('store.item', content_id=content_id, **request.args), code=307)
 
-@legacy_store.route("/<prefix>/<int:legacy_id>/images")
+@legacy.route("/<prefix>/<int:legacy_id>/images")
 def images(prefix, legacy_id):
 
     content_type = db.get_content_type(prefix=prefix)

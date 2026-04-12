@@ -2,7 +2,6 @@ from .config import config
 
 from .applist import applist
 from .auth import auth
-from .qtstore import qtstore
-
-from .legacy_store import legacy_store
+from .legacy import legacy
 from .store import store
+from .qtstore import qtstore

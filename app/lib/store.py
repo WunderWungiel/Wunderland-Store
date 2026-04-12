@@ -72,6 +72,7 @@ def images(content_id):
 
     return render_template("images.html", item=item)
 
+
 @store.route("/content/<content_type_id>/browse")
 def browse_categories(content_type_id):
 
@@ -83,6 +84,7 @@ def browse_categories(content_type_id):
     categories = db.get_categories(content_type_id=content_type_id, platform_id=session['platform_id'])
 
     return render_template("categories.html", content_type=content_type, categories=categories)
+
 
 @store.route("/search")
 def search():
@@ -140,6 +142,9 @@ def content(content_type_id):
 
     content_type = db.get_content_type(type_id=content_type_id)
 
+    if not content_type:
+        return redirect(url_for('.root'))
+
     category_id = request.args.get('category', type=int)
     page = request.args.get('page', 1, type=int)
     platform_id = session['platform_id']
@@ -175,7 +180,7 @@ def download():
     if not config['clients']:
         return redirect(url_for('.root'))
 
-    results = [db.get_content(client['content_type_name'], id=client['id']) for client in config['clients']]
+    results = [db.get_one_content(content_id=content_id) for content_id in config['clients']]
     results = [item for item in results if item is not None]
 
     content_type = db.get_content_type('apps')

@@ -71,17 +71,21 @@ def get_one_content(content_id):
     results, _ = get_content(content_id=content_id)
     return results[0] if results else None
 
+
 def get_one_news(news_id):
     results, _ = get_news(news_id=news_id)
     return results[0] if results else None
+
 
 def get_content_type(type_id=None, name=None, prefix=None):
     results = get_content_types(type_id=type_id, name=name, prefix=prefix)
     return results[0] if results else None
 
+
 def get_category(category_id):
     results = get_categories(category_id=category_id)
     return results[0] if results else None
+
 
 def get_platform(platform_id):
     results = get_platforms(platform_id=platform_id)
@@ -95,7 +99,8 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
 
     if platforms is not None:
         query = CONTENT_SELECT_WITH_PLATFORM_TREE
-        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        where_clauses.append(
+            "(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
         params.append(platforms)
     else:
         query = CONTENT_SELECT
@@ -134,7 +139,8 @@ def search(search_query, platform_id=None, limit=None, offset=None):
 
     if platform_id is not None:
         query = CONTENT_SELECT_WITH_PLATFORM_TREE.replace("ANY(%s)", "%s")
-        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        where_clauses.append(
+            "(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
         params.insert(0, platform_id)
     else:
         query = CONTENT_SELECT
@@ -285,7 +291,8 @@ def get_news(news_id=None, limit=None, offset=None):
     results = []
 
     for row in rows:
-        file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
+        file_path = os.path.join(
+            current_app.static_folder, "content", "news", row['file'])
 
         if not os.path.isfile(file_path):
             continue
