@@ -29,7 +29,7 @@ def get_content(content_type_name):
 
     results = db.get_content(**arguments).values()
 
-    return sorted(results, key=lambda x: x['id']) if id is None else [results]
+    return sorted(results, key=lambda x: x['id'])
 
 @api.route("/get_categories/<content_type_name>")
 def get_categories(content_type_name):

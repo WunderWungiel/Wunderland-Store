@@ -11,85 +11,75 @@ from . import config
 
 store = Blueprint('store', __name__, template_folder="templates")
 
-@store.route("/<prefix>/<int:id>/rate", methods=['GET', 'POST'])
-def rate(prefix, id):
 
-    content_type = db.get_content_type(prefix=prefix)
+@store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
+def rate(content_id):
 
-    if not content_type:
-        return redirect(url_for('.root'))
+    items = db.get_content(content_id=content_id)
+    item = items[0] if items else None
 
-    app = db.get_content(content_type['name'], id=id)
-
-    if not app or not session.get('logged_in'):
-        return redirect(url_for('.item', prefix=prefix, id=id))
+    if not item or not session.get('logged_in'):
+        return redirect(url_for('.item', content_id=content_id)) # TODO
 
     if request.method == 'GET':
-        return render_template("rate.html", app=app, prefix=prefix)
-    else:
-        rating = request.form.get('rating')
-        if not rating:
-            return redirect(url_for('.item', prefix=prefix, id=id))
+        return render_template("rate.html", item=item) # TODO
 
-        db.rate(rating, user_id=session['user_id'], content_id=id, content_type_name=content_type['name'])
-        return redirect(url_for('.item', prefix=prefix, id=id))
+    rating = request.form.get('rating')
+    if not rating:
+        return redirect(url_for('.item', content_id=content_id))
 
-@store.route("/<prefix>/<int:id>")
-def item(prefix, id):
+    db.rate(rating, content_id=content_id, user_id=session['user_id'])
+    return redirect(url_for('.item', content_id=content_id)) # TODO
 
-    content_type = db.get_content_type(prefix=prefix)
 
-    if not content_type:
+@store.route("/content/<int:content_id>")
+def item(content_id):
+
+    items = db.get_content(content_id=content_id)
+    item = items[0] if items else None
+
+    if item and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
+        db.increment_counter(content_id)
+
+    if not item:
         return redirect(url_for('.root'))
 
-    app = db.get_content(content_type['name'], id=id)
-
-    if app and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
-        db.increment_counter(id, content_type['name'])
-
-    if not app:
-        return redirect(url_for('.content', content_type_name=content_type['name']))
-
     try:
-        app['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', app['file'])).st_size
+        item['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', item['file'])).st_size
     except FileNotFoundError:
-        app['size'] = 0
+        item['size'] = 0
 
     platform_id = session.get('platform')
-
-    recommended = db.get_content(content_type['name'], category_id=app['category']['id'], platforms=[platform_id] if platform_id else None)
+    recommended = db.get_content(type_id="apps", category_id=item['category']['id'], platforms=[platform_id] if platform_id else None) # TODO
 
     if recommended:
         recommended = list(recommended.values())
         recommended = random.sample(recommended, k=min(10, len(recommended)))
-        recommended = [d for d in recommended if d['id'] != app['id']]
+        recommended = [d for d in recommended if d['id'] != item['id']]
         if not recommended:
             recommended = None
     else:
         recommended = None
 
-    app['description'] = app['description'].replace("\n", "<br>") if app['description'] else None
-    app['addon_message'] = app['addon_message'].replace("\n", "<br>") if app['addon_message'] else None
+    item['description'] = item['description'].replace("\n", "<br>") if item['description'] else None
+    item['addon_message'] = item['addon_message'].replace("\n", "<br>") if item['addon_message'] else None
 
-    return render_template("item.html", content_type=content_type, app=app, recommended=recommended)
+    return render_template("item.html", item=item, recommended=recommended) # TODO
 
-@store.route("/<prefix>/<int:id>/images")
-def images(prefix, id):
 
-    content_type = db.get_content_type(prefix=prefix)
+@store.route("/content/<int:content_id>/images")
+def images(content_id):
 
-    if not content_type:
-        return redirect(url_for('.root'))
+    items = db.get_content(content_id=content_id)
+    item = items[0] if items else None
 
-    app = db.get_content(content_type['name'], id=id)
+    if not item:
+        return redirect(url_for('.root')) # TODO
 
-    if not app:
-        return redirect(url_for('.content', content_type_name=content_type['name']))
+    if not item['screenshots']:
+        return redirect(url_for('.item', content_id=content_id))
 
-    if not app['screenshots']:
-        return redirect(url_for('.item', prefix=prefix, id=id))
-
-    return render_template("images.html", app=app, content_type=content_type)
+    return render_template("images.html", item=item)
 
 @store.route("/<content_type_name>/browse")
 def browse_categories(content_type_name):

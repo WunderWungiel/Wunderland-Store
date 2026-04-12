@@ -11,7 +11,20 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}/{config['database']['name']}"
 connection = connect(uri, row_factory=dict_row)
 
-def get_content(id=None, type_id=None, category_id=None, platforms=None):
+
+def get_legacy_content_id(old_id, content_type_id):
+
+    query = """SELECT new_id FROM content_legacy WHERE old_id = %s AND type_id = %s"""
+    params = [old_id, content_type_id]
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        result = cursor.fetchone()
+
+        return result['new_id'] if result else None
+
+
+def get_content(content_id=None, type_id=None, category_id=None, platforms=None):
 
     where_clauses = ["content.visible = TRUE"]
     params = []
@@ -35,7 +48,9 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
                 COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
             FROM content
         """
-        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        where_clauses.append("""
+            (content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)
+        """)
         params.append(platforms)
     else:
         query = """
@@ -54,9 +69,9 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
         LEFT JOIN rating ON content.id = rating.content_id
     """
 
-    if id is not None:
+    if content_id is not None:
         where_clauses.append("content.id = %s")
-        params.append(id)
+        params.append(content_id)
 
     if category_id is not None:
         where_clauses.append("content.category_id = %s")
@@ -80,16 +95,20 @@ def get_content(id=None, type_id=None, category_id=None, platforms=None):
             'type_id': result.pop('category_type_id'),
         }
 
+        result['type'] = get_content_type(result['category']['type_id'])
+
         result['platform'] = {
             'id': result['platform'],
             'name': result.pop('platform_name'),
         } if result['platform'] is not None else None
 
-        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(1, result['screenshot_count'] + 1)]
+        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(
+            1, result['screenshot_count'] + 1)]
 
         results[i] = result
 
-    return results if id is None else (results[0] if results else None)
+    return results
+
 
 def get_rating(content_id):
 
@@ -100,7 +119,8 @@ def get_rating(content_id):
         cursor.execute(query, params)
         return int(cursor.fetchone()['rating'])
 
-def rate(rating, user_id, content_id):
+
+def rate(rating, content_id, user_id):
 
     query = """
         INSERT INTO rating (content_id, rating, user_id)
@@ -114,6 +134,7 @@ def rate(rating, user_id, content_id):
         cursor.execute(query, params)
 
     connection.commit()
+
 
 def get_categories(platform_id=None):
 
@@ -134,6 +155,7 @@ def get_categories(platform_id=None):
         cursor.execute(query, params)
         return cursor.fetchall()
 
+
 def get_platforms(platform_id=None):
 
     query = "SELECT * FROM platforms"
@@ -151,7 +173,8 @@ def get_platforms(platform_id=None):
 
     with connection.cursor() as cursor:
         cursor.execute(query, params)
-        return cursor.fetchall() if platform_id is None else cursor.fetchone()
+        return cursor.fetchall()
+
 
 def get_category(category_id):
 
@@ -161,6 +184,7 @@ def get_category(category_id):
     with connection.cursor() as cursor:
         cursor.execute(query, params)
         return cursor.fetchone()
+
 
 def search(search_query, platform_id=None):
 
@@ -189,7 +213,8 @@ def search(search_query, platform_id=None):
                 COALESCE(ROUND(AVG(rating.rating)), 0) AS rating
             FROM content
         """
-        where_clauses.append("(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+        where_clauses.append(
+            "(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
         params.insert(0, platform_id)
     else:
         query = """
@@ -226,16 +251,20 @@ def search(search_query, platform_id=None):
             'type_id': result.pop('category_type_id'),
         }
 
+        result['type'] = get_content_type(result['category']['type_id'])
+
         result['platform'] = {
             'id': result['platform'],
             'name': result.pop('platform_name'),
         } if result['platform'] is not None else None
 
-        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(1, result['screenshot_count'] + 1)]
+        result['screenshots'] = [f"{result['screenshot_prefix']}{n}.jpg" for n in range(
+            1, result['screenshot_count'] + 1)]
 
         results[i] = result
 
     return results
+
 
 def increment_counter(content_id):
 
@@ -246,6 +275,7 @@ def increment_counter(content_id):
         cursor.execute(query, params)
 
     connection.commit()
+
 
 def get_news(news_id=None):
 
@@ -269,7 +299,8 @@ def get_news(news_id=None):
     formatted_results = []
 
     for row in results:
-        file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
+        file_path = os.path.join(
+            current_app.static_folder, "content", "news", row['file'])
 
         if not os.path.isfile(file_path):
             continue
@@ -280,7 +311,8 @@ def get_news(news_id=None):
         f.close()
 
         file_timestamp = os.path.getmtime(file_path)
-        file_date = datetime.fromtimestamp(file_timestamp).strftime("%a, %d %b %Y %H:%M:%S GMT")
+        file_date = datetime.fromtimestamp(
+            file_timestamp).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
         formatted_results.append(
             {
@@ -296,6 +328,7 @@ def get_news(news_id=None):
 
     return formatted_results
 
+
 def get_content_types():
 
     query = "SELECT * FROM content_types"
@@ -303,6 +336,7 @@ def get_content_types():
     with connection.cursor() as cursor:
         cursor.execute(query)
         return cursor.fetchall()
+
 
 def get_content_type(name=None, prefix=None):
 
