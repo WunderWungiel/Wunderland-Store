@@ -31,7 +31,7 @@ def rate(content_id):
     return redirect(url_for('.item', content_id=content_id))
 
 
-@store.route("/content/<int:content_id>")
+@store.route("/item/<int:content_id>")
 def item(content_id):
 
     item = db.get_one_content(content_id=content_id)
@@ -141,13 +141,12 @@ def content(content_type_id):
 
     category_id = request.args.get('category', type=int)
     page = request.args.get('page', 1, type=int)
-    platform_id = session['platform_id']
 
     category = db.get_category(category_id=category_id) if category_id else None
 
     if category_id and not category:
         flash("Invalid category.", 'danger')
-        return redirect(url_for('.content', content_type_id=content_type_id))
+        return redirect(url_for('.content', content_type_id=content_type['id']))
 
     if page < 1:
         flash("Invalid page. Redirected to the first page.", 'danger')
@@ -155,7 +154,7 @@ def content(content_type_id):
 
     offset = (page - 1) * config['per_page']
 
-    results, total = db.get_content(content_type['name'], category_id=category_id, platforms=[platform_id] if platform_id else None, offset=offset, limit=config['per_page'])
+    results, total = db.get_content(content_type_id=content_type['id'], category_id=category_id, platforms=[g.platform['id']] if g.platform else None, offset=offset, limit=config['per_page'])
 
     if not results:
         return render_template(f"empty.html", category=category, content_type=content_type)

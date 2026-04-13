@@ -68,7 +68,7 @@
                             </td>
                             <td class="contentType">
                                 <h2 class="title">
-                                    <a href="{{ url_for('store.item', prefix=content_type['prefix'], id=item['id']) }}">{{ item['title'] }}</a>
+                                    <a href="{{ url_for('store.item', content_id=item['id']) }}">{{ item['title'] }}</a>
                                 </h2>
                                 {% if content_type['show_categories'] and not category %}{{ item['category']['name'] }}{% endif %}
                             </td>
@@ -89,10 +89,10 @@
                     {% if pages.previous or pages.next %}
                     <p class="pagination">
                         {% if pages.previous %}
-                        <a href="{{ url_for('store.content', content_type_id=content_type['id'], category=category_id, page=pages.previous) }}">Previous</a>
+                        <a href="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category_id, page=pages.previous) }}">Previous</a>
                         {% endif %}
                         {% if pages.next %}
-                        <a href="{{ url_for('store.content', content_type_id=content_type['id'], category=category_id, page=pages.next) }}">Next</a>
+                        <a href="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category_id, page=pages.next) }}">Next</a>
                         {% endif %}
                     </p>
                     {% endif %}
@@ -115,7 +115,7 @@
                 <div id="bottomNavigation">
                     <h3>Browse categories</h3>
                     <a href="{{ url_for('store.root') }}">Home</a><br/>
-                    {% for ct in get_content_types() %}
+                    {% for _content_type in get_content_types() %}
                     <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}" class="{{ 'selected' if content_type['id'] == _content_type['id'] }}">{{ _content_type['name'] }}</a><br/>
                     {% endfor %}
                 </div>
