@@ -1,20 +1,12 @@
-from flask import Blueprint, current_app, g, request, session, flash, render_template, redirect, url_for
-from itsdangerous import URLSafeTimedSerializer
+from datetime import datetime, timezone
+
+from flask import Blueprint, g, request, session, flash, render_template, redirect, url_for
 import re
 
 from . import database as db
 from ..email import send_email
 
 auth = Blueprint('auth', __name__, template_folder="templates")
-
-def generate_confirmation_token(email):
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    return serializer.dumps(email, salt=current_app.config['SECURITY_PASSWORD_SALT'])
-
-
-def confirm_token(token, expiration=3600):
-    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    return serializer.loads(token, salt=current_app.config['SECURITY_PASSWORD_SALT'], max_age=expiration)
 
 
 def session_logout():
@@ -25,106 +17,104 @@ def session_logout():
 @auth.route("/login", methods=['GET', 'POST'])
 def login():
 
-    if session.get('logged_in') is True:
-            return redirect(url_for('store.root'))
+    if g.user:
+        return redirect(url_for('store.root'))
 
     if request.method == 'GET':
         return render_template("auth/login.html")
-    else:
-        email = request.form.get('email')
-        password = request.form.get('password')
+        
+    email = request.form.get('email')
+    password = request.form.get('password')
 
-        if not email or not password:
-            return redirect(url_for('.login'))
+    if not email or not password:
+        return redirect(url_for('.login'))
 
-        result = db.check_credentials(email, password)
-        user = db.get_user(email=email)
+    result = db.check_credentials(email, password)
+    user = db.get_user(email=email)
 
-        if result:
+    if result:
 
-            if not user['confirmed']:
-                flash("Account not confirmed.", 'danger')
-                return render_template("auth/login.html")
-
-            session['logged_in'] = True
-            session['user_id'] = user['id']
-            session.permanent = True
-            return redirect(url_for('store.root'))
-
-        else:
-            session_logout()
-            flash("Wrong e-mail/password!", 'danger')
+        if not user['confirmed']:
+            flash("Account not confirmed.", 'danger')
             return render_template("auth/login.html")
+
+        session['logged_in'] = True
+        session['user_id'] = user['id']
+        session.permanent = True
+        return redirect(url_for('store.root'))
+
+    else:
+        session_logout()
+        flash("Wrong e-mail/password!", 'danger')
+        return render_template("auth/login.html")
 
 @auth.route("/register", methods=['GET', 'POST'])
 def register():
-    if session.get('logged_in') is True:
+
+    if g.user:
         return redirect(url_for('store.root'))
 
     if request.method == 'GET':
         return render_template("auth/register.html", message=request.args.get('message'))
-    else:
-        email = request.form.get('email')
-        username = request.form.get('username')
-        password = request.form.get('password')
+        
+    email = request.form.get('email')
+    username = request.form.get('username')
+    password = request.form.get('password')
 
-        if not email or not password or not username:
-            flash("Fill in the form!", 'danger')
-            return render_template("auth/register.html")
+    if not email or not password or not username:
+        flash("Fill in the form!", 'danger')
+        return render_template("auth/register.html")
 
-        if not re.match(r"^[\w]{6,}$", username):
-            flash("Wrong username. It should contain only letters and numbers and be 7-letters long or longer.", 'danger')
-            return render_template("auth/register.html")
+    if not re.match(r"^[\w]{6,}$", username):
+        flash("Wrong username. It should contain only letters and numbers and be 7-letters long or longer.", 'danger')
+        return render_template("auth/register.html")
 
-        if not re.match(r'^(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$', email):
-            flash("Wrong e-mail address.", 'danger')
-            return render_template("auth/register.html")
+    if not re.match(r'^(?:[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$', email):
+        flash("Wrong e-mail address.", 'danger')
+        return render_template("auth/register.html")
 
-        if db.user_exists(email=email):
-            flash("Account already exists.", 'danger')
-            return render_template("auth/register.html")
-        if db.user_exists(username=username):
-            return redirect(url_for('.register', message="Username already taken."))
+    if db.get_user(email=email):
+        flash("Account already exists.", 'danger')
+        return render_template("auth/register.html")
 
-        db.register(email, password, username)
-        token = generate_confirmation_token(email)
+    if db.get_user(username=username):
+        flash("Username already taken.", 'danger')
+        return render_template("auth/register.html")
 
-        text_message = f"""Please confirm your email by clicking the link below:
+    user = db.register(email, password, username)
 
-    {url_for('.confirm_email', token=token, _external=True)}
+    text_message = f"""Please confirm your email by clicking the link below:
 
-    Thank you.
-        """
+{url_for('.confirm_email', token=user['confirmation_token'], _external=True)}
 
-        html_message = f"""Please confirm your email by clicking the link below:
-    <br>
-    <a href="{url_for('.confirm_email', token=token, _external=True)}">{url_for('.confirm_email', token=token, _external=True)}</a>
-    <br>
-    Thank you.
-        """
+Thank you.
+    """
 
-        try:
-            send_email("Confirm your account", text_message, html_message, email)
-        except:
-            flash("Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username.", 'danger')
-            return render_template("auth/register.html")
+    html_message = f"""Please confirm your email by clicking the link below:
+<br>
+<a href="{url_for('.confirm_email', token=user['confirmation_token'], _external=True)}">{url_for('.confirm_email', token=user['confirmation_token'], _external=True)}</a>
+<br>
+Thank you.
+    """
 
-        flash("Account created! Please confirm your email.", 'success')
-        return render_template("auth/confirm.html", message=f"Please confirm your account using link sent to your email: {email}.")
+    try:
+        send_email("Confirm your account", text_message, html_message, email)
+    except:
+        flash("Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username.", 'danger')
+        return render_template("auth/register.html")
+
+    flash("Account created! Please confirm your email.", 'success')
+    return render_template("auth/confirm.html", message=f"Please confirm your account using link sent to your email: {email}.")
 
 @auth.route("/confirm/<token>")
-def confirm_email(token):
-    email = confirm_token(token)
-    user = db.get_user(email=email) if email else None
+def confirm(token):
+    
+    user = db.check_confirmation_token(token)
 
-    if not email:
+    if not user or user['confirmation_token_expires_at'] < datetime.now(timezone.utc):
         flash("The confirmation link is invalid or has expired.", 'danger')
-    elif not user:
-        flash("Account got deleted or doesn't exist.", 'danger')
-    elif user['confirmed']:
-        flash("Account already confirmed. Please login.", 'info')
     else:
-        db.confirm_user(email)
+        db.confirm(user['id'])
         flash("You have confirmed your account. Thanks!", 'success')
 
     return render_template("auth/confirm.html")
@@ -148,6 +138,7 @@ def change_password():
 
     db.change_password(g.user['id'], new_password)
     flash("Password changed!", 'success')
+
     return render_template("auth/profile.html")
 
 @auth.route("/profile")

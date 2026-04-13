@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta, timezone
+import secrets
+
 import bcrypt
 from psycopg.errors import UniqueViolation
 
@@ -38,10 +41,21 @@ def get_user(user_id=None, username=None, email=None):
             return cursor.fetchone()
 
 
-def confirm_user(email):
+def check_confirmation_token(confirmation_token):
 
-    query = "UPDATE users SET confirmed = true WHERE email = %s"
-    params = [email]
+    query = "SELECT * FROM users WHERE confirmation_token = %s"
+    params = [confirmation_token]
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchone()
+
+
+def confirm(user_id):
+
+    query = "UPDATE users SET confirmed = true, confirmation_token = NULL WHERE id = %s"
+    params = [user_id]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -50,17 +64,21 @@ def confirm_user(email):
 
 def register(email, user_password, username):
 
-    query = "INSERT INTO users (email, username, password, confirmed) VALUES (%s, %s, %s, %s) RETURNING id, email, username"
-    params = [email, generate_password(user_password), username, False]
+    confirmation_token = secrets.token_urlsafe(32)
+    confirmation_token_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
+
+    query = "INSERT INTO users (email, username, password, confirmed, confirmation_token, confirmation_token_expires_at) VALUES (%s, %s, %s, %s, %s, %s) RETURNING *"
+    params = [email, generate_password(user_password), username, False, confirmation_token, confirmation_token_expires_at]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            try:
-                cursor.execute(query, params)
-            except UniqueViolation:
-                return None
+            cursor.execute(query, params)
+            result = cursor.fetchone()
 
-            return cursor.fetchone()
+    if result:
+        result.pop('password', None)
+
+    return result
 
 
 def change_password(user_id, password):
