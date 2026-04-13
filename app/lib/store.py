@@ -79,7 +79,7 @@ def browse_categories(content_type_id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_id=content_type['id'], platform_id=g.platform['id'])
+    categories = db.get_categories(content_type_id=content_type['id'], platform_id=g.platform['id'] if g.platform else None)
 
     return render_template("categories.html", content_type=content_type, categories=categories)
 
@@ -99,7 +99,7 @@ def search():
 
     offset = (page - 1) * config['per_page']
 
-    results, total = db.search(query, platform_id=session['platform_id'], offset=offset, limit=config['per_page'])
+    results, total = db.search(query, platform_id=g.platform['id'] if g.platform else None, offset=offset, limit=config['per_page'])
 
     if not results:
         return render_template("empty.html", category=None, content_type=db.get_content_type('apps'))
@@ -157,7 +157,7 @@ def content(content_type_id):
     results, total = db.get_content(content_type_id=content_type['id'], category_id=category_id, platforms=[g.platform['id']] if g.platform else None, offset=offset, limit=config['per_page'])
 
     if not results:
-        return render_template(f"empty.html", category=category, content_type=content_type)
+        return render_template("empty.html", category=category, content_type=content_type)
 
     total_pages = max(1, math.ceil(total / config['per_page']))
 
@@ -165,7 +165,7 @@ def content(content_type_id):
         flash("Invalid page. Redirected to the last page.", 'danger')
         return redirect(url_for('.content', **request.view_args, **request.args, page=total_pages))
 
-    return render_template(f"content.html", content_type=content_type, results=results, category=category, pages=utils.generate_pages(page, total_pages))
+    return render_template("content.html", content_type=content_type, results=results, category=category, pages=utils.generate_pages(page, total_pages))
 
 @store.route("/download")
 def download():
