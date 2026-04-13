@@ -41,13 +41,10 @@ def login():
         user = db.get_user(email=email)
 
         if result:
+
             if not user['confirmed']:
                 flash("Account not confirmed.", 'danger')
                 return render_template("auth/login.html")
-
-            if user['banned']:
-                session_logout()
-                return render_template("auth/banned.html", reason=user['banned_reason'])
 
             session['logged_in'] = True
             session['user_id'] = user['id']

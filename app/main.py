@@ -56,9 +56,6 @@ def before_request():
         session_logout()
     else:
         user = auth_db.get_user(user_id=user_id)
-        if user and user.get('banned'):
-            session_logout()
-            return render_template("auth/banned.html", reason=user.get('banned_reason'))
 
         if user:
             user.pop('password', None)
