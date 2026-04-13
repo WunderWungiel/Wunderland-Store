@@ -91,6 +91,7 @@ def register():
     flash("Account created! Please confirm your email.", 'success')
     return render_template("auth/confirm.html", message=f"Please confirm your account using link sent to your email: {email}.")
 
+
 @auth.route("/confirm/<token>")
 def confirm(token):
     
@@ -135,4 +136,11 @@ def profile():
 
 @auth.route("/logout")
 def logout():
+    if not g.user:
+        return redirect(url_for('.login'))
+
+    db.delete_session(session.get('token'))
+    session.pop('token', None)
+
+    flash("Logged out!", 'success')
     return redirect(url_for('store.root'))
