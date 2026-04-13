@@ -6,7 +6,6 @@ import humanize
 from lib import database as db
 from lib import config, applist, auth, legacy, store, qtstore
 from lib.auth import database as auth_db
-from lib.auth.routes import session_logout
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -49,17 +48,18 @@ def before_request():
     else:
         g.platform = None
 
-    user_id = session.get('user_id')
-    g.user = None
+    token = session.get('token')
+    if not token:
+        g.user = None
+        return
 
-    if not user_id:
-        session_logout()
-    else:
-        user = auth_db.get_user(user_id=user_id)
+    user = auth_db.get_session(token)
+    if not user:
+        session.pop('token', None)
+        g.user = None
+        return
 
-        if user:
-            user.pop('password', None)
-            g.user = user
+    g.user = user
 
 if not config['allow_indexing']:
     @app.route("/robots.txt")

@@ -17,7 +17,7 @@ def rate(content_id):
 
     item = db.get_item(content_id)
 
-    if not item or not session.get('logged_in'):
+    if not item or not g.user:
         return redirect(url_for('.item', content_id=content_id))
 
     if request.method == 'GET':

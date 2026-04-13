@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 import secrets
 
 import bcrypt
-from psycopg.errors import UniqueViolation
 
 from ..database import pool
 
@@ -12,6 +11,27 @@ def generate_password(password):
 
     password_hash = bcrypt.hashpw(password, salt)
     return password_hash.decode('utf-8')
+
+
+def get_session(token):
+
+    query = "SELECT sessions.*, users.username, users.email FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token = %s AND sessions.expires_at > NOW()"
+    params = [token]
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchone()
+
+
+def delete_session(token):
+
+    query = "DELETE FROM sessions WHERE token = %s"
+    params = [token]
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
 
 
 def get_user(user_id=None, username=None, email=None):
@@ -54,12 +74,32 @@ def check_confirmation_token(confirmation_token):
 
 def confirm(user_id):
 
-    query = "UPDATE users SET confirmed = true, confirmation_token = NULL WHERE id = %s"
+    query = "UPDATE users SET confirmed = TRUE, confirmation_token = NULL, confirmation_token_expires_at = NULL WHERE id = %s"
     params = [user_id]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
+
+
+def login(email, password):
+
+    user = get_user(email=email)
+
+    if not user or not bcrypt.checkpw(password.encode(), user['password'].encode()):
+        return None
+
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+
+    query = "INSERT INTO sessions (user_id, token, expires_at) VALUES (%s, %s, %s)"
+    params = [user['id'], token, expires_at]
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+
+    return {'token': token}
 
 
 def register(email, user_password, username):
@@ -68,7 +108,7 @@ def register(email, user_password, username):
     confirmation_token_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
 
     query = "INSERT INTO users (email, username, password, confirmed, confirmation_token, confirmation_token_expires_at) VALUES (%s, %s, %s, %s, %s, %s) RETURNING *"
-    params = [email, generate_password(user_password), username, False, confirmation_token, confirmation_token_expires_at]
+    params = [email, username, generate_password(user_password), False, confirmation_token, confirmation_token_expires_at]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
