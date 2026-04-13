@@ -24,11 +24,11 @@
                             <td id="searchLink">
                                 <span>
                                     <a href="{{ url_for('store.platforms') }}">Platform</a>:
-                                    <b>{{ get_platform(session['platform_id'])['name'] if session['platform_id'] else 'All' }}</b>
+                                    <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
                                 </span>
                                 |
-                                {% if session.logged_in is defined %}
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ get_user(session['user_id'])['username'] }}</a></span>
+                                {% if g.user %}
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
                                 |
                                 {% endif %}
                                 <a href="{{ url_for('store.search') }}">Search</a>
@@ -41,7 +41,7 @@
                     <a class="first" href="{{ url_for('store.root') }}">Home</a> <b>|</b>
                     {% for _content_type in get_content_types() %}
                     <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}">{{ _content_type['name'] }}</a>
-                    {% if not loop.last %}<b>|</b>{% endif %
+                    {% if not loop.last %}<b>|</b>{% endif %}
                     {% endfor %}
                 </div>
             </div>
@@ -66,7 +66,7 @@
 
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
-                {% if session.logged_in is not defined %}
+                {% if not g.user %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
                 <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>

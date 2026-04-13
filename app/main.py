@@ -55,7 +55,7 @@ def before_request():
     if not user_id:
         session_logout()
     else:
-        user = auth_db.get_user(id=user_id)
+        user = auth_db.get_user(user_id=user_id)
         if user and user.get('banned'):
             session_logout()
             return render_template("auth/banned.html", reason=user.get('banned_reason'))

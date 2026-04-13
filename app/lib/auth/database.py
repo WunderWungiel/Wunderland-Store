@@ -19,7 +19,7 @@ def get_user(user_id=None, username=None, email=None):
     params = []
 
     if user_id is not None:
-        where_clauses.append("user_id = %s")
+        where_clauses.append("id = %s")
         params.append(user_id)
 
     if username is not None:

@@ -248,6 +248,8 @@ def get_platforms(platform_id=None):
 
 
 def get_content_types(type_id=None, name=None, prefix=None):
+
+    query = "SELECT * FROM content_types"
     where_clauses = []
     params = []
 
@@ -263,9 +265,10 @@ def get_content_types(type_id=None, name=None, prefix=None):
         where_clauses.append("prefix = %s")
         params.append(prefix)
 
-    query = "SELECT * FROM content_types"
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
+
+    query += " ORDER BY name ASC"
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:

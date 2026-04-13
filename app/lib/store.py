@@ -91,8 +91,7 @@ def search():
     page = request.args.get('page', 1, type=int)
 
     if not query:
-        flash("Search query not provided.")
-        return render_template("search.html")
+        return render_template("search_form.html")
 
     if page < 1:
         flash("Invalid page. Redirected to the first page.", 'danger')
