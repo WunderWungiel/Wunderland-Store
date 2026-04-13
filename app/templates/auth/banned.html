@@ -3,9 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        <title>You're banned • Wunderland Store</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
+        <title>You are banned • Wunderland Store</title>                
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
@@ -22,19 +20,19 @@
                             </td>
                         </tr>
                     </table>
-                </div> <!-- end top -->                    
-            </div> <!-- end header -->
+                </div>
+            </div>
 
             <div id="views">
                 <div class="view">
                     <div id="faq" class="viewWrapper">
-                        <h1>You are banned, thus you can't login.
-                        {% if reason is defined and reason is not none %}
+                        <h1>You are banned and you can't login.
+                        {% if reason %}
                         Reason: <span style="font-weight: bold; color: black;">{{ reason }}</span>
                         {% endif %}
                         </h1>
                     </div>
-                    <br />
+                    <br/>
                 </div>
             </div> <!-- end views -->
 
@@ -43,8 +41,10 @@
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
-                <br />
-            © Wunder Wungiel {{ now.year }}</div>
-        </div> <!-- end wrapper -->
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+
+        </div>
     </body>
 </html>

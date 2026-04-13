@@ -4,12 +4,9 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         <title>Register • Wunderland Store</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
-
         <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
     </head>
@@ -25,8 +22,18 @@
                             </td>
                         </tr>
                     </table>
-                </div> <!-- end top -->                        
-            </div> <!-- end header -->
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
             <div id="views">
                 <div class="view">
@@ -34,32 +41,27 @@
                         <div id="loginField">
                             <form action="{{ url_for('auth.register') }}" method="POST" id="loginForm" onsubmit="return validateRegisterForm()">
                                 <fieldset>
-
-                                    {% if message is defined and message is not none %}
-                                    <h1>{{ message }}</h1>
-                                    {% endif %}
-
                                     <label for="username" id="username_label">Username: <span class="required">*</span></label>
                                     <input type="text" id="username" name="username" size="15" style="width: 63%; max-width: 300px;" title="" />
                                     <span id="username_tip" class="tip">Wrong username. It should contain only letters and numbers and be 7-letters long or longer.</span>
 
-                                    <br />
+                                    <br/>
 
                                     <label for="email" id="email_label">E-mail address: <span class="required">*</span></label>
                                     <input type="text" id="email" name="email" size="15" style="width: 63%; max-width: 300px;" title="" />
                                     <span id="email_tip" class="tip">Wrong e-mail address.</span>
 
-                                    <br />
+                                    <br/>
 
                                     <label for="password" id="password_label">Password: <span class="required">*</span></label>
                                     <input type="password" id="password" name="password" size="15" style="width: 63%; max-width: 300px;" title="" />
                                     
-                                    <br /><br />
+                                    <br/><br/>
                                     
                                     <input type="submit" class="Btn" value="Register" />
                                 </fieldset>
                             </form>
-                        </div> <!-- end login -->
+                        </div>
                     </div>
 
                     <div class="homeLink">
@@ -68,15 +70,16 @@
 
                     <div class="beacon"></div>
                 </div>
-            </div> <!-- end views -->
+            </div>
 
             <div id="bottom"></div>
                         
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
-                <br />
-            © Wunder Wungiel {{ now.year }}</div>
-        </div> <!-- end wrapper -->
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+        </div>
     </body>
 </html>

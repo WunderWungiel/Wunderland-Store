@@ -27,7 +27,7 @@
                                     <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
                                 </span>
                                 |
-                                {% if g.user is defined %}
+                                {% if g.user %}
                                 <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
                                 |
                                 {% endif %}
@@ -45,6 +45,16 @@
                     {% endfor %}
                 </div>
             </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
             <div id="views">
                 <div class="view">

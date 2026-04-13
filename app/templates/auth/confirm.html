@@ -4,8 +4,6 @@
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
         <title>Confirm email • Wunderland Store</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
@@ -22,24 +20,32 @@
                             </td>
                         </tr>
                     </table>
-                </div> <!-- end top -->                    
-            </div> <!-- end header -->
+                </div>
+            </div>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
             <div id="views">
                 <div class="view">
-                    <div id="faq" class="viewWrapper">
-                        <h1>{{ message|safe }}</h1>
+                    <div id="faq" class="viewWrapper alert alert-{{ category }}">
+                        <h1>{{ message }}</h1>
                     </div>
-                    <br />
+                    <br/>
                 </div>
-            </div> <!-- end views -->
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
             <div id="bottom"></div>
                         
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a>
-                <br />
-            © Wunder Wungiel {{ now.year }}</div>
-        </div> <!-- end wrapper -->
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+
+        </div>
     </body>
 </html>

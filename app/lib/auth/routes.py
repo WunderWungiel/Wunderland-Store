@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, request, session, flash, render_template, redirect, url_for
+from flask import Blueprint, current_app, g, request, session, flash, render_template, redirect, url_for
 from itsdangerous import URLSafeTimedSerializer
 import re
 
@@ -37,7 +37,7 @@ def login():
             return redirect(url_for('store.root'))
 
     if request.method == 'GET':
-        return render_template("auth/login.html.jinja")
+        return render_template("auth/login.html")
     else:
         email = request.form.get('email')
         password = request.form.get('password')
@@ -51,21 +51,21 @@ def login():
         if result:
             if not user['confirmed']:
                 flash("Account not confirmed.", 'danger')
-                return render_template("auth/login.html.jinja")
+                return render_template("auth/login.html")
 
             if user['banned']:
                 session_logout()
                 return render_template("auth/banned.html", reason=user['banned_reason'])
 
             session['logged_in'] = True
-            session['user_id'] = db.get_user(email=email)['id']
+            session['user_id'] = user['id']
             session.permanent = True
             return redirect(url_for('store.root'))
 
         else:
             session_logout()
             flash("Wrong e-mail/password!", 'danger')
-            return render_template("auth/login.html.jinja")
+            return render_template("auth/login.html")
 
 @auth.route("/register", methods=['GET', 'POST'])
 def register():
@@ -123,27 +123,26 @@ def register():
         flash("Account created! Please confirm your email.", 'success')
         return render_template("auth/confirm.html", message=f"Please confirm your account using link sent to your email: {email}.")
 
+@auth.route("/confirm")
+def confirm():
+    return render_template("auth/confirm.html") # TODO
+
 @auth.route("/confirm/<token>")
 def confirm_email(token):
-    try:
-        email = confirm_token(token)
-    except Exception as e:
+    email = confirm_token(token)
+    user = db.get_user(email=email) if email else None
+
+    if not email:
         flash("The confirmation link is invalid or has expired.", 'danger')
-        return render_template("auth/confirm.html")
-    if email is None:
-        flash("The confirmation link is invalid or has expired.", 'danger')
-        return render_template("auth/confirm.html")
-    user = db.get_user(email=email)
-    if user is None:
+    elif not user:
         flash("Account got deleted or doesn't exist.", 'danger')
-        return render_template("auth/confirm.html")
-    if user['confirmed']:
+    elif user['confirmed']:
         flash("Account already confirmed. Please login.", 'info')
-        return render_template("auth/confirm.html")
     else:
         db.confirm_user(email)
         flash("You have confirmed your account. Thanks!", 'success')
-        return render_template("auth/confirm.html")
+
+    return render_template("auth/confirm.html")
 
 @auth.route("/change_password", methods=['POST'])
 def change_password():
@@ -158,20 +157,17 @@ def change_password():
         flash("Fill in the form!", 'danger')
         return render_template("auth/profile.html")
 
-    user_id = session['user_id']
-
-    email = db.get_user(id=user_id)['email']
-    if not db.check_credentials(email, current_password):
+    if not db.check_credentials(g.user['email'], current_password):
         flash("Wrong current password!", 'danger')
         return render_template("auth/profile.html")
 
-    db.change_password(user_id, new_password)
+    db.change_password(g.user['id'], new_password)
     flash("Password changed!", 'success')
     return render_template("auth/profile.html")
 
 @auth.route("/profile")
 def profile():
-    if not session.get('logged_in'):
+    if not g.user:
         session_logout()
         return redirect(url_for('.login'))
 

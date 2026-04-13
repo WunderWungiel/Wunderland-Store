@@ -36,6 +36,16 @@
                 </div>
             </div>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
             <div id="views">
                 <div class="view">
                     <div class="contentItem"{% if not results is defined %} style="padding: 14px 5px 0;"{% endif %}>

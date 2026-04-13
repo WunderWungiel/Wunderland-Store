@@ -3,13 +3,10 @@
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
         <meta name="navigation" content="cursor" />
-        <title>Profile • Wunderland Store</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-                
+        <title>Profile • Wunderland Store</title>                
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon" />
-
         <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
     </head>
@@ -24,23 +21,26 @@
                                 <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
                             </td>
                             <td id="searchLink">
-                                {% set username = get_user(session['user_id'])['username'] %}
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
                             </td>
                         </tr>
                     </table>
-                </div> <!-- end top -->                    
-            </div> <!-- end header -->
+                </div>
+            </div>
+                        
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
 
             <div id="views">
                 <div class="view">
                     <div id="faq" class="viewWrapper">
-
-                        {% if message is defined and message is not none %}
-                        <h1>{{ message }}</h1>
-                        {% endif %}
-
-                        {% set user = get_user(session['user_id']) %}
 
                         <h1>Username: {{ user['username'] }}</h1>
                         <h1>Email: {{ user['email'] }}</h1>
@@ -68,17 +68,19 @@
 
                         <input type="button" class="Btn" onclick="window.location.href='/logout'" value="Log out"></input>
                     </div>
-                    <br />
+                    <br/>
                 </div>
-            </div> <!-- end views -->
+            </div>
 
             <div id="bottom"></div>
                         
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
                 <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
-                <br />
-            © Wunder Wungiel {{ now.year }}</div>
-        </div> <!-- end wrapper -->
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+
+        </div>
     </body>
 </html>

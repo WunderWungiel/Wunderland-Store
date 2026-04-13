@@ -20,3 +20,19 @@ span.required, span.tip {
     color: #333;
     text-decoration: none;
 }
+
+.alert {
+    margin: 10px 5px 0 5px;
+}
+
+.alert-danger {
+    color: red;
+}
+
+.alert-info {
+    color: lightblue;
+}
+
+.alert-success {
+    color: green;
+}
