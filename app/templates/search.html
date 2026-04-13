@@ -26,10 +26,12 @@
                                     <a href="{{ url_for('store.platforms') }}">Platform</a>:
                                     <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
                                 </span>
-                                {% if g.user %}
                                 |
+                                {% if g.user %}
                                 <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
+                                |
                                 {% endif %}
+                                <a href="{{ url_for('store.search') }}">Search</a>
                             </td>
                         </tr>
                     </table>
@@ -38,54 +40,17 @@
 
             <div id="views">
                 <div class="view">
-                    <div class="contentItem"{% if not results is defined %} style="padding: 14px 5px 0;"{% endif %}>
+                    <div class="contentItem">
+                        <h1>Search</h1>
                         <div id="searchField">
                             <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                                 <fieldset>
-                                    <input type="text" id="search" name="q" size="15" style="width: 63%; max-width: 300px;" value="{{ query }}"/>
+                                    <input type="text" id="search" name="q" size="15" style="width: 63%; max-width: 300px;"/>
                                     <input type="submit" id="searchBtn" value="Search"/>
                                 </fieldset>
                             </form>
                         </div>
-                        {% if results is defined %}
-                        <h3>Search results for &apos;{{ query }}&apos;</h3>
-                        {% endif %}
                     </div>
-
-                    {% if results is defined %}
-                    <table class="contentList" cellspacing="0" width="100%">
-                        {% for result in results %}
-                        <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
-                            <td class="thumbnail">
-                                <img src="{{ url_for('static', filename='content/icons/' ~ result['icon']) }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46"/>
-                            </td>
-                            <td class="contentType">
-                                <h2 class="title">
-                                    <a href="{{ url_for('store.item', prefix=result['content_type']['prefix'], id=result['id']) }}">{{ result['title'] }}</a>
-                                </h2>
-                                {{ result['content_type']['name'] }} • {{ result['category']['name'] }}
-                            </td>
-                            <td class="contentRatingPrice">
-                                <div class="rating">
-                                    {% for i in range(result['rating']) %}
-                                    <img src="{{ url_for('static', filename='img/star_p.png') }}" alt="{{ i+1 }} star"/>
-                                    {% endfor %}
-                                    {% for i in range(result['rating'], 5) %}
-                                    <img src="{{ url_for('static', filename='img/star_g.png') }}" alt="{{ i+1 }} star"/>
-                                    {% endfor %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-
-                    {% if pages.previous or pages.next %}
-                    <p class="pagination">
-                        {% if pages.previous %}<a href="{{ url_for('store.search', query=query, page=pages.previous) }}">Previous</a>{% endif %}
-                        {% if pages.next %}<a href="{{ url_for('store.search', query=query, page=pages.next) }}">Next</a>{% endif %}
-                    </p>
-                    {% endif %}
-                    {% endif %}
 
                     <div class="homeLink">
                         <a href="{{ url_for('store.root') }}">Home</a>

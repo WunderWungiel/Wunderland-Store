@@ -3,7 +3,7 @@ import random
 import math
 from datetime import datetime
 
-from flask import Blueprint, request, session, current_app, flash, render_template, redirect, url_for
+from flask import Blueprint, current_app, g, request, session, flash, redirect, render_template, url_for
 
 from . import config
 from . import database as db
@@ -39,7 +39,7 @@ def item(content_id):
     if not item:
         return redirect(url_for('.root'))
 
-    if (session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in'):
+    if (g.user and g.user['username'] not in config['admin_usernames']) or not g.user:
         db.increment_counter(content_id)
 
     file_path = os.path.join(current_app.root_path, 'static', 'content', 'files', item['file'])
@@ -79,7 +79,7 @@ def browse_categories(content_type_id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_id=content_type_id, platform_id=session['platform_id'])
+    categories = db.get_categories(content_type_id=content_type_id, platform_id=g.platform['id'])
 
     return render_template("categories.html", content_type=content_type, categories=categories)
 
@@ -91,7 +91,7 @@ def search():
     page = request.args.get('page', 1, type=int)
 
     if not query:
-        return render_template("search_form.html")
+        return render_template("search.html")
 
     if page < 1:
         flash("Invalid page. Redirected to the first page.", 'danger')
@@ -110,19 +110,22 @@ def search():
         flash("Invalid page. Redirected to the last page.", 'danger')
         return redirect(url_for('.search', **request.view_args, **request.args, page=total_pages))
 
-    return render_template("search.html", results=results, query=query, pages=utils.generate_pages(page, total_pages))
+    return render_template("results.html", results=results, query=query, pages=utils.generate_pages(page, total_pages))
 
 @store.route("/platforms", methods=['GET', 'POST'])
 def platforms():
     if request.method == 'GET':
         return render_template("platform.html", platforms=db.get_platforms())
 
-    platform_id = request.args.get('platform_id')
+    platform_id = request.form.get('platform_id')
 
-    if platform_id is None:
+    if not platform_id:
         session['platform_id'] = None
-    elif platform_id and db.get_platforms(platform_id):
-        session['platform_id'] = platform_id
+    else:
+        if db.get_platform(platform_id):
+            session['platform_id'] = platform_id
+        else:
+            flash("Invalid platform.", 'danger')
     
     session.permanent = True
     return redirect(url_for('.root'))

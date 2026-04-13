@@ -41,15 +41,16 @@
                     <div class="contentItem">
                         <h2>Platforms</h2>
                         <div id="categories">
-                            <a href="{{ url_for('store.set_platform', platform=None) }}">
-                                {% if not session['platform_id'] %}<b>All platforms</b>{% else %}All platforms{% endif %}
-                            </a><br/>
-                            {% for platform in platforms %}
-                            <a href="{{ url_for('store.set_platform', platform_id=platform['id']) }}">
-                                {% if session['platform_id'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
-                            </a>
-                            {% if not loop.last %}<br/>{% endif %}
-                            {% endfor %}
+                            <form action="{{ url_for('store.platforms') }}" method="post">
+                                <select name="platform_id">
+                                    <option value=""{% if not g.platform %}selected{% endif %}>All platforms</option>
+                                    {% for platform in platforms %}
+                                    <option value="{{ platform['id'] }}"{% if g.platform and g.platform['id'] == platform['id'] %} selected{% endif %}>{{ platform['name'] }}</option>
+                                    {% endfor %}
+                                </select>
+                                <br/>
+                                <input type="submit" value="Select"/>
+                            </form>
                         </div>
                     </div>
                     <div class="beacon"></div>
