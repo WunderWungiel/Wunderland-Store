@@ -1,80 +1,74 @@
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
     <head>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
-        <meta name="navigation" content="cursor" />
+        <meta name="navigation" content="cursor"/>
         <title>Select platform • Wunderland Store</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>
         <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
     </head>
 
     <body>
         <div id="wrapper">
+
             <div id="header">
                 <div id="top">
                     <table>
                         <tr>
                             <td id="logo">
-                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
+                                <a id="logoImg" href="{{ url_for('store.root') }}">
+                                    <img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store"/>
+                                </a>
                             </td>
                             <td id="searchLink">
-                                {% if session['platform_id'] is none %}
-                                {% set platform_name = "All" %}
-                                {% else %}
-                                {% set platform_name = get_platform(session['platform_id'])['name'] %}
-                                {% endif %}
-                                <span><a href="{{ url_for('store.platforms') }}">Platform</a>: <b>{{ platform_name }}</b></span>
-                                {% if session['logged_in'] is defined %}
+                                <span>
+                                    <a href="{{ url_for('store.platforms') }}">Platform</a>:
+                                    <b>{{ get_platform(session['platform_id'])['name'] if session['platform_id'] else 'All' }}</b>
+                                </span>
+                                {% if session.logged_in is defined %}
                                 |
-                                {% set username = get_user(session['user_id'])['username'] %}
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ username }}</a></span>
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ get_user(session['user_id'])['username'] }}</a></span>
                                 {% endif %}
                             </td>
                         </tr>
                     </table>
-                </div> <!-- end top -->
-            </div> <!-- end header -->
+                </div>
+            </div>
 
             <div id="views">
                 <div class="view">
                     <div class="contentItem">
-	                    <h2>Platforms</h2>
-
+                        <h2>Platforms</h2>
                         <div id="categories">
                             <a href="{{ url_for('store.set_platform', platform=None) }}">
-                                {% if session['platform_id'] is none %}
-                                <b>All platforms</b>
-                                {% else %}
-                                All platforms
-                                {% endif %}
-                            </a><br />
+                                {% if not session['platform_id'] %}<b>All platforms</b>{% else %}All platforms{% endif %}
+                            </a><br/>
                             {% for platform in platforms %}
-                                <a href="{{ url_for('store.set_platform', platform_id=platform['id']) }}">
-                                    {% if session['platform_id'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
-                                </a>{% if not loop.last %}<br />{% endif %}
+                            <a href="{{ url_for('store.set_platform', platform_id=platform['id']) }}">
+                                {% if session['platform_id'] == platform['id'] %}<b>{{ platform['name'] }}</b>{% else %}{{ platform['name'] }}{% endif %}
+                            </a>
+                            {% if not loop.last %}<br/>{% endif %}
                             {% endfor %}
-                        </div> <!-- end categories -->
-
-	                </div> <!-- end content item -->
-
+                        </div>
+                    </div>
                     <div class="beacon"></div>
                 </div>
-            </div> <!-- end views -->
+            </div>
 
             <div id="bottom"></div>
 
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
-                {% if session['logged_in'] is not defined %}
+                {% if session.logged_in is not defined %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
                 <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
                 {% endif %}
-                <br />
-            © Wunder Wungiel {{ now.year }}</div>
-        </div> <!-- end wrapper -->
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+
+        </div>
     </body>
 </html>
