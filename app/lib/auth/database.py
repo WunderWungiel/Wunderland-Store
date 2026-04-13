@@ -1,6 +1,5 @@
 import bcrypt
 from psycopg.errors import UniqueViolation
-from psycopg import sql
 
 from ..database import pool
 
@@ -41,7 +40,7 @@ def get_user(user_id=None, username=None, email=None):
 
 def confirm_user(email):
 
-    query = "UPDATE users SET confirmed=true WHERE email=%s"
+    query = "UPDATE users SET confirmed = true WHERE email = %s"
     params = [email]
 
     with pool.connection() as connection:

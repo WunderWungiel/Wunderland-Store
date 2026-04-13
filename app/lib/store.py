@@ -15,7 +15,7 @@ store = Blueprint('store', __name__, template_folder="templates")
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):
 
-    item = db.get_one_content(content_id)
+    item = db.get_item(content_id)
 
     if not item or not session.get('logged_in'):
         return redirect(url_for('.item', content_id=content_id))
@@ -34,7 +34,7 @@ def rate(content_id):
 @store.route("/item/<int:content_id>")
 def item(content_id):
 
-    item = db.get_one_content(content_id=content_id)
+    item = db.get_item(content_id=content_id)
 
     if not item:
         return redirect(url_for('.root'))
@@ -60,7 +60,7 @@ def item(content_id):
 @store.route("/content/<int:content_id>/images")
 def images(content_id):
 
-    item = db.get_one_content(content_id)
+    item = db.get_item(content_id)
 
     if not item:
         return redirect(url_for('.root'))
@@ -79,7 +79,7 @@ def browse_categories(content_type_id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_id=content_type_id, platform_id=g.platform['id'])
+    categories = db.get_categories(content_type_id=content_type['id'], platform_id=g.platform['id'])
 
     return render_template("categories.html", content_type=content_type, categories=categories)
 
@@ -142,7 +142,7 @@ def content(content_type_id):
     category_id = request.args.get('category', type=int)
     page = request.args.get('page', 1, type=int)
 
-    category = db.get_category(category_id=category_id) if category_id else None
+    category = db.get_category(category_id)
 
     if category_id and not category:
         flash("Invalid category.", 'danger')
@@ -173,7 +173,7 @@ def download():
     if not config['clients']:
         return redirect(url_for('.root'))
 
-    results = [db.get_one_content(content_id=content_id) for content_id in config['clients']]
+    results = [db.get_item(content_id=content_id) for content_id in config['clients']]
     results = [item for item in results if item is not None]
 
     content_type = db.get_content_type('apps')

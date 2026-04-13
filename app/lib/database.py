@@ -71,7 +71,7 @@ def _format_content(results):
     return results, total
 
 
-def get_one_content(content_id):
+def get_item(content_id):
     results, _ = get_content(content_id=content_id)
     return results[0] if results else None
 
