@@ -4,6 +4,7 @@ from . import database as db
 
 legacy = Blueprint('legacy_store', __name__, template_folder="templates")
 
+
 @legacy.route("/<prefix>/<int:legacy_id>/rate", methods=['GET', 'POST'])
 def rate(prefix, legacy_id):
 
@@ -16,6 +17,7 @@ def rate(prefix, legacy_id):
 
     return redirect(url_for('store.rate', content_id=content_id, **request.args), code=307)
 
+
 @legacy.route("/<prefix>/<int:legacy_id>")
 def item(prefix, legacy_id):
 
@@ -27,6 +29,7 @@ def item(prefix, legacy_id):
         return redirect(url_for('store.root'))
 
     return redirect(url_for('store.item', content_id=content_id, **request.args), code=307)
+
 
 @legacy.route("/<prefix>/<int:legacy_id>/images")
 def images(prefix, legacy_id):

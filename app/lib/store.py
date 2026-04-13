@@ -94,7 +94,7 @@ def search():
         return render_template("search.html")
 
     if page < 1:
-        flash("Invalid page. Redirected to the first page.", 'danger')
+        flash("Invalid page. Redirected to the first page.", "danger")
         return redirect(url_for('.search', **request.view_args, **request.args, page=1))
 
     offset = (page - 1) * config['per_page']
@@ -107,7 +107,7 @@ def search():
     total_pages = max(1, math.ceil(total / config['per_page']))
 
     if page > total_pages:
-        flash("Invalid page. Redirected to the last page.", 'danger')
+        flash("Invalid page. Redirected to the last page.", "danger")
         return redirect(url_for('.search', **request.view_args, **request.args, page=total_pages))
 
     return render_template("results.html", results=results, query=query, pages=utils.generate_pages(page, total_pages))
@@ -125,7 +125,7 @@ def platforms():
         if db.get_platform(platform_id):
             session['platform_id'] = platform_id
         else:
-            flash("Invalid platform.", 'danger')
+            flash("Invalid platform.", "danger")
     
     session.permanent = True
     return redirect(url_for('.root'))
@@ -145,11 +145,11 @@ def content(content_type_id):
     category = db.get_category(category_id)
 
     if category_id and not category:
-        flash("Invalid category.", 'danger')
+        flash("Invalid category.", "danger")
         return redirect(url_for('.content', content_type_id=content_type['id']))
 
     if page < 1:
-        flash("Invalid page. Redirected to the first page.", 'danger')
+        flash("Invalid page. Redirected to the first page.", "danger")
         return redirect(url_for('.content', **request.view_args, **request.args, page=1))
 
     offset = (page - 1) * config['per_page']
@@ -162,7 +162,7 @@ def content(content_type_id):
     total_pages = max(1, math.ceil(total / config['per_page']))
 
     if page > total_pages:
-        flash("Invalid page. Redirected to the last page.", 'danger')
+        flash("Invalid page. Redirected to the last page.", "danger")
         return redirect(url_for('.content', **request.view_args, **request.args, page=total_pages))
 
     return render_template("content.html", content_type=content_type, results=results, category=category, pages=utils.generate_pages(page, total_pages))
@@ -229,7 +229,7 @@ def root():
     page = request.args.get('page', 1, type=int)
 
     if page < 1:
-        flash("Invalid page. Redirected to the first page.", 'danger')
+        flash("Invalid page. Redirected to the first page.", "danger")
         return redirect(url_for('.root', **request.view_args, **request.args, page=1))
 
     offset = (page - 1) * config['per_page']
@@ -239,7 +239,7 @@ def root():
     total_pages = max(1, math.ceil(total / config['per_page']))
 
     if page > total_pages:
-        flash("Invalid page. Redirected to the last page.", 'danger')
+        flash("Invalid page. Redirected to the last page.", "danger")
         return redirect(url_for('.root', **request.view_args, **request.args, page=total_pages))
 
     return render_template("index.html", news=news, pages=utils.generate_pages(page, total_pages))

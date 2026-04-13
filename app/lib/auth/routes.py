@@ -22,24 +22,24 @@ def login():
     password = request.form.get('password')
 
     if not email or not password:
-        flash("Missing parameters!", 'danger')
+        flash("Missing parameters!", "danger")
         return redirect(url_for('.login'))
 
     result = db.login(email, password)
 
     if not result:
-        flash("Invalid credentials!", 'danger')
+        flash("Invalid credentials!", "danger")
         return redirect(url_for('.login'))
 
     user = db.get_user(email=email)
 
     if not user['confirmed']:
-        flash("Please confirm your email!", 'danger')
+        flash("Please confirm your email!", "danger")
         return redirect(url_for('.login'))
 
     session['token'] = result['token']
 
-    flash("Logged in!", 'success')
+    flash("Logged in!", "success")
     return redirect(url_for('store.root'))
 
 
@@ -57,7 +57,7 @@ def register():
     password = request.form.get('password')
 
     def fail(message):
-        flash(message, 'danger')
+        flash(message, "danger")
         return render_template("auth/register.html")
 
     if not all([email, username, password]):
@@ -88,7 +88,7 @@ def register():
     except Exception:
         return fail("Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username.")
 
-    flash("Account created! Please confirm your email.", 'success')
+    flash("Account created! Please confirm your email.", "success")
     return render_template("auth/confirm.html", message=f"Please confirm your account using link sent to your email: {email}.")
 
 
@@ -98,10 +98,10 @@ def confirm(token):
     user = db.check_confirmation_token(token)
 
     if not user or user['confirmation_token_expires_at'] < datetime.now(timezone.utc):
-        flash("The confirmation link is invalid or has expired.", 'danger')
+        flash("The confirmation link is invalid or has expired.", "danger")
     else:
         db.confirm(user['id'])
-        flash("You have confirmed your account. Thanks!", 'success')
+        flash("You have confirmed your account. Thanks!", "success")
 
     return render_template("auth/confirm.html")
 
@@ -115,15 +115,15 @@ def change_password():
         return redirect(url_for('store.root'))
 
     if not current_password or not new_password:
-        flash("Fill in the form!", 'danger')
+        flash("Fill in the form!", "danger")
         return render_template("auth/profile.html")
 
     if not db.check_credentials(g.user['email'], current_password):
-        flash("Wrong current password!", 'danger')
+        flash("Wrong current password!", "danger")
         return render_template("auth/profile.html")
 
     db.change_password(g.user['id'], new_password)
-    flash("Password changed!", 'success')
+    flash("Password changed!", "success")
 
     return render_template("auth/profile.html")
 
@@ -142,5 +142,5 @@ def logout():
     db.delete_session(session.get('token'))
     session.pop('token', None)
 
-    flash("Logged out!", 'success')
+    flash("Logged out!", "success")
     return redirect(url_for('store.root'))
