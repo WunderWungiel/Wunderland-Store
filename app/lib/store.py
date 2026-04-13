@@ -15,20 +15,20 @@ store = Blueprint('store', __name__, template_folder="templates")
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):
 
-    item = db.get_one_content(content_id=content_id)
+    item = db.get_one_content(content_id)
 
     if not item or not session.get('logged_in'):
-        return redirect(url_for('.item', content_id=content_id)) # TODO
+        return redirect(url_for('.item', content_id=content_id))
 
     if request.method == 'GET':
-        return render_template("rate.html", item=item) # TODO
+        return render_template("rate.html", item=item)
 
     rating = request.form.get('rating')
     if not rating:
         return redirect(url_for('.item', content_id=content_id))
 
     db.rate(rating, content_id=content_id, user_id=session['user_id'])
-    return redirect(url_for('.item', content_id=content_id)) # TODO
+    return redirect(url_for('.item', content_id=content_id))
 
 
 @store.route("/content/<int:content_id>")
@@ -36,36 +36,34 @@ def item(content_id):
 
     item = db.get_one_content(content_id=content_id)
 
-    if item and ((session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in')):
-        db.increment_counter(content_id)
-
     if not item:
         return redirect(url_for('.root'))
 
-    try:
-        item['size'] = os.stat(os.path.join(current_app.root_path, 'static', 'content', 'files', item['file'])).st_size
-    except FileNotFoundError:
-        item['size'] = 0
+    if (session.get('logged_in') and auth_db.get_user(session['user_id'])['username'] not in config['admin_usernames']) or not session.get('logged_in'):
+        db.increment_counter(content_id)
+
+    file_path = os.path.join(current_app.root_path, 'static', 'content', 'files', item['file'])
+    item['size'] = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
 
     platform_id = session.get('platform_id')
-    recommended = db.get_content(type_id="apps", category_id=item['category']['id'], platforms=[platform_id] if platform_id else None) # TODO
+    recommended, _ = db.get_content(content_type_id=item['category']['type_id'], category_id=item['category']['id'], platforms=[platform_id] if platform_id else None)
 
-    recommended = [d for d in recommended.values() if d['id'] != item['id']] if recommended else []
+    recommended = [d for d in recommended if d['id'] != item['id']] if recommended else []
     recommended = random.sample(recommended, k=min(10, len(recommended))) or None
 
     item['description'] = item['description'].replace("\n", "<br>") if item['description'] else None
-    item['addon_message'] = item['addon_message'].replace("\n", "<br>") if item['addon_message'] else None
+    item['addon_text'] = item['addon_text'].replace("\n", "<br>") if item['addon_text'] else None
 
-    return render_template("item.html", item=item, recommended=recommended) # TODO
+    return render_template("item.html", item=item, recommended=recommended)
 
 
 @store.route("/content/<int:content_id>/images")
 def images(content_id):
 
-    item = db.get_one_content(content_id=content_id)
+    item = db.get_one_content(content_id)
 
     if not item:
-        return redirect(url_for('.root')) # TODO
+        return redirect(url_for('.root'))
 
     if not item['screenshots']:
         return redirect(url_for('.item', content_id=content_id))
@@ -117,20 +115,14 @@ def search():
 
 @store.route("/platforms", methods=['GET', 'POST'])
 def platforms():
-    
     if request.method == 'GET':
-        platforms = db.get_platforms()
-        return render_template("platform.html", platforms=platforms)
+        return render_template("platform.html", platforms=db.get_platforms())
 
     platform_id = request.args.get('platform_id')
 
     if platform_id is None:
         session['platform_id'] = None
-    elif not platform_id:
-        pass
-    elif not db.get_platforms(platform_id):
-        pass
-    else:
+    elif platform_id and db.get_platforms(platform_id):
         session['platform_id'] = platform_id
     
     session.permanent = True

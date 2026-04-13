@@ -25,11 +25,11 @@
                             <td id="searchLink">
                                 <span>
                                     <a href="{{ url_for('store.platforms') }}">Platform</a>:
-                                    <b>{{ get_platform(session['platform_id'])['name'] if session['platform_id'] else 'All' }}</b>
+                                    <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
                                 </span>
                                 |
-                                {% if session.logged_in is defined %}
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ get_user(session['user_id'])['username'] }}</a></span>
+                                {% if g.user %}
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
                                 |
                                 {% endif %}
                                 <a href="{{ url_for('store.search') }}">Search</a>
@@ -39,8 +39,8 @@
                 </div>
 
                 <div id="crumbNav">
-                    <a href="{{ url_for('store.content', content_type_id=content_type['id']) }}" id="crumbNavContentArea">{{ content_type['name'] }}</a>
-                    &gt; <a href="{{ url_for('store.content', content_type_id=content_type['id'], category=item['category']['id']) }}" id="crumbNavContentArea">{{ item['category']['name'] }}</a>
+                    <a href="{{ url_for('store.content', content_type_id=item['content_type']['id']) }}" id="crumbNavContentArea">{{ item['content_type']['name'] }}</a>
+                    &gt; <a href="{{ url_for('store.content', content_type_id=item['content_type']['id'], category_id=item['category']['id']) }}" id="crumbNavContentArea">{{ item['category']['name'] }}</a>
                     &gt; {{ item['title'] }}
                 </div>
             </div>
@@ -50,7 +50,7 @@
                     <div class="contentItem" id="{{ item['id'] }}">
                         <table class="contentInfo hreview-aggregate">
                             <tr>
-                                {% if content_type['icons'] %}
+                                {% if item['content_type']['icons'] %}
                                 <td class="feature">
                                     <img src="{{ url_for('static', filename='content/icons/' ~ item['icon']) }}" alt="{{ item['title'] }}" width="66" height="66"/>
                                 </td>
@@ -58,7 +58,7 @@
                                 <td class="meta item">
                                     <div class="title"><h2 class="fn nokia-gray">{{ item['title'] }}</h2></div>
                                     <p class="type">
-                                        <b>Size:</b> {{ get_natural_size(item['size']) }}<br/>
+                                        <b>Size:</b> {{ item['size'] | naturalsize }}<br/>
                                         {% if item['platform'] %}
                                         <b>Platform:</b> {{ item['platform']['name'] }}<br/>
                                         {% endif %}
@@ -94,7 +94,7 @@
                         </div>
 
                         {% if item['screenshots'] %}
-                        <p class="morePhotos"><a href="{{ url_for('store.images', prefix=content_type['prefix'], id=item['id']) }}">Screenshots ({{ item['screenshots']|length }})</a></p>
+                        <p class="morePhotos"><a href="{{ url_for('store.images', content_id=item['id']) }}">Screenshots ({{ item['screenshots']|length }})</a></p>
                         {% else %}
                         <p></p>
                         {% endif %}
@@ -128,7 +128,7 @@
                                     </td>
                                     <td class="contentType">
                                         <h2 class="title">
-                                            <a href="{{ url_for('store.item', id=rec['id']) }}">{{ rec['title'] }}</a>
+                                            <a href="{{ url_for('store.item', content_id=rec['id']) }}">{{ rec['title'] }}</a>
                                         </h2>
                                     </td>
                                     <td class="contentRatingPrice">
@@ -167,14 +167,14 @@
                     <h3>Browse categories</h3>
                     <a href="{{ url_for('store.root') }}">Home</a><br/>
                     {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}" class="{{ 'selected' if content_type['id'] == _content_type['id'] }}">{{ _content_type['name'] }}</a><br/>
+                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}" class="{{ 'selected' if item['content_type']['id'] == _content_type['id'] }}">{{ _content_type['name'] }}</a><br/>
                     {% endfor %}
                 </div>
             </div>
 
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
-                {% if session.logged_in is not defined %}
+                {% if not g.user %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
                 <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>

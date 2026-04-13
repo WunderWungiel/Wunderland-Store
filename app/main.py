@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import Flask, session, render_template, send_from_directory
+from flask import Flask, g, session, render_template, send_from_directory
 import humanize
 
 from lib import database as db
@@ -25,19 +25,14 @@ app.register_blueprint(legacy)
 app.register_blueprint(store)
 app.register_blueprint(qtstore)
 
+@app.template_filter('naturalsize')
+def naturalsize_filter(size):
+    return humanize.naturalsize(size)
+
 @app.context_processor
 def utility_processor():
-
-    def get_user(user_id):
-        user = auth_db.get_user(user_id)
-        user.pop('password', None)
-        return user
-
     return dict(
         now=datetime.now(),
-        get_platform=db.get_platform,
-        get_user=get_user,
-        get_natural_size=humanize.naturalsize,
         get_content_types=db.get_content_types
     )
 
@@ -46,19 +41,28 @@ def before_request():
     session.permanent = True
 
     platform_id = session.get('platform_id')
-    if not platform_id or not db.get_platform(platform_id):
-        session['platform_id'] = None
+
+    if platform_id:
+        g.platform = db.get_platform(platform_id)
+        if not g.platform: 
+            session['platform_id'] = None
+    else:
+        g.platform = None
 
     user_id = session.get('user_id')
+    g.user = None
 
     if not user_id:
         session_logout()
-        return
     else:
         user = auth_db.get_user(id=user_id)
-        if user['banned']:
+        if user and user.get('banned'):
             session_logout()
-            return render_template("auth/banned.html", reason=user['banned_reason'])
+            return render_template("auth/banned.html", reason=user.get('banned_reason'))
+
+        if user:
+            user.pop('password', None)
+            g.user = user
 
 if not config['allow_indexing']:
     @app.route("/robots.txt")
