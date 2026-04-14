@@ -31,7 +31,7 @@ def login():
         flash("Invalid credentials!", "danger")
         return redirect(url_for('.login'))
 
-    user = db.get_user(email=email)
+    user = db.get_user_by_email(email)
 
     if not user['confirmed']:
         flash("Please confirm your email!", "danger")
@@ -63,16 +63,16 @@ def register():
     if not all([email, username, password]):
         return fail("Fill in the form!")
 
-    if not re.match(r"^[\w]{6,}$", username):
+    if not re.match(r"^[A-Za-z0-9]{7,}$", username):
         return fail("Wrong username. It should contain only letters and numbers and be 7-letters long or longer.")
 
     if not re.match(r'^(?:[a-z0-9!#$%&\'*+/=?^_{|}~-]+(?:\.[a-z0-9!#$%&\'*+/=?^_{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$', email):
         return fail("Wrong e-mail address.")
 
-    if db.get_user(email=email):
+    if db.get_user_by_email(email):
         return fail("Account already exists.")
 
-    if db.get_user(username=username):
+    if db.get_user_by_username(username):
         return fail("Username already taken.")
 
     user = db.register(email, password, username)

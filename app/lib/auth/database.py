@@ -34,30 +34,27 @@ def delete_session(token):
             cursor.execute(query, params)
 
 
-def get_user(user_id=None, username=None, email=None):
-
-    query = "SELECT * FROM users"
-    where_clauses = []
-    params = []
-
-    if user_id is not None:
-        where_clauses.append("id = %s")
-        params.append(user_id)
-
-    if username is not None:
-        where_clauses.append("username = %s")
-        params.append(username)
-
-    if email is not None:
-        where_clauses.append("email = %s")
-        params.append(email)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
+def get_user_by_id(user_id):
+    query = "SELECT * FROM users WHERE id = %s"
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(query, params)
+            cursor.execute(query, [user_id])
+            return cursor.fetchone()
+
+
+def get_user_by_username(username):
+    query = "SELECT * FROM users WHERE username = %s"
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [username])
+            return cursor.fetchone()
+
+
+def get_user_by_email(email):
+    query = "SELECT * FROM users WHERE email = %s"
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [email])
             return cursor.fetchone()
 
 
@@ -84,9 +81,9 @@ def confirm(user_id):
 
 def login(email, password):
 
-    user = get_user(email=email)
+    user = get_user_by_email(email)
 
-    if not user or not bcrypt.checkpw(password.encode(), user['password'].encode()):
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
         return None
 
     token = secrets.token_urlsafe(32)
@@ -102,13 +99,13 @@ def login(email, password):
     return {'token': token}
 
 
-def register(email, user_password, username):
+def register(email, password, username):
 
     confirmation_token = secrets.token_urlsafe(32)
     confirmation_token_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
 
     query = "INSERT INTO users (email, username, password, confirmed, confirmation_token, confirmation_token_expires_at) VALUES (%s, %s, %s, %s, %s, %s) RETURNING *"
-    params = [email, username, generate_password(user_password), False, confirmation_token, confirmation_token_expires_at]
+    params = [email, username, generate_password(password), False, confirmation_token, confirmation_token_expires_at]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -133,18 +130,9 @@ def change_password(user_id, password):
 
 def check_credentials(email, password):
 
-    query = "SELECT password FROM users WHERE email = %s"
-    params = [email]
+    user = get_user_by_email(email)
 
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            result = cursor.fetchone()
-
-    if not result:
+    if not user:
         return False
 
-    password_hash = result['password'].encode('utf-8')
-    password = password.encode('utf-8')
-
-    return bcrypt.checkpw(password, password_hash)
+    return bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8'))

@@ -60,7 +60,9 @@ def _format_content(results):
             for n in range(1, result['screenshot_count'] + 1)
         ]
 
-        result['content_type'] = get_content_type(type_id=result['category']['type_id'])
+        result['content_type'] = get_content_type(
+            type_id=result['category']['type_id']
+        )
 
         result['rating'] = int(result['rating'])
 
