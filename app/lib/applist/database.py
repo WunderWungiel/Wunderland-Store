@@ -79,7 +79,7 @@ def format_results(results, content_type_name=None, widget=False):
         if not content_type_name:
             content_type_name = row['content_type_name']
 
-        content_type = db.get_content_type(content_type_name)
+        content_type = db.get_content_type_by_name(content_type_name)
 
         row = {key: value.strip() if isinstance(value, str) else value for (key, value) in row.items()}
 

@@ -60,8 +60,8 @@ def _format_content(results):
             for n in range(1, result['screenshot_count'] + 1)
         ]
 
-        result['content_type'] = get_content_type(
-            type_id=result['category']['type_id']
+        result['content_type'] = get_content_type_by_id(
+            result['category']['type_id']
         )
 
         result['rating'] = int(result['rating'])
@@ -83,9 +83,28 @@ def get_one_news(news_id):
     return results[0] if results else None
 
 
-def get_content_type(type_id=None, name=None, prefix=None):
-    results = get_content_types(type_id=type_id, name=name, prefix=prefix)
-    return results[0] if results else None
+def get_content_type_by_id(type_id):
+    query = "SELECT * FROM content_types WHERE id = %s"
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [type_id])
+            return cursor.fetchone()
+
+
+def get_content_type_by_name(name):
+    query = "SELECT * FROM content_types WHERE name = %s"
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [name])
+            return cursor.fetchone()
+
+
+def get_content_type_by_prefix(prefix):
+    query = "SELECT * FROM content_types WHERE prefix = %s"
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [prefix])
+            return cursor.fetchone()
 
 
 def get_category(category_id):
@@ -249,32 +268,13 @@ def get_platforms(platform_id=None):
             return cursor.fetchall()
 
 
-def get_content_types(type_id=None, name=None, prefix=None):
+def get_content_types():
 
-    query = "SELECT * FROM content_types"
-    where_clauses = []
-    params = []
-
-    if type_id is not None:
-        where_clauses.append("id = %s")
-        params.append(type_id)
-
-    if name is not None:
-        where_clauses.append("name = %s")
-        params.append(name)
-
-    if prefix is not None:
-        where_clauses.append("prefix = %s")
-        params.append(prefix)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " ORDER BY name ASC"
+    query = "SELECT * FROM content_types ORDER BY name ASC"
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(query, params)
+            cursor.execute(query)
             return cursor.fetchall()
 
 

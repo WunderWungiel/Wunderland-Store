@@ -74,7 +74,7 @@ def images(content_id):
 @store.route("/content/<content_type_id>/browse")
 def browse_categories(content_type_id):
 
-    content_type = db.get_content_type(type_id=content_type_id)
+    content_type = db.get_content_type_by_id(content_type_id)
 
     if not content_type:
         return redirect(url_for('.root'))
@@ -102,7 +102,7 @@ def search():
     results, total = db.search(query, platform_id=g.platform['id'] if g.platform else None, offset=offset, limit=config['per_page'])
 
     if not results:
-        return render_template("empty.html", category=None, content_type=db.get_content_type('apps'))
+        return render_template("empty.html", category=None, content_type=db.get_content_type_by_name('apps'))
 
     total_pages = max(1, math.ceil(total / config['per_page']))
 
@@ -134,7 +134,7 @@ def platforms():
 @store.route("/content/<content_type_id>")
 def content(content_type_id):
 
-    content_type = db.get_content_type(type_id=content_type_id)
+    content_type = db.get_content_type_by_id(content_type_id)
 
     if not content_type:
         return redirect(url_for('.root'))
@@ -176,7 +176,7 @@ def download():
     results = [db.get_item(content_id=content_id) for content_id in config['clients']]
     results = [item for item in results if item is not None]
 
-    content_type = db.get_content_type('apps')
+    content_type = db.get_content_type_by_name('apps')
 
     return render_template("download.html", content_type=content_type, results=results)
 

@@ -13,7 +13,7 @@ def index():
 @qtstore.route("/StoreData/<content_type_name>/<app>/descr.txt")
 def description(content_type_name, app):
 
-    content_type = db.get_content_type(content_type_name.lower())
+    content_type = db.get_content_type_by_id(content_type_name.lower())
     if not content_type:
         abort(404)
 
@@ -43,7 +43,7 @@ def description(content_type_name, app):
 @qtstore.route("/StoreData/<content_type_name>/<app>/file<ext>")
 def file(content_type_name, app, ext):
 
-    content_type = db.get_content_type(content_type_name.lower())
+    content_type = db.get_content_type_by_id(content_type_name.lower())
     if not content_type:
         abort(404)
 
@@ -58,7 +58,7 @@ def file(content_type_name, app, ext):
 @qtstore.route("/StoreData/<content_type_name>/<app>/preview.png")
 def preview(content_type_name, app):
 
-    content_type = db.get_content_type(content_type_name.lower())
+    content_type = db.get_content_type_by_id(content_type_name.lower())
     if not content_type:
         abort(404)
 
