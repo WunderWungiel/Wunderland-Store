@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict RCkBo7DGSoY1Jz58WyubPIT0NSThvaSrd88de4zOP6dPHir7gHlSjwXPcDaDH3W
+\restrict 4KRwd8Sd2adRh7xbWfOBRZxJpRxiIZarIE56TAsZvPsf5uiwp92McQyo4ClgFQK
 
 -- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
 -- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
@@ -541,7 +541,7 @@ ALTER TABLE ONLY public.ratings
 --
 
 ALTER TABLE ONLY public.ratings
-    ADD CONSTRAINT ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+    ADD CONSTRAINT ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -556,5 +556,5 @@ ALTER TABLE ONLY public.sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict RCkBo7DGSoY1Jz58WyubPIT0NSThvaSrd88de4zOP6dPHir7gHlSjwXPcDaDH3W
+\unrestrict 4KRwd8Sd2adRh7xbWfOBRZxJpRxiIZarIE56TAsZvPsf5uiwp92McQyo4ClgFQK
 
