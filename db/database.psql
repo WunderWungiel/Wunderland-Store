@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5YEcUZrqku6mWoeFAM7Y0IOHZb8OTdaVul3925KqbplehD5dT6F8J5mHrGDqto4
+\restrict YNE5zRZp9rk7kbun4wgKNYk0ki8xU6bvHEXsT7uEjBnly3wrUDRzUtlXfs4mAjs
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -74,10 +74,10 @@ CREATE TABLE public.content (
     title text NOT NULL,
     file text NOT NULL,
     category_id integer NOT NULL,
-    description text DEFAULT 'Description'::text,
+    description text,
     publisher text DEFAULT 'Publisher'::text NOT NULL,
     version text DEFAULT '1.00(0)'::text NOT NULL,
-    platform text,
+    platform_id text,
     icon text DEFAULT 'Store.png'::text NOT NULL,
     screenshot_prefix text,
     screenshot_count integer DEFAULT 0 NOT NULL,
@@ -140,8 +140,9 @@ CREATE TABLE public.content_types (
 
 CREATE TABLE public.news (
     id integer NOT NULL,
-    title character varying NOT NULL,
-    file character varying NOT NULL
+    title text NOT NULL,
+    file text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -170,21 +171,21 @@ ALTER SEQUENCE public.news_id_seq OWNED BY public.news.id;
 --
 
 CREATE TABLE public.platforms (
-    id character varying NOT NULL,
-    name character varying NOT NULL,
-    parent_id character varying
+    id text NOT NULL,
+    name text NOT NULL,
+    parent_id text
 );
 
 
 --
--- Name: rating; Type: TABLE; Schema: public; Owner: -
+-- Name: ratings; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.rating (
-    id integer NOT NULL,
-    content_id integer NOT NULL,
-    rating integer NOT NULL,
-    user_id integer NOT NULL,
+CREATE TABLE public.ratings (
+    id integer CONSTRAINT rating_id_not_null NOT NULL,
+    content_id integer CONSTRAINT rating_content_id_not_null NOT NULL,
+    rating smallint CONSTRAINT rating_rating_not_null NOT NULL,
+    user_id integer CONSTRAINT rating_user_id_not_null NOT NULL,
     CONSTRAINT rating_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
 );
 
@@ -206,7 +207,7 @@ CREATE SEQUENCE public.rating_id_seq
 -- Name: rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.rating_id_seq OWNED BY public.rating.id;
+ALTER SEQUENCE public.rating_id_seq OWNED BY public.ratings.id;
 
 
 --
@@ -217,7 +218,7 @@ CREATE TABLE public.sessions (
     id integer NOT NULL,
     user_id integer,
     token text NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
     expires_at timestamp with time zone NOT NULL
 );
 
@@ -300,10 +301,10 @@ ALTER TABLE ONLY public.news ALTER COLUMN id SET DEFAULT nextval('public.news_id
 
 
 --
--- Name: rating id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: ratings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.rating ALTER COLUMN id SET DEFAULT nextval('public.rating_id_seq'::regclass);
+ALTER TABLE ONLY public.ratings ALTER COLUMN id SET DEFAULT nextval('public.rating_id_seq'::regclass);
 
 
 --
@@ -393,18 +394,18 @@ ALTER TABLE ONLY public.platforms
 
 
 --
--- Name: rating rating_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings rating_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.rating
+ALTER TABLE ONLY public.ratings
     ADD CONSTRAINT rating_content_id_user_id_key UNIQUE (content_id, user_id);
 
 
 --
--- Name: rating rating_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings rating_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.rating
+ALTER TABLE ONLY public.ratings
     ADD CONSTRAINT rating_pkey PRIMARY KEY (id);
 
 
@@ -425,6 +426,14 @@ ALTER TABLE ONLY public.sessions
 
 
 --
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -433,10 +442,25 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
 -- Name: content_category_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX content_category_id_idx ON public.content USING btree (category_id);
+
+
+--
+-- Name: content_platform_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX content_platform_idx ON public.content USING btree (platform_id);
 
 
 --
@@ -488,11 +512,11 @@ ALTER TABLE ONLY public.content_legacy
 
 
 --
--- Name: content content_platform_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: content content_platform_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.content
-    ADD CONSTRAINT content_platform_fkey FOREIGN KEY (platform) REFERENCES public.platforms(id);
+    ADD CONSTRAINT content_platform_id_fkey FOREIGN KEY (platform_id) REFERENCES public.platforms(id);
 
 
 --
@@ -504,18 +528,18 @@ ALTER TABLE ONLY public.platforms
 
 
 --
--- Name: rating rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.rating
+ALTER TABLE ONLY public.ratings
     ADD CONSTRAINT rating_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.content(id) ON DELETE CASCADE;
 
 
 --
--- Name: rating rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.rating
+ALTER TABLE ONLY public.ratings
     ADD CONSTRAINT rating_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
@@ -531,5 +555,5 @@ ALTER TABLE ONLY public.sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5YEcUZrqku6mWoeFAM7Y0IOHZb8OTdaVul3925KqbplehD5dT6F8J5mHrGDqto4
+\unrestrict YNE5zRZp9rk7kbun4wgKNYk0ki8xU6bvHEXsT7uEjBnly3wrUDRzUtlXfs4mAjs
 

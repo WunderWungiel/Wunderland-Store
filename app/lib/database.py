@@ -17,12 +17,12 @@ CONTENT_SELECT = """
         category.name AS category_name,
         category.type_id AS category_type_id,
         platform.name AS platform_name,
-        COALESCE(ROUND(AVG(rating.rating)), 0) AS rating,
+        COALESCE(ROUND(AVG(ratings.rating)), 0) AS rating,
         COUNT(*) OVER() AS total
     FROM content
     LEFT JOIN categories AS category ON content.category_id = category.id
     LEFT JOIN platforms AS platform ON content.platform = platform.id
-    LEFT JOIN rating ON content.id = rating.content_id
+    LEFT JOIN ratings ON content.id = ratings.content_id
 """
 
 CONTENT_SELECT_WITH_PLATFORM_TREE = """
@@ -203,7 +203,7 @@ def rate(rating, content_id, user_id):
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO rating (content_id, rating, user_id) VALUES (%s, %s, %s)
+                INSERT INTO ratings (content_id, rating, user_id) VALUES (%s, %s, %s)
                 ON CONFLICT (content_id, user_id) DO UPDATE SET rating = EXCLUDED.rating
             """, [content_id, rating, user_id])
 
