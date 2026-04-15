@@ -2,6 +2,7 @@ secret_key: ""
 port: 8080
 database:
   host: "localhost"
+  port: 5432
   name: "ovistore"
   user: "postgres"
   password: "1234"
@@ -11,10 +12,9 @@ email:
   smtp:
     port: 465
     address: ""
-admin_usernames:
-  - ADMIN_USERNAME
 proxy: false
 allow_indexing: true
+per_page: 10
 api_prefix: "/api/v1"
 platforms:
   qtstore:
@@ -23,15 +23,6 @@ platforms:
   applist:
     - 's60'
     - 'symbian3'
-content_types:
-  apps:
-    prefix: "app"
-  games:
-    prefix: "game"
-  themes:
-    prefix: "theme
 clients:
-  - id: 16
-    content_type_name: 'apps'
-  - id: 192
-    content_type_name: 'apps'
+  - 16
+  - 192

@@ -15,7 +15,7 @@ def generate_password(password):
 
 def get_session(token):
 
-    query = "SELECT sessions.*, users.username, users.email FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token = %s AND sessions.expires_at > NOW()"
+    query = "SELECT sessions.*, users.id, users.username, users.email, users.role FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token = %s AND sessions.expires_at > NOW()"
     params = [token]
 
     with pool.connection() as connection:

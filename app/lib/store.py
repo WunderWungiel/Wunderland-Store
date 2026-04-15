@@ -39,7 +39,7 @@ def item(content_id):
     if not item:
         return redirect(url_for('.root'))
 
-    if (g.user and g.user['username'] not in config['admin_usernames']) or not g.user:
+    if (g.user and g.user['role'] != 'admin') or not g.user:
         db.increment_counter(content_id)
 
     file_path = os.path.join(current_app.root_path, 'static', 'content', 'files', item['file'])
