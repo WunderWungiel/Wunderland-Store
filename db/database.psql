@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict YNE5zRZp9rk7kbun4wgKNYk0ki8xU6bvHEXsT7uEjBnly3wrUDRzUtlXfs4mAjs
+\restrict RCkBo7DGSoY1Jz58WyubPIT0NSThvaSrd88de4zOP6dPHir7gHlSjwXPcDaDH3W
 
--- Dumped from database version 18.3
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.3 (Debian 18.3-1.pgdg13+1)
+-- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg13+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -182,19 +182,19 @@ CREATE TABLE public.platforms (
 --
 
 CREATE TABLE public.ratings (
-    id integer CONSTRAINT rating_id_not_null NOT NULL,
-    content_id integer CONSTRAINT rating_content_id_not_null NOT NULL,
-    rating smallint CONSTRAINT rating_rating_not_null NOT NULL,
-    user_id integer CONSTRAINT rating_user_id_not_null NOT NULL,
-    CONSTRAINT rating_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
+    id integer NOT NULL,
+    content_id integer NOT NULL,
+    rating smallint NOT NULL,
+    user_id integer NOT NULL,
+    CONSTRAINT ratings_rating_check CHECK (((rating >= 1) AND (rating <= 5)))
 );
 
 
 --
--- Name: rating_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: ratings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.rating_id_seq
+CREATE SEQUENCE public.ratings_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -204,10 +204,10 @@ CREATE SEQUENCE public.rating_id_seq
 
 
 --
--- Name: rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: ratings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.rating_id_seq OWNED BY public.ratings.id;
+ALTER SEQUENCE public.ratings_id_seq OWNED BY public.ratings.id;
 
 
 --
@@ -255,7 +255,8 @@ CREATE TABLE public.users (
     username text NOT NULL,
     confirmation_token text,
     confirmation_token_expires_at timestamp with time zone,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    role text DEFAULT 'user'::text NOT NULL
 );
 
 
@@ -304,7 +305,7 @@ ALTER TABLE ONLY public.news ALTER COLUMN id SET DEFAULT nextval('public.news_id
 -- Name: ratings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.ratings ALTER COLUMN id SET DEFAULT nextval('public.rating_id_seq'::regclass);
+ALTER TABLE ONLY public.ratings ALTER COLUMN id SET DEFAULT nextval('public.ratings_id_seq'::regclass);
 
 
 --
@@ -394,19 +395,19 @@ ALTER TABLE ONLY public.platforms
 
 
 --
--- Name: ratings rating_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings ratings_content_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ratings
-    ADD CONSTRAINT rating_content_id_user_id_key UNIQUE (content_id, user_id);
+    ADD CONSTRAINT ratings_content_id_user_id_key UNIQUE (content_id, user_id);
 
 
 --
--- Name: ratings rating_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ratings
-    ADD CONSTRAINT rating_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT ratings_pkey PRIMARY KEY (id);
 
 
 --
@@ -457,10 +458,10 @@ CREATE INDEX content_category_id_idx ON public.content USING btree (category_id)
 
 
 --
--- Name: content_platform_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: content_platform_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX content_platform_idx ON public.content USING btree (platform_id);
+CREATE INDEX content_platform_id_idx ON public.content USING btree (platform_id);
 
 
 --
@@ -528,19 +529,19 @@ ALTER TABLE ONLY public.platforms
 
 
 --
--- Name: ratings rating_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings ratings_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ratings
-    ADD CONSTRAINT rating_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.content(id) ON DELETE CASCADE;
+    ADD CONSTRAINT ratings_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.content(id) ON DELETE CASCADE;
 
 
 --
--- Name: ratings rating_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: ratings ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.ratings
-    ADD CONSTRAINT rating_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+    ADD CONSTRAINT ratings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -555,5 +556,5 @@ ALTER TABLE ONLY public.sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict YNE5zRZp9rk7kbun4wgKNYk0ki8xU6bvHEXsT7uEjBnly3wrUDRzUtlXfs4mAjs
+\unrestrict RCkBo7DGSoY1Jz58WyubPIT0NSThvaSrd88de4zOP6dPHir7gHlSjwXPcDaDH3W
 
