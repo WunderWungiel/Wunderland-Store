@@ -57,7 +57,7 @@
                         </a>
                         {% endfor %}
                         <div class="options">
-                            <a href="{{ url_for('store.item', id=item['id']) }}">&lt; Back to {{ item['title'] }}</a>
+                            <a href="{{ url_for('store.item', content_id=item['id']) }}">&lt; Back to {{ item['title'] }}</a>
                         </div>
                     </div>
                     <div class="beacon"></div>
