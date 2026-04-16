@@ -52,8 +52,8 @@
                 <div class="view">
                     <div class="contentItem">
                         {% for screenshot in item['screenshots'] %}
-                        <a href="{{ url_for('static', filename='content/screenshots/' ~ content_type['name'] ~ '/' ~ screenshot) }}">
-                            <img src="{{ url_for('static', filename='content/screenshots/' ~ content_type['name'] ~ '/' ~ screenshot) }}" alt="{{ item['title'] }}"/>
+                        <a href="{{ url_for('static', filename='content/screenshots/' ~ screenshot) }}">
+                            <img src="{{ url_for('static', filename='content/screenshots/' ~ screenshot) }}" alt="{{ item['title'] }}"/>
                         </a>
                         {% endfor %}
                         <div class="options">

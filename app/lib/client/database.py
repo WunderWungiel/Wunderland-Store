@@ -83,7 +83,7 @@ def format_results(results, content_type_id=None, widget=False):
             uidstore = SubElement(app, 'uidstore')
             uidunsigned = SubElement(app, 'uidunsigned')
             icon = SubElement(app, 'icon')
-            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", content_type_id, row['icon']))
+            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", row['icon']))
             version = SubElement(app, 'version')
             version.text = row['version']
             versionstore = SubElement(app, 'versionstore')
@@ -129,8 +129,7 @@ def format_results(results, content_type_id=None, widget=False):
             for i in range(5): # 5 - 1
                 image = SubElement(app, f'image{i + 1}')
                 if len(screenshots) >= i + 1:
-                    image.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_id, screenshots[i]))
-                    print("")
+                    image.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", screenshots[i]))
 
             tags = SubElement(app, 'tags')
             changelog = SubElement(app, 'changelog')
