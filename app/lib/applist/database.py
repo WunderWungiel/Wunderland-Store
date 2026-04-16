@@ -14,72 +14,40 @@ def version():
 def changelog():
     return send_from_directory(current_app.static_folder, os.path.join("applist", "changelog.xml"))
 
-# !!! Replace right side and comments with YOUR categories' IDs!
-applist_to_wunderland = {
-    0: (None, 'apps'),  # All apps
-    1: (4, 'apps'),  # Camera, photos, videos
-    2: (11, 'apps'),  # Emulator
-    3: (12, 'apps'),  # Extras
-    4: (5, 'apps'),  # File manager & cloud
-    5: (7, 'apps'),  # Internet
-    6: (8, 'apps'),  # Music
-    7: (3, 'apps'),  # Office
-    8: (1, 'apps'),  # Other apps
-    9: (9, 'apps'),  # Social
-    10: (10, 'apps'),  # Tools
-    11: (2, 'apps'),  # Weather & GPS
-    12: (None, 'games'),  # All games
-    13: (2, 'games'),  # Action
-    14: (3, 'games'),  # Adventure
-    15: (1, 'games'),  # Other games
-    16: (6, 'games'),  # Puzzles & cards
-    17: (4, 'games'),  # Sports
-    18: (5, 'games'),  # Strategy
-    19: (1, 'themes')  # Themes
-}
+def resolve_client_id(client_id):
+    if client_id == 0:
+        return None, 'apps'
+    if client_id == 12:
+        return None, 'games'
 
-# !!! Replace left side and comments with YOUR categories' IDs!
-wunderland_to_applist = {
-    'apps': {
-        None: 0,  # All apps
-        4: 1,  # Camera, photos, videos
-        11: 2,  # Emulator
-        12: 3,  # Extras
-        5: 4,  # File manager & cloud
-        7: 5,  # Internet
-        8: 6,  # Music
-        3: 7,  # Office
-        1: 8,  # Other apps
-        9: 9,  # Social
-        10: 10,  # Tools
-        2: 11  # Weather & GPS
-    },
-    'games': {
-        None: 12,  # All games
-        2: 13,  # Action
-        3: 14,  # Adventure
-        1: 15,  # Other games
-        6: 16,  # Puzzles & cards
-        4: 17,  # Sports
-        5: 18  # Strategy
-    },
-    'themes': {
-        1: 19  # Themes
-    }
-}
+    with db.pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id, type_id FROM categories WHERE client_id = %s", [client_id])
+            row = cursor.fetchone()
+            if row:
+                return row['id'], row['type_id']
 
-def format_results(results, content_type_name=None, widget=False):
+    return None, 'apps'
+
+def get_client_id_mapping():
+    categories = db.get_categories()
+    mapping = {category['id']: category['client_id'] for category in categories if category.get('client_id') is not None}
+    mapping[('all', 'apps')] = 0
+    mapping[('all', 'games')] = 12
+    return mapping
+
+def format_results(results, content_type_id=None, widget=False):
     root = Element('applist')
     minversion = Element('minversion')
     minversion.text = "1.0.298"
     root.append(minversion)
 
+    mapping = get_client_id_mapping()
+
     for row in results:
 
-        if not content_type_name:
-            content_type_name = row['content_type_name']
-
-        content_type = db.get_content_type_by_name(content_type_name)
+        if not content_type_id:
+            content_type_id = row['content_type_id']
 
         row = {key: value.strip() if isinstance(value, str) else value for (key, value) in row.items()}
 
@@ -115,7 +83,7 @@ def format_results(results, content_type_name=None, widget=False):
             uidstore = SubElement(app, 'uidstore')
             uidunsigned = SubElement(app, 'uidunsigned')
             icon = SubElement(app, 'icon')
-            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", content_type_name, row['img']))
+            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", content_type_id, row['icon']))
             version = SubElement(app, 'version')
             version.text = row['version']
             versionstore = SubElement(app, 'versionstore')
@@ -124,8 +92,13 @@ def format_results(results, content_type_name=None, widget=False):
             versiondate.text = "2024-03-30 20:54"
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
+            
+            applist_id = mapping.get(row['category_id'])
+            if applist_id is None:
+                applist_id = mapping.get(('all', content_type_id), 0)
+                
             category = SubElement(app, 'category')
-            category.text = str(wunderland_to_applist[content_type_name][row['category']])
+            category.text = str(applist_id)
             language = SubElement(app, 'language')
             language.text = "EN"
 
@@ -135,7 +108,7 @@ def format_results(results, content_type_name=None, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, 'mail')
             website = SubElement(app, 'website')
-            website.text = url_for('store.item', _external=True, prefix=content_type['prefix'], id=row['id'])
+            website.text = url_for('store.item', _external=True, content_id=row['id'])
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:
@@ -148,15 +121,15 @@ def format_results(results, content_type_name=None, widget=False):
                 row['description'].strip()
                 description.text = row['description']
 
-            if row['addon_message']:
-                description.text += f"\n\nExtra file: {row['addon_message']}"
+            if row['addon_text']:
+                description.text += f"\n\nExtra file: {row['addon_text']}"
 
             screenshots = [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
 
             for i in range(5): # 5 - 1
                 image = SubElement(app, f'image{i + 1}')
                 if len(screenshots) >= i + 1:
-                    image.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_name, screenshots[i]))
+                    image.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type_id, screenshots[i]))
                     print("")
 
             tags = SubElement(app, 'tags')
@@ -177,105 +150,75 @@ def format_results(results, content_type_name=None, widget=False):
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
 def search(search_query, start=None):
-
+    
     results = []
+    all_results, _ = db.search(search_query)
+    
+    for result in all_results:
+        result['category_id'] = result['category']['id']
+        result['content_type_id'] = result['category']['type_id']
+        results.append(result)
 
-    for content_type in db.get_content_types():
+    if start is not None:
+        results = [result for result in results if result['id'] > start]
 
-        where_clauses = [sql.SQL("visible = true")]
-        params = []
+    return format_results(results)
 
-        query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type['name']))
+def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type_id=None):
 
-        if config['platforms']['applist']:
-            query = sql.SQL("""
-                WITH RECURSIVE platform_tree AS (
-                    SELECT id, parent_id
-                    FROM platforms
-                    WHERE id = ANY(%s)
+    category_id, content_type_id = resolve_client_id(category) if category is not None else (None, content_type_id or 'apps')
 
-                    UNION ALL
-
-                    SELECT parent.id, parent.parent_id
-                    FROM platforms parent
-                    JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id    
-                )
-            """) + query
-            where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
-            params.append(config['platforms']['applist'])
-
-        where_clauses.append(sql.SQL("title ILIKE %s"))
-        params.append(f"%{search_query}%")
-
-        if start is not None:
-            where_clauses.append(sql.SQL("id > %s"))
-            params.append(start)
-
-        if where_clauses:
-            query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
-
-        with db.pool.connection() as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(query, params)
-                content_type_results = cursor.fetchall()
-
-        for i, result in enumerate(content_type_results):
-            content_type_results[i]['content_type_name'] = content_type['name']
-
-        results += content_type_results
-
-    xml = format_results(results)
-
-    return xml
-
-def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type_name=None):
-
-    if category is not None:
-        new_category, content_type_name = applist_to_wunderland.get(category) or (None, 'apps')
-    else:
-        new_category = None
-
-    where_clauses = [sql.SQL("visible = true")]
+    where_clauses = ["content.visible = true"]
     params = []
 
-    query = sql.SQL("SELECT * FROM {}").format(sql.Identifier(content_type_name))
+    query = """
+        SELECT content.*, categories.type_id as content_type_id
+        FROM content
+        JOIN categories ON content.category_id = categories.id
+    """
 
     if config['platforms']['applist']:
-        query = sql.SQL("""
+        query = """
             WITH RECURSIVE platform_tree AS (
-                SELECT id, parent_id
-                FROM platforms
-                WHERE id = ANY(%s)
-
+                SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
                 UNION ALL
-
                 SELECT parent.id, parent.parent_id
                 FROM platforms parent
-                JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
+                JOIN platform_tree ON parent.id = platform_tree.parent_id
             )
-        """) + query
-        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        """ + query
+        where_clauses.append("(platform_id IN (SELECT id FROM platform_tree) OR platform_id IS NULL)")
         params.append(config['platforms']['applist'])
 
-    if new_category is not None:
-        where_clauses.append(sql.SQL("category = %s"))
-        params.append(new_category)
+    if content_type_id:
+        if content_type_id in [content_type['id'] for content_type in db.get_content_types()]:
+            content_type_filter = content_type_id
+        else:
+            content_type_filter = 'apps'
+        
+        where_clauses.append("categories.type_id = %s")
+        params.append(content_type_filter)
+
+    if category_id is not None:
+        where_clauses.append("category_id = %s")
+        params.append(category_id)
 
     if id is not None:
-        where_clauses.append(sql.SQL("id = ANY(%s)"))
+        if isinstance(id, int): id = [id]
+        where_clauses.append("content.id = ANY(%s)")
         params.append(id)
 
     if start is not None:
-        where_clauses.append(sql.SQL("id > %s"))
+        where_clauses.append("content.id > %s")
         params.append(start)
 
     if where_clauses:
-        query += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_clauses)
+        query += " WHERE " + " AND ".join(where_clauses)
 
-    query += sql.SQL(" ORDER BY id DESC")
+    query += " ORDER BY content.id DESC"
 
     if latest is not None and count is not None:
-        query += sql.SQL(" LIMIT %s")
+        query += " LIMIT %s"
         params.append(count)
 
     with db.pool.connection() as connection:
@@ -283,5 +226,4 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
             cursor.execute(query, params)
             results = cursor.fetchall()
 
-    xml = format_results(results, content_type_name, widget)
-    return xml
+    return format_results(results, content_type_id, widget)

@@ -30,7 +30,8 @@ SET default_table_access_method = heap;
 CREATE TABLE public.categories (
     id integer NOT NULL,
     name text NOT NULL,
-    type_id text NOT NULL
+    type_id text NOT NULL,
+    client_id integer
 );
 
 

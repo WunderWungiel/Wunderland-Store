@@ -29,7 +29,7 @@ def generate_content(database, content_name):
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
         """) + query
-        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        where_clauses.append(sql.SQL("(platform_id IN (SELECT id FROM platform_tree) OR platform_id IS NULL)"))
         params.append(config['platforms']['qtstore'])
 
     if where_clauses:
@@ -91,7 +91,7 @@ def get_content(name, content_type_name):
                 JOIN platform_tree AS current_platform ON parent.id = current_platform.parent_id
             )
         """) + query
-        where_clauses.append(sql.SQL("(platform IN (SELECT id FROM platform_tree) OR platform IS NULL)"))
+        where_clauses.append(sql.SQL("(platform_id IN (SELECT id FROM platform_tree) OR platform_id IS NULL)"))
         params.append(config['platforms']['qtstore'])
 
     where_clauses.append(sql.SQL("title LIKE %s"))

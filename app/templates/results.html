@@ -52,7 +52,7 @@
                         <div id="searchField">
                             <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                                 <fieldset>
-                                    <input type="text" id="search" name="q" size="15" style="width: 63%; max-width: 300px;" value="{{ query }}"/>
+                                    <input type="text" id="search" name="query" size="15" style="width: 63%; max-width: 300px;" value="{{ query }}"/>
                                     <input type="submit" id="searchBtn" value="Search"/>
                                 </fieldset>
                             </form>

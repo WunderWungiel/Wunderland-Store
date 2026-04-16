@@ -21,7 +21,7 @@ CONTENT_SELECT = """
         COUNT(*) OVER() AS total
     FROM content
     LEFT JOIN categories AS category ON content.category_id = category.id
-    LEFT JOIN platforms AS platform ON content.platform = platform.id
+    LEFT JOIN platforms AS platform ON content.platform_id = platform.id
     LEFT JOIN ratings ON content.id = ratings.content_id
 """
 
@@ -50,10 +50,10 @@ def _format_content(results):
             'type_id': result.pop('category_type_id'),
         }
 
-        result['platform'] = {
-            'id': result['platform'],
+        result['platform_id'] = {
+            'id': result['platform_id'],
             'name': result.pop('platform_name'),
-        } if result['platform'] is not None else None
+        } if result['platform_id'] is not None else None
 
         result['screenshots'] = [
             f"{result['screenshot_prefix']}{n}.jpg"
@@ -125,7 +125,7 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     if platforms is not None:
         query = CONTENT_SELECT_WITH_PLATFORM_TREE
         where_clauses.append(
-            "(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+            "(content.platform_id IN (SELECT id FROM platform_tree) OR content.platform_id IS NULL)")
         params.append(platforms)
     else:
         query = CONTENT_SELECT
@@ -165,7 +165,7 @@ def search(search_query, platform_id=None, limit=None, offset=None):
     if platform_id is not None:
         query = CONTENT_SELECT_WITH_PLATFORM_TREE.replace("ANY(%s)", "%s")
         where_clauses.append(
-            "(content.platform IN (SELECT id FROM platform_tree) OR content.platform IS NULL)")
+            "(content.platform_id IN (SELECT id FROM platform_tree) OR content.platform_id IS NULL)")
         params.insert(0, platform_id)
     else:
         query = CONTENT_SELECT
@@ -227,18 +227,17 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
             SELECT DISTINCT category.* FROM categories AS category
             JOIN content ON category.id = content.category_id
         """
-        where_clauses.append("content.platform = %s")
+        where_clauses.append("content.platform_id = %s")
         params.append(platform_id)
     else:
-        query = "SELECT * FROM categories"
+        query = "SELECT * FROM categories AS category"
 
     if category_id is not None:
         where_clauses.append("category.id = %s")
         params.append(category_id)
 
     if content_type_id is not None:
-        column = "category.type_id" if platform_id is not None else "type_id"
-        where_clauses.append(f"{column} = %s")
+        where_clauses.append("category.type_id = %s")
         params.append(content_type_id)
 
     if where_clauses:
