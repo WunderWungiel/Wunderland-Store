@@ -10,14 +10,14 @@ qtstore = Blueprint('qtstore', __name__, template_folder="templates")
 def index():
     return db.index()
 
-@qtstore.route("/StoreData/<content_type_name>/<app>/descr.txt")
-def description(content_type_name, app):
+@qtstore.route("/StoreData/<content_type_id>/<app>/descr.txt")
+def description(content_type_id, app):
 
-    content_type = db.get_content_type_by_id(content_type_name.lower())
+    content_type = db.get_content_type_by_id(content_type_id.lower())
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type['name'])
+    content = db.get_content(app, content_type['id'])
     if not content:
         return abort(404)
 
@@ -29,25 +29,25 @@ def description(content_type_name, app):
         if description:
             description += "<br><br>"
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type['name'], screenshot))
+            path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", content_type['id'], screenshot))
             description += f'<img src="{path}" alt="screenshot{i}" width="150"><br><br>'
 
-    if content['addon_message']:
-        description += f"<br><br>Extra file: {content['addon_message']}"
+    if content['addon_text']:
+        description += f"<br><br>Extra file: {content['addon_text']}"
     if content['addon_file']:
         path = url_for('static', _external=True, filename=os.path.join("content", "files", content['addon_file']))
         description += f"<br><br>Link: {path}"
 
     return description
 
-@qtstore.route("/StoreData/<content_type_name>/<app>/file<ext>")
-def file(content_type_name, app, ext):
+@qtstore.route("/StoreData/<content_type_id>/<app>/file<ext>")
+def file(content_type_id, app, ext):
 
-    content_type = db.get_content_type_by_id(content_type_name.lower())
+    content_type = db.get_content_type_by_id(content_type_id.lower())
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type['name'])
+    content = db.get_content(app, content_type['id'])
     path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
 
     if content and os.path.isfile(path):
@@ -55,15 +55,15 @@ def file(content_type_name, app, ext):
     else:
         abort(404)
 
-@qtstore.route("/StoreData/<content_type_name>/<app>/preview.png")
-def preview(content_type_name, app):
+@qtstore.route("/StoreData/<content_type_id>/<app>/preview.png")
+def preview(content_type_id, app):
 
-    content_type = db.get_content_type_by_id(content_type_name.lower())
+    content_type = db.get_content_type_by_id(content_type_id.lower())
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type['name'])
-    path = os.path.join(current_app.root_path, "static", "content", "icons", content_type['name'], content['img'])
+    content = db.get_content(app, content_type['id'])
+    path = os.path.join(current_app.root_path, "static", "content", "icons", content_type['id'], content['icon'])
 
     if content and os.path.isfile(path):
         return send_file(path)
