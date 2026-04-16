@@ -2,18 +2,13 @@ from flask import Blueprint, request
 
 from . import database as db
 
-applist = Blueprint('applist', __name__, template_folder="templates")
+client = Blueprint('client', __name__, template_folder="templates")
 
-# Change abc* routes to something that will make your host with this prefix be the same lenght as applist.schumi1331.de
-# I.e. applist.schumi1331.de/applist.php [33] is the same as ovi.wunderwungiel.pl/aapplist.php [33]
-
-@applist.route("/aapplist-download.php")
-@applist.route("/applist-download.php")
+@client.route("/applist-download.php")
 def applist_download():
     return "0"
 
-@applist.route("/aapplist.php")
-@applist.route("/applist.php")
+@client.route("/applist.php")
 def php():
     id = request.args.get('id')
     start = request.args.get('start', type=int)
@@ -33,12 +28,10 @@ def php():
     else:
         return db.search(search, start=start)
 
-@applist.route("/version.xml")
-@applist.route("/aversion.xml")
+@client.route("/version.xml")
 def version():
     return db.version()
 
-@applist.route("/changelog.xml")
-@applist.route("/achangelog.xml")
+@client.route("/changelog.xml")
 def changelog():
     return db.changelog()

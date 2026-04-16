@@ -9,10 +9,10 @@ from .. import database as db
 from .. import config
 
 def version():
-    return send_from_directory(current_app.static_folder, os.path.join("applist", "version.xml"))
+    return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"))
 
 def changelog():
-    return send_from_directory(current_app.static_folder, os.path.join("applist", "changelog.xml"))
+    return send_from_directory(current_app.static_folder, os.path.join("client", "changelog.xml"))
 
 def resolve_client_id(client_id):
     if client_id == 0:
@@ -37,7 +37,7 @@ def get_client_id_mapping():
     return mapping
 
 def format_results(results, content_type_id=None, widget=False):
-    root = Element('applist')
+    root = Element('client')
     minversion = Element('minversion')
     minversion.text = "1.0.298"
     root.append(minversion)
@@ -93,12 +93,12 @@ def format_results(results, content_type_id=None, widget=False):
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
             
-            applist_id = mapping.get(row['category_id'])
-            if applist_id is None:
-                applist_id = mapping.get(('all', content_type_id), 0)
+            client_id = mapping.get(row['category_id'])
+            if client_id is None:
+                client_id = mapping.get(('all', content_type_id), 0)
                 
             category = SubElement(app, 'category')
-            category.text = str(applist_id)
+            category.text = str(client_id)
             language = SubElement(app, 'language')
             language.text = "EN"
 
@@ -177,7 +177,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
         JOIN categories ON content.category_id = categories.id
     """
 
-    if config['platforms']['applist']:
+    if config['platforms']['client']:
         query = """
             WITH RECURSIVE platform_tree AS (
                 SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
@@ -188,7 +188,7 @@ def get_content(id=None, category=None, start=None, latest=None, count=None, wid
             )
         """ + query
         where_clauses.append("(platform_id IN (SELECT id FROM platform_tree) OR platform_id IS NULL)")
-        params.append(config['platforms']['applist'])
+        params.append(config['platforms']['client'])
 
     if content_type_id:
         if content_type_id in [content_type['id'] for content_type in db.get_content_types()]:

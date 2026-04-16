@@ -20,7 +20,7 @@ platforms:
   qtstore:
     - 's60v3'
     - 's60'
-  applist:
+  client:
     - 's60'
     - 'symbian3'
 clients:

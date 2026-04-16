@@ -4,7 +4,7 @@ from flask import Flask, g, session, render_template, send_from_directory
 import humanize
 
 from lib import database as db
-from lib import config, applist, auth, legacy, store, qtstore
+from lib import config, auth, client, legacy, store, qtstore
 from lib.auth import database as auth_db
 
 app = Flask(__name__)
@@ -18,8 +18,8 @@ if config['proxy']:
         app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
     )
 
-app.register_blueprint(applist)
 app.register_blueprint(auth)
+app.register_blueprint(client)
 app.register_blueprint(legacy)
 app.register_blueprint(store)
 app.register_blueprint(qtstore)
