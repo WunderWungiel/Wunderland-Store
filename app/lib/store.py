@@ -99,7 +99,7 @@ def search():
 
     offset = (page - 1) * config['per_page']
 
-    results, total = db.search(query, platform_id=g.platform['id'] if g.platform else None, offset=offset, limit=config['per_page'])
+    results, total = db.get_content(search=query, platforms=[g.platform['id']] if g.platform else None, offset=offset, limit=config['per_page'])
 
     if not results:
         return render_template("empty.html", category=None, content_type=db.get_content_type_by_name('apps'))

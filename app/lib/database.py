@@ -11,21 +11,7 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}:{config['database']['port']}/{config['database']['name']}"
 pool = ConnectionPool(uri, kwargs={"row_factory": dict_row})
 
-CONTENT_SELECT = """
-    SELECT
-        content.*,
-        category.name AS category_name,
-        category.type_id AS category_type_id,
-        platform.name AS platform_name,
-        COALESCE(ROUND(AVG(ratings.rating)), 0) AS rating,
-        COUNT(*) OVER() AS total
-    FROM content
-    LEFT JOIN categories AS category ON content.category_id = category.id
-    LEFT JOIN platforms AS platform ON content.platform_id = platform.id
-    LEFT JOIN ratings ON content.id = ratings.content_id
-"""
-
-CONTENT_SELECT_WITH_PLATFORM_TREE = """
+PLATFORM_TREE_CTE = """
     WITH RECURSIVE platform_tree AS (
         SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
         UNION ALL
@@ -33,10 +19,7 @@ CONTENT_SELECT_WITH_PLATFORM_TREE = """
         FROM platforms parent
         JOIN platform_tree ON parent.id = platform_tree.parent_id
     )
-""" + CONTENT_SELECT
-
-CONTENT_GROUP_BY = " GROUP BY content.id, category.name, category.type_id, platform.name"
-
+"""
 
 def _format_content(results):
 
@@ -91,7 +74,7 @@ def get_content_type_by_id(type_id):
     query = "SELECT * FROM content_types WHERE id = %s"
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(query, [type_id])
+            cursor.execute(query, (type_id,))
             return cursor.fetchone()
 
 
@@ -99,7 +82,7 @@ def get_content_type_by_name(name):
     query = "SELECT * FROM content_types WHERE name = %s"
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(query, [name])
+            cursor.execute(query, (name,))
             return cursor.fetchone()
 
 
@@ -107,7 +90,7 @@ def get_content_type_by_prefix(prefix):
     query = "SELECT * FROM content_types WHERE prefix = %s"
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(query, [prefix])
+            cursor.execute(query, (prefix,))
             return cursor.fetchone()
 
 
@@ -125,18 +108,29 @@ def get_platform(platform_id):
     return results[0] if results else None
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, limit=None, offset=None):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None):
+
+    query = """
+        SELECT
+            content.*,
+            category.name AS category_name,
+            category.type_id AS category_type_id,
+            platform.name AS platform_name,
+            COALESCE(ROUND(AVG(ratings.rating)), 0) AS rating,
+            COUNT(*) OVER() AS total
+        FROM content
+        LEFT JOIN categories AS category ON content.category_id = category.id
+        LEFT JOIN platforms AS platform ON content.platform_id = platform.id
+        LEFT JOIN ratings ON content.id = ratings.content_id
+    """
 
     where_clauses = ["content.visible = TRUE"]
     params = []
 
     if platforms is not None:
-        query = CONTENT_SELECT_WITH_PLATFORM_TREE
-        where_clauses.append(
-            "(content.platform_id IN (SELECT id FROM platform_tree) OR content.platform_id IS NULL)")
+        query = PLATFORM_TREE_CTE + query
+        where_clauses.append("(content.platform_id IN (SELECT id FROM platform_tree) OR content.platform_id IS NULL)")
         params.append(platforms)
-    else:
-        query = CONTENT_SELECT
 
     if content_id is not None:
         where_clauses.append("content.id = %s")
@@ -150,43 +144,26 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         where_clauses.append("content.category_id = %s")
         params.append(category_id)
 
-    where = " WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+    if search is not None:
+        where_clauses.append("content.title ILIKE %s")
+        params.append(f"%{search}%")
 
-    query += where
-    query += CONTENT_GROUP_BY
-    query += " ORDER BY content.title"
+    if start is not None:
+        where_clauses.append("content.id < %s")
+        params.append(start)
 
-    if None not in (limit, offset):
-        query += " LIMIT %s OFFSET %s"
-        params.extend([limit, offset])
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
 
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            return _format_content(cursor.fetchall())
-
-
-def search(search_query, platform_id=None, limit=None, offset=None):
-    where_clauses = ["content.visible = TRUE", "LOWER(content.title) LIKE %s"]
-    params = [f"%{search_query.lower()}%"]
-
-    if platform_id is not None:
-        query = CONTENT_SELECT_WITH_PLATFORM_TREE.replace("ANY(%s)", "%s")
-        where_clauses.append(
-            "(content.platform_id IN (SELECT id FROM platform_tree) OR content.platform_id IS NULL)")
-        params.insert(0, platform_id)
-    else:
-        query = CONTENT_SELECT
-
-    where = " WHERE " + " AND ".join(where_clauses) if where_clauses else None
-
-    query += where
-    query += CONTENT_GROUP_BY
+    query += " GROUP BY content.id, category.name, category.type_id, platform.name"
     query += " ORDER BY content.id DESC"
 
     if None not in (limit, offset):
         query += " LIMIT %s OFFSET %s"
         params.extend([limit, offset])
+
+    print(query)
+    print(params)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -200,7 +177,7 @@ def get_legacy_content_id(old_id, content_type_id):
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT new_id FROM content_legacy WHERE old_id = %s AND type_id = %s",
-                [old_id, content_type_id]
+                (old_id, content_type_id)
             )
             result = cursor.fetchone()
             return result['new_id'] if result else None
@@ -213,7 +190,7 @@ def rate(rating, content_id, user_id):
             cursor.execute("""
                 INSERT INTO ratings (content_id, rating, user_id) VALUES (%s, %s, %s)
                 ON CONFLICT (content_id, user_id) DO UPDATE SET rating = EXCLUDED.rating
-            """, [content_id, rating, user_id])
+            """, (content_id, rating, user_id))
 
 
 def increment_counter(content_id):
@@ -222,7 +199,7 @@ def increment_counter(content_id):
         with connection.cursor() as cursor:
             cursor.execute(
                 "UPDATE content SET counter = counter + 1 WHERE id = %s",
-                [content_id]
+                (content_id,)
             )
 
 
@@ -260,12 +237,17 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
 
 
 def get_platforms(platform_id=None):
+
     query = "SELECT * FROM platforms"
+    where_clauses = []
     params = []
 
     if platform_id is not None:
-        query += " WHERE id = %s"
+        where_clauses.append("id = %s")
         params.append(platform_id)
+
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
 
     query += " ORDER BY name"
 
@@ -287,11 +269,15 @@ def get_content_types():
 
 def get_news(news_id=None, limit=None, offset=None):
     query = "SELECT * FROM news"
+    where_clauses = []
     params = []
 
     if news_id is not None:
-        query += " WHERE id = %s"
+        where_clauses.append("id = %s")
         params.append(news_id)
+
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
 
     query += " ORDER BY id DESC"
 
@@ -307,8 +293,7 @@ def get_news(news_id=None, limit=None, offset=None):
     results = []
 
     for row in rows:
-        file_path = os.path.join(
-            current_app.static_folder, "content", "news", row['file'])
+        file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
 
         if not os.path.isfile(file_path):
             continue
