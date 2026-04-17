@@ -52,7 +52,7 @@
                 <div id="crumbNav">
                     {% if content_type['show_categories'] %}
                     {{ content_type['name'] }}&nbsp;&gt;
-                    {{ category['name'] if (category is defined and category) else 'All' }}&nbsp;
+                    {{ category['name'] if category else 'All' }}&nbsp;
                     <a href="{{ url_for('store.browse_categories', content_type_id=content_type['id']) }}">Change</a>
                     {% endif %}
                 </div>

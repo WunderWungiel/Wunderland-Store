@@ -139,7 +139,7 @@ def content(content_type_id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    category_id = request.args.get('category', type=int)
+    category_id = request.args.get('category_id', type=int)
     page = request.args.get('page', 1, type=int)
 
     category = db.get_category(category_id)
@@ -193,7 +193,8 @@ def feed():
         <lastBuildDate>{datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT")}</lastBuildDate>
     """
 
-    for content in db.get_news():
+    news_items, total = db.get_news()
+    for content in news_items:
         xml += f"""
             <item>
                 <title>{content['title']}</title>

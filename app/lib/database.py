@@ -74,11 +74,15 @@ def _format_content(results):
 
 
 def get_item(content_id):
+    if content_id is None:
+        return None
     results, _ = get_content(content_id=content_id)
     return results[0] if results else None
 
 
 def get_one_news(news_id):
+    if news_id is None:
+        return None
     results, _ = get_news(news_id=news_id)
     return results[0] if results else None
 
@@ -108,11 +112,15 @@ def get_content_type_by_prefix(prefix):
 
 
 def get_category(category_id):
+    if category_id is None:
+        return None
     results = get_categories(category_id=category_id)
     return results[0] if results else None
 
 
 def get_platform(platform_id):
+    if platform_id is None:
+        return None
     results = get_platforms(platform_id=platform_id)
     return results[0] if results else None
 
