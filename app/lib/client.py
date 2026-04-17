@@ -2,11 +2,12 @@ import os
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
-from flask import url_for, current_app, send_from_directory
-from psycopg import sql
+from flask import Blueprint, current_app, request, url_for, send_from_directory
 
-from .. import database as db
-from .. import config
+from . import database as db
+from . import config
+
+client = Blueprint('client', __name__, template_folder="templates")
 
 def version():
     return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"))
@@ -148,81 +149,70 @@ def format_results(results, content_type_id=None, widget=False):
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
-def search(search_query, start=None):
+def search(query, start=None):
     
     results = []
-    all_results, _ = db.search(search_query)
+    all_results, total = db.get_content(search=query, platforms=config['platforms']['client'], start=start)
     
     for result in all_results:
         result['category_id'] = result['category']['id']
         result['content_type_id'] = result['category']['type_id']
         results.append(result)
 
-    if start is not None:
-        results = [result for result in results if result['id'] > start]
-
     return format_results(results)
 
-def get_content(id=None, category=None, start=None, latest=None, count=None, widget=None, content_type_id=None):
+def get_content(content_ids=None, category=None, start=None, widget=None, count=None, content_type_id=None):
 
     category_id, content_type_id = resolve_client_id(category) if category is not None else (None, content_type_id or 'apps')
 
-    where_clauses = ["content.visible = true"]
-    params = []
-
-    query = """
-        SELECT content.*, categories.type_id as content_type_id
-        FROM content
-        JOIN categories ON content.category_id = categories.id
-    """
-
-    if config['platforms']['client']:
-        query = """
-            WITH RECURSIVE platform_tree AS (
-                SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
-                UNION ALL
-                SELECT parent.id, parent.parent_id
-                FROM platforms parent
-                JOIN platform_tree ON parent.id = platform_tree.parent_id
-            )
-        """ + query
-        where_clauses.append("(platform_id IN (SELECT id FROM platform_tree) OR platform_id IS NULL)")
-        params.append(config['platforms']['client'])
-
-    if content_type_id:
-        if content_type_id in [content_type['id'] for content_type in db.get_content_types()]:
-            content_type_filter = content_type_id
-        else:
-            content_type_filter = 'apps'
-        
-        where_clauses.append("categories.type_id = %s")
-        params.append(content_type_filter)
-
-    if category_id is not None:
-        where_clauses.append("category_id = %s")
-        params.append(category_id)
-
-    if id is not None:
-        if isinstance(id, int): id = [id]
-        where_clauses.append("content.id = ANY(%s)")
-        params.append(id)
-
-    if start is not None:
-        where_clauses.append("content.id > %s")
-        params.append(start)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " ORDER BY content.id DESC"
-
-    if latest is not None and count is not None:
-        query += " LIMIT %s"
-        params.append(count)
-
-    with db.pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            results = cursor.fetchall()
+    if content_ids is None:
+        results, total = db.get_content(
+            content_type_id=content_type_id,
+            category_id=category_id,
+            platforms=config['platforms']['client'],
+            start=start,
+            limit=count
+        )
+    else:
+        results = []
+        for content_id in content_ids:
+            result = db.get_item(content_id=content_id)
+            results.append(result)
+    
+    for i, result in enumerate(results):
+        result['category_id'] = result['category']['id']
+        result['content_type_id'] = result['category']['type_id']
+        results[i] = result
 
     return format_results(results, content_type_id, widget)
+
+@client.route("/applist-download.php")
+def applist_download():
+    return "0"
+
+@client.route("/applist.php")
+def php():
+    content_ids = request.args.get('id')
+    start = request.args.get('start', type=int)
+    count = request.args.get('count', type=int)
+    query = request.args.get('search')
+    widget = request.args.get('widget')
+    category = request.args.get('category', type=int)
+
+    if content_ids:
+        content_ids = [int(content_id) for content_id in content_ids.split(",") if content_id.isdecimal()]
+    else:
+        content_ids = None
+
+    if not query:
+        return get_content(content_ids=content_ids, category=category, start=start, widget=widget, count=count, content_type_id="apps")
+    else:
+        return search(query=query, start=start)
+
+@client.route("/version.xml")
+def version():
+    return version()
+
+@client.route("/changelog.xml")
+def changelog():
+    return changelog()
