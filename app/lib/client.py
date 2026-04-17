@@ -9,11 +9,6 @@ from . import config
 
 client = Blueprint('client', __name__, template_folder="templates")
 
-def version():
-    return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"))
-
-def changelog():
-    return send_from_directory(current_app.static_folder, os.path.join("client", "changelog.xml"))
 
 def resolve_client_id(client_id):
     if client_id == 0:
@@ -67,7 +62,7 @@ def format_results(results, content_type_id=None, widget=False):
             version.text = row['version']
             versionstore = SubElement(app, 'versionstore')
             versionunsigned = SubElement(app, 'unsigned')
-            versiondate = SubElement(app, 'version')
+            versiondate = SubElement(app, 'versiondate')
             versiondate.text = "2024-03-30 20:54"
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
@@ -89,7 +84,7 @@ def format_results(results, content_type_id=None, widget=False):
             version.text = row['version']
             versionstore = SubElement(app, 'versionstore')
             versionunsigned = SubElement(app, 'unsigned')
-            versiondate = SubElement(app, 'version')
+            versiondate = SubElement(app, 'versiondate')
             versiondate.text = "2024-03-30 20:54"
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
@@ -119,8 +114,7 @@ def format_results(results, content_type_id=None, widget=False):
             price.text = "0.00"
             description = SubElement(app, 'description')
             if row['description']:
-                row['description'].strip()
-                description.text = row['description']
+                description.text = row['description'].strip()
 
             if row['addon_text']:
                 description.text += f"\n\nExtra file: {row['addon_text']}"
@@ -138,7 +132,13 @@ def format_results(results, content_type_id=None, widget=False):
             download = SubElement(app, 'download')
             download.text = url_for('static', _external=True, filename=os.path.join("content", "files", row['file']))
             downloadsize = SubElement(app, 'downloadsize')
-            downloadsize.text = "0"
+
+            file_path = os.path.join(current_app.static_folder, "content", "files", row['file'])
+            if os.path.isfile(file_path):
+                downloadsize.text = str(os.path.getsize(file_path))
+            else:
+                downloadsize.text = "0"
+
             downloadstore = SubElement(app, 'downloadstore')
             downloadunsigned = SubElement(app, 'downloadunsigned')
             downloadunsignedsize = SubElement(app, 'downloadunsignedsize')
@@ -177,7 +177,8 @@ def get_content(content_ids=None, category=None, start=None, widget=None, count=
         results = []
         for content_id in content_ids:
             result = db.get_item(content_id=content_id)
-            results.append(result)
+            if result:
+                results.append(result)
     
     for i, result in enumerate(results):
         result['category_id'] = result['category']['id']
@@ -196,7 +197,7 @@ def php():
     start = request.args.get('start', type=int)
     count = request.args.get('count', type=int)
     query = request.args.get('search')
-    widget = request.args.get('widget')
+    widget = request.args.get('widget', type=bool)
     category = request.args.get('category', type=int)
 
     if content_ids:
@@ -211,8 +212,8 @@ def php():
 
 @client.route("/version.xml")
 def version():
-    return version()
+    return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"))
 
 @client.route("/changelog.xml")
 def changelog():
-    return changelog()
+    return send_from_directory(current_app.static_folder, os.path.join("client", "changelog.xml"))
