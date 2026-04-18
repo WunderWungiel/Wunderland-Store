@@ -4,8 +4,8 @@ from xml.etree.ElementTree import Element, SubElement
 
 from flask import Blueprint, current_app, request, url_for, send_from_directory
 
-from . import database as db
-from . import config
+from .. import database as db
+from .. import config
 
 client = Blueprint('client', __name__, template_folder="templates")
 

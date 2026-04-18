@@ -3,8 +3,8 @@ import time
 
 from flask import Blueprint, current_app, request, send_file, abort, url_for
 
-from . import database as db
-from . import config
+from .. import database as db
+from .. import config
 
 qtstore = Blueprint('qtstore', __name__, template_folder="templates")
 
