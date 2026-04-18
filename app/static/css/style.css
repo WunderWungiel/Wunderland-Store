@@ -2,21 +2,27 @@
     display: inline;
 }
 
-span.required, span.tip {
+.required,
+.tip {
     display: none;
     color: red;
     font-weight: bold;
 }
 
-#searchLink, #searchLink span, #searchLink span a {
+#searchLink,
+#searchLink span,
+#searchLink span a {
     color: #fff;
 }
 
 .smallButton a {
-    font-size: 10px; 
+    font-size: 10px;
 }
 
-.share a, .share a:visited, .share a:active, .share a:hover {
+.share a,
+.share a:visited,
+.share a:active,
+.share a:hover {
     color: #333;
     text-decoration: none;
 }
