@@ -11,16 +11,6 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}:{config['database']['port']}/{config['database']['name']}"
 pool = ConnectionPool(uri, kwargs={"row_factory": dict_row})
 
-PLATFORM_TREE_CTE = """
-    WITH RECURSIVE platform_tree AS (
-        SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
-        UNION ALL
-        SELECT parent.id, parent.parent_id
-        FROM platforms parent
-        JOIN platform_tree ON parent.id = platform_tree.parent_id
-    )
-"""
-
 
 def _format_content(results):
 
@@ -110,6 +100,16 @@ def get_platform(platform_id):
 
 
 def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None):
+
+    PLATFORM_TREE_CTE = """
+        WITH RECURSIVE platform_tree AS (
+            SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
+            UNION ALL
+            SELECT parent.id, parent.parent_id
+            FROM platforms parent
+            JOIN platform_tree ON parent.id = platform_tree.parent_id
+        )
+    """
 
     query = """
         SELECT

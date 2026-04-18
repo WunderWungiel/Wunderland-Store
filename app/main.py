@@ -2,6 +2,7 @@ from datetime import datetime
 
 from flask import Flask, g, session, send_from_directory
 import humanize
+import atexit
 
 from utils import database as db
 from utils import config, auth, client, legacy, store, qtstore
@@ -23,6 +24,9 @@ app.register_blueprint(client)
 app.register_blueprint(legacy)
 app.register_blueprint(store)
 app.register_blueprint(qtstore)
+
+
+atexit.register(db.pool.close)
 
 
 @app.template_filter('naturalsize')
