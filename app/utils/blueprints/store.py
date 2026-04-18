@@ -8,7 +8,6 @@ from flask import Blueprint, current_app, g, request, session, flash, redirect, 
 from .. import config
 from .. import database as db
 from .. import utils
-from ..auth import database as auth_db
 
 store = Blueprint('store', __name__, template_folder="templates")
 

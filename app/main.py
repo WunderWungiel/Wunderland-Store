@@ -1,13 +1,12 @@
 from datetime import datetime
 
-from flask import Flask, g, session, send_from_directory, render_template
+from flask import Flask, g, session, send_from_directory
 import humanize
 import atexit
 import logging
 
-from utils import database as db
-from utils import config, auth, client, legacy, store, qtstore
-from utils.auth import database as auth_db
+from utils import config, database as db
+from utils.blueprints import auth, client, legacy, qtstore, store
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -66,7 +65,7 @@ def load_global_data():
         g.user = None
         return
 
-    user = auth_db.get_session(token)
+    user = db.get_session(token)
     if not user:
         session.pop('token', None)
         g.user = None

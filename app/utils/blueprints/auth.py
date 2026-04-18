@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from flask import Blueprint, g, request, session, flash, render_template, redirect, url_for
 import re
 
-from . import database as db
-from ..email import send_email
+from .. import database as db
+from .. import email
 
 auth = Blueprint('auth', __name__, template_folder="templates")
 
@@ -79,7 +79,7 @@ def register():
     confirm_url = url_for('.confirm', token=user['confirmation_token'], _external=True)
 
     try:
-        send_email(
+        email.send_email(
             "Confirm your account",
             f"Please confirm your email by clicking the link below:\n{confirm_url}\nThank you.",
             f"Please confirm your email by clicking the link below:<br><a href=\"{confirm_url}\">{confirm_url}</a><br>Thank you.",
@@ -100,7 +100,7 @@ def confirm(token):
     if not user or user['confirmation_token_expires_at'] < datetime.now(timezone.utc):
         flash("The confirmation link is invalid or has expired.", "danger")
     else:
-        db.confirm(user['id'])
+        db.confirm_user(user['id'])
         flash("You have confirmed your account. Thanks!", "success")
 
     return render_template("auth/confirm.html")
