@@ -195,7 +195,7 @@ def download():
     results = [db.get_item(content_id=content_id) for content_id in config['clients']]
     results = [item for item in results if item is not None]
 
-    content_type = db.get_content_type_by_name('apps')
+    content_type = db.get_content_type_by_id('apps')
 
     return render_template("download.html", content_type=content_type, results=results)
 

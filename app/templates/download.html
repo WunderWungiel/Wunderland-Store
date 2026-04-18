@@ -56,21 +56,21 @@
 
             <div id="views">
                 <div class="view">
-                    {% for item in apps %}
+                    {% for result in results %}
                     <div class="contentItem">
                         <table class="contentInfo hreview-aggregate">
                             <tr>
                                 <td class="feature">
-                                    <img src="{{ url_for('static', filename='content/icons/' ~ item['icon']) }}" alt="{{ item['title'] }}" width="66" height="66"/>
+                                    <img src="{{ url_for('static', filename='content/icons/' ~ result['icon']) }}" alt="{{ result['title'] }}" width="66" height="66"/>
                                 </td>
                                 <td class="meta item">
-                                    <div class="title"><h2 class="fn nokia-gray">Wunderland</h2></div>
+                                    <div class="title"><h2 class="fn nokia-gray">{{ result['title'] }}</h2></div>
                                     <div>
                                         <p class="type">
-                                            {% if item['platform'] %}
-                                            <b>Platform</b>: {{ item['platform']['name'] }}<br/>
+                                            {% if result['platform'] %}
+                                            <b>Platform</b>: {{ result['platform']['name'] }}<br/>
                                             {% endif %}
-                                            <b>Version</b>: {{ item['version'] }}
+                                            <b>Version</b>: {{ result['version'] }}
                                         </p>
                                     </div>
                                 </td>
@@ -78,7 +78,7 @@
                         </table>
                         <div class="buy">
                             <div class="buttons">
-                                <a href="{{ url_for('store.item', content_id=item['id']) }}" class="lite">Download</a>
+                                <a href="{{ url_for('store.item', content_id=result['id']) }}" class="lite">Download</a>
                             </div>
                         </div>
                     </div>
