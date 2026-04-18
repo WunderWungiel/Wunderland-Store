@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from flask import Flask, g, session, render_template, send_from_directory
+from flask import Flask, g, session, send_from_directory
 import humanize
 
-from lib import database as db
-from lib import config, auth, client, legacy, store, qtstore
-from lib.auth import database as auth_db
+from utils import database as db
+from utils import config, auth, client, legacy, store, qtstore
+from utils.auth import database as auth_db
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
