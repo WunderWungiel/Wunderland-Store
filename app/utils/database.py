@@ -26,7 +26,7 @@ def _format_content(results):
             'type_id': result.pop('category_type_id'),
         }
 
-        result['platform_id'] = {
+        result['platform'] = {
             'id': result['platform_id'],
             'name': result.pop('platform_name'),
         } if result['platform_id'] is not None else None
