@@ -8,6 +8,7 @@ from . import config
 
 qtstore = Blueprint('qtstore', __name__, template_folder="templates")
 
+
 def generate_content(content_type_id, content_name):
 
     content = ""
@@ -34,6 +35,7 @@ def generate_content(content_type_id, content_name):
 
     return content
 
+
 def get_content(name, content_type_id):
 
     results, total = db.get_content(content_type_id=content_type_id, search=name, limit=1)
@@ -54,6 +56,7 @@ def index():
     content += generate_content("themes", "Themes")
 
     return content
+
 
 @qtstore.route("/StoreData/<content_type_id>/<name>/descr.txt")
 def description(content_type_id, name):
@@ -85,6 +88,7 @@ def description(content_type_id, name):
 
     return description
 
+
 @qtstore.route("/StoreData/<content_type_id>/<app>/file<ext>")
 def file(content_type_id, app, ext):
 
@@ -99,6 +103,7 @@ def file(content_type_id, app, ext):
         return send_file(path)
     else:
         abort(404)
+
 
 @qtstore.route("/StoreData/<content_type_id>/<app>/preview.png")
 def preview(content_type_id, app):

@@ -24,9 +24,11 @@ app.register_blueprint(legacy)
 app.register_blueprint(store)
 app.register_blueprint(qtstore)
 
+
 @app.template_filter('naturalsize')
 def naturalsize_filter(size):
     return humanize.naturalsize(size)
+
 
 @app.context_processor
 def utility_processor():
@@ -34,6 +36,7 @@ def utility_processor():
         now=datetime.now(),
         get_content_types=db.get_content_types
     )
+
 
 @app.before_request
 def before_request():
@@ -43,7 +46,7 @@ def before_request():
 
     if platform_id:
         g.platform = db.get_platform(platform_id)
-        if not g.platform: 
+        if not g.platform:
             session['platform_id'] = None
     else:
         g.platform = None
@@ -60,6 +63,7 @@ def before_request():
         return
 
     g.user = user
+
 
 if not config['allow_indexing']:
     @app.route("/robots.txt")

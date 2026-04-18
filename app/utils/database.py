@@ -21,6 +21,7 @@ PLATFORM_TREE_CTE = """
     )
 """
 
+
 def _format_content(results):
 
     total = results[0]['total'] if results else 0

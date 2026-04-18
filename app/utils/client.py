@@ -18,19 +18,21 @@ def resolve_client_id(client_id):
 
     with db.pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT id, type_id FROM categories WHERE client_id = %s", [client_id])
+            cursor.execute("SELECT id, type_id FROM categories WHERE client_id = %s", (client_id))
             row = cursor.fetchone()
             if row:
                 return row['id'], row['type_id']
 
     return None, 'apps'
 
+
 def get_client_id_mapping():
     categories = db.get_categories()
-    mapping = {category['id']: category['client_id'] for category in categories if category.get('client_id') is not None}
+    mapping = {category['id']: category['client_id'] for category in categories if category.get('client_id')}
     mapping[('all', 'apps')] = 0
     mapping[('all', 'games')] = 12
     return mapping
+
 
 def format_results(results, content_type_id=None, widget=False):
     root = Element('client')
@@ -88,11 +90,11 @@ def format_results(results, content_type_id=None, widget=False):
             versiondate.text = "2024-03-30 20:54"
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
-            
+
             client_id = mapping.get(row['category_id'])
             if client_id is None:
                 client_id = mapping.get(('all', content_type_id), 0)
-                
+
             category = SubElement(app, 'category')
             category.text = str(client_id)
             language = SubElement(app, 'language')
@@ -108,7 +110,8 @@ def format_results(results, content_type_id=None, widget=False):
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:
-                facebook.text = url_for('static', _external=True, filename=os.path.join("content", "files", row['addon_file']))
+                facebook.text = url_for('static', _external=True, filename=os.path.join(
+                    "content", "files", row['addon_file']))
             donation = SubElement(app, 'donation')
             price = SubElement(app, 'price')
             price.text = "0.00"
@@ -121,10 +124,12 @@ def format_results(results, content_type_id=None, widget=False):
 
             screenshots = [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
 
-            for i in range(5): # 5 - 1
+            for i in range(5):  # 5 - 1
                 image = SubElement(app, f'image{i + 1}')
                 if len(screenshots) >= i + 1:
-                    image.text = url_for('static', _external=True, filename=os.path.join("content", "screenshots", screenshots[i]))
+                    image.text = url_for(
+                        'static', _external=True, filename=os.path.join("content", "screenshots", screenshots[i])
+                    )
 
             tags = SubElement(app, 'tags')
             changelog = SubElement(app, 'changelog')
@@ -149,17 +154,19 @@ def format_results(results, content_type_id=None, widget=False):
 
     return ET.tostring(root, encoding='unicode', short_empty_elements=False)
 
+
 def search(query, start=None):
-    
+
     results = []
     all_results, total = db.get_content(search=query, platforms=config['platforms']['client'], start=start)
-    
+
     for result in all_results:
         result['category_id'] = result['category']['id']
         result['content_type_id'] = result['category']['type_id']
         results.append(result)
 
     return format_results(results)
+
 
 def get_content(content_ids=None, category=None, start=None, widget=None, count=None, content_type_id=None):
 
@@ -179,7 +186,7 @@ def get_content(content_ids=None, category=None, start=None, widget=None, count=
             result = db.get_item(content_id=content_id)
             if result:
                 results.append(result)
-    
+
     for i, result in enumerate(results):
         result['category_id'] = result['category']['id']
         result['content_type_id'] = result['category']['type_id']
@@ -187,9 +194,11 @@ def get_content(content_ids=None, category=None, start=None, widget=None, count=
 
     return format_results(results, content_type_id, widget)
 
+
 @client.route("/applist-download.php")
 def applist_download():
     return "0"
+
 
 @client.route("/applist.php")
 def php():
@@ -210,9 +219,11 @@ def php():
     else:
         return search(query=query, start=start)
 
+
 @client.route("/version.xml")
 def version():
     return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"))
+
 
 @client.route("/changelog.xml")
 def changelog():

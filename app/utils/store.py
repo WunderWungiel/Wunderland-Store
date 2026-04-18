@@ -12,6 +12,7 @@ from .auth import database as auth_db
 
 store = Blueprint('store', __name__, template_folder="templates")
 
+
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):
 
@@ -46,7 +47,11 @@ def item(content_id):
     item['size'] = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
 
     platform_id = session.get('platform_id')
-    recommended, _ = db.get_content(content_type_id=item['category']['type_id'], category_id=item['category']['id'], platforms=[platform_id] if platform_id else None)
+    recommended, _ = db.get_content(
+        content_type_id=item['category']['type_id'],
+        category_id=item['category']['id'],
+        platforms=[platform_id] if platform_id else None
+    )
 
     recommended = [d for d in recommended if d['id'] != item['id']] if recommended else []
     recommended = random.sample(recommended, k=min(10, len(recommended))) or None
@@ -79,7 +84,10 @@ def browse_categories(content_type_id):
     if not content_type:
         return redirect(url_for('.root'))
 
-    categories = db.get_categories(content_type_id=content_type['id'], platform_id=g.platform['id'] if g.platform else None)
+    categories = db.get_categories(
+        content_type_id=content_type['id'],
+        platform_id=g.platform['id'] if g.platform else None
+    )
 
     return render_template("categories.html", content_type=content_type, categories=categories)
 
@@ -99,7 +107,11 @@ def search():
 
     offset = (page - 1) * config['per_page']
 
-    results, total = db.get_content(search=query, platforms=[g.platform['id']] if g.platform else None, offset=offset, limit=config['per_page'])
+    results, total = db.get_content(
+        search=query,
+        platforms=[g.platform['id']] if g.platform else None,
+        offset=offset, limit=config['per_page']
+    )
 
     if not results:
         return render_template("empty.html", category=None, content_type=db.get_content_type_by_name('apps'))
@@ -111,6 +123,7 @@ def search():
         return redirect(url_for('.search', **request.view_args, **request.args, page=total_pages))
 
     return render_template("results.html", results=results, query=query, pages=utils.generate_pages(page, total_pages))
+
 
 @store.route("/platforms", methods=['GET', 'POST'])
 def platforms():
@@ -126,7 +139,7 @@ def platforms():
             session['platform_id'] = platform_id
         else:
             flash("Invalid platform.", "danger")
-    
+
     session.permanent = True
     return redirect(url_for('.root'))
 
@@ -154,7 +167,13 @@ def content(content_type_id):
 
     offset = (page - 1) * config['per_page']
 
-    results, total = db.get_content(content_type_id=content_type['id'], category_id=category_id, platforms=[g.platform['id']] if g.platform else None, offset=offset, limit=config['per_page'])
+    results, total = db.get_content(
+        content_type_id=content_type['id'],
+        category_id=category_id,
+        platforms=[g.platform['id']] if g.platform else None,
+        offset=offset,
+        limit=config['per_page']
+    )
 
     if not results:
         return render_template("empty.html", category=category, content_type=content_type)
@@ -165,7 +184,14 @@ def content(content_type_id):
         flash("Invalid page. Redirected to the last page.", "danger")
         return redirect(url_for('.content', **request.view_args, **request.args, page=total_pages))
 
-    return render_template("content.html", content_type=content_type, results=results, category=category, pages=utils.generate_pages(page, total_pages))
+    return render_template(
+        "content.html",
+        content_type=content_type,
+        results=results,
+        category=category,
+        pages=utils.generate_pages(page, total_pages)
+    )
+
 
 @store.route("/download")
 def download():
@@ -179,6 +205,7 @@ def download():
     content_type = db.get_content_type_by_name('apps')
 
     return render_template("download.html", content_type=content_type, results=results)
+
 
 @store.route("/feed.xml")
 def feed():
@@ -209,6 +236,7 @@ def feed():
 
     return xml
 
+
 @store.route("/news/<int:news_id>")
 def news(news_id):
 
@@ -219,10 +247,12 @@ def news(news_id):
 
     return render_template("news.html", news=news, share=True)
 
+
 @store.route("/")
 def _root():
 
     return redirect(url_for('.root'))
+
 
 @store.route("/home")
 def root():
@@ -234,7 +264,7 @@ def root():
         return redirect(url_for('.root', **request.view_args, **request.args, page=1))
 
     offset = (page - 1) * config['per_page']
-    
+
     news, total = db.get_news(offset=offset, limit=config['per_page'])
 
     total_pages = max(1, math.ceil(total / config['per_page']))

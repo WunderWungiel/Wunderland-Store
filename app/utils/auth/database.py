@@ -5,6 +5,7 @@ import bcrypt
 
 from ..database import pool
 
+
 def generate_password(password):
     password = password.encode('utf-8')
     salt = bcrypt.gensalt()
@@ -127,6 +128,7 @@ def change_password(user_id, password):
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
+
 
 def check_credentials(email, password):
 

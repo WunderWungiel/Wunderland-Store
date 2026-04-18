@@ -17,7 +17,7 @@ def login():
 
     if request.method == 'GET':
         return render_template("auth/login.html")
-        
+
     email = request.form.get('email')
     password = request.form.get('password')
 
@@ -94,7 +94,7 @@ def register():
 
 @auth.route("/confirm/<token>")
 def confirm(token):
-    
+
     user = db.check_confirmation_token(token)
 
     if not user or user['confirmation_token_expires_at'] < datetime.now(timezone.utc):
@@ -104,6 +104,7 @@ def confirm(token):
         flash("You have confirmed your account. Thanks!", "success")
 
     return render_template("auth/confirm.html")
+
 
 @auth.route("/change_password", methods=['POST'])
 def change_password():
@@ -127,12 +128,14 @@ def change_password():
 
     return render_template("auth/profile.html")
 
+
 @auth.route("/profile")
 def profile():
     if not g.user:
         return redirect(url_for('.login'))
 
     return render_template("auth/profile.html")
+
 
 @auth.route("/logout")
 def logout():
