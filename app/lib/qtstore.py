@@ -1,23 +1,68 @@
 import os
+import time
 
-from flask import Blueprint, current_app, send_file, abort, url_for
+from flask import Blueprint, current_app, request, send_file, abort, url_for
 
 from . import database as db
+from . import config
 
 qtstore = Blueprint('qtstore', __name__, template_folder="templates")
 
+def generate_content(content_type_id, content_name):
+
+    content = ""
+
+    results, total = db.get_content(content_type_id=content_type_id, platforms=config['platforms']['qtstore'])
+
+    for row in results:
+
+        path = os.path.join(current_app.static_folder, "content", "files", row['file'])
+
+        try:
+            timestamp = int(os.path.getmtime(path))
+        except FileNotFoundError:
+            timestamp = time.time()
+
+        name, extension = os.path.splitext(row['file'])
+
+        content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
+        if extension in (".sis", ".sisx"):
+            content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
+        else:
+            content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{extension}]\n"
+        content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
+
+    return content
+
+def get_content(name, content_type_id):
+
+    results, total = db.get_content(content_type_id=content_type_id, search=name, limit=1)
+    content = results[0] if results else None
+
+    if content:
+        content['description'] = content['description'].replace("\n", "<br>") if content['description'] else None
+        content['addon_text'] = content['addon_text'].replace("\n", "<br>") if content['addon_text'] else None
+        return content
+    else:
+        return None
+
+
 @qtstore.route("/StoreData/storeIndex.xml")
 def index():
-    return db.index()
+    content = generate_content("apps", "Apps")
+    content += generate_content("games", "Games")
+    content += generate_content("themes", "Themes")
 
-@qtstore.route("/StoreData/<content_type_id>/<app>/descr.txt")
-def description(content_type_id, app):
+    return content
+
+@qtstore.route("/StoreData/<content_type_id>/<name>/descr.txt")
+def description(content_type_id, name):
 
     content_type = db.get_content_type_by_id(content_type_id.lower())
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type['id'])
+    content = get_content(name, content_type['id'])
     if not content:
         return abort(404)
 
