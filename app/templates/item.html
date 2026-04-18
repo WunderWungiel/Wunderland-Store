@@ -60,7 +60,7 @@
                     <div class="contentItem" id="{{ item['id'] }}">
                         <table class="contentInfo hreview-aggregate">
                             <tr>
-                                {% if item['content_type']['icons'] %}
+                                {% if item['content_type']['show_icons'] %}
                                 <td class="feature">
                                     <img src="{{ url_for('static', filename='content/icons/' ~ item['icon']) }}" alt="{{ item['title'] }}" width="66" height="66"/>
                                 </td>
