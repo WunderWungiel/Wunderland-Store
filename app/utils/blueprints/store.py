@@ -112,9 +112,6 @@ def search():
         offset=offset, limit=config['per_page']
     )
 
-    if not results:
-        return render_template("empty.html", category=None, content_type=db.get_content_type_by_name('apps'))
-
     total_pages = max(1, math.ceil(total / config['per_page']))
 
     if page > total_pages:
@@ -173,9 +170,6 @@ def content(content_type_id):
         offset=offset,
         limit=config['per_page']
     )
-
-    if not results:
-        return render_template("empty.html", category=category, content_type=content_type)
 
     total_pages = max(1, math.ceil(total / config['per_page']))
 

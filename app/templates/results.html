@@ -48,7 +48,7 @@
 
             <div id="views">
                 <div class="view">
-                    <div class="contentItem"{% if not results is defined %} style="padding: 14px 5px 0;"{% endif %}>
+                    <div class="contentItem"{% if not results %} style="padding: 14px 5px 0;"{% endif %}>
                         <div id="searchField">
                             <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                                 <fieldset>
@@ -57,12 +57,11 @@
                                 </fieldset>
                             </form>
                         </div>
-                        {% if results is defined %}
+                        {% if results %}
                         <h3>Search results for &apos;{{ query }}&apos;</h3>
                         {% endif %}
                     </div>
 
-                    {% if results is defined %}
                     <table class="contentList" cellspacing="0" width="100%">
                         {% for result in results %}
                         <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
@@ -86,6 +85,12 @@
                                 </div>
                             </td>
                         </tr>
+                        {% else %}
+                        <tr class="contentItem">
+                            <td class="contentType">
+                                <h2 class="title" style="margin-left: 5px;">No results found</h2>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </table>
 
@@ -94,7 +99,6 @@
                         {% if pages.previous %}<a href="{{ url_for('store.search', query=query, page=pages.previous) }}">Previous</a>{% endif %}
                         {% if pages.next %}<a href="{{ url_for('store.search', query=query, page=pages.next) }}">Next</a>{% endif %}
                     </p>
-                    {% endif %}
                     {% endif %}
 
                     <div class="homeLink">
