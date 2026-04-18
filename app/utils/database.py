@@ -163,9 +163,6 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         query += " LIMIT %s OFFSET %s"
         params.extend([limit, offset])
 
-    print(query)
-    print(params)
-
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)

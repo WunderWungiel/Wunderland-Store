@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from flask import Flask, g, session, send_from_directory
+from flask import Flask, g, session, send_from_directory, render_template
 import humanize
 import atexit
+import logging
 
 from utils import database as db
 from utils import config, auth, client, legacy, store, qtstore
@@ -12,6 +13,12 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SECRET_KEY'] = config['secret_key']
 app.config['SECURITY_PASSWORD_SALT'] = app.config['SECRET_KEY']
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 if config['proxy']:
     from werkzeug.middleware.proxy_fix import ProxyFix
@@ -43,11 +50,10 @@ def utility_processor():
 
 
 @app.before_request
-def before_request():
+def load_global_data():
     session.permanent = True
 
     platform_id = session.get('platform_id')
-
     if platform_id:
         g.platform = db.get_platform(platform_id)
         if not g.platform:
