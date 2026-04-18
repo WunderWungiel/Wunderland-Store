@@ -3,6 +3,7 @@
 Flask
 bcrypt
 psycopg[binary]
+psycopg[pool]
 markdown
 gunicorn
 pyyaml
