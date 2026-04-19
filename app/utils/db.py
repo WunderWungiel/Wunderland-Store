@@ -159,7 +159,7 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         query += " WHERE " + " AND ".join(where_clauses)
 
     query += " GROUP BY content.id, category.name, category.type_id, platform.name"
-    query += " ORDER BY content.id DESC"
+    query += " ORDER BY content.updated_at DESC, content.id DESC"
 
     if None not in (limit, offset):
         query += " LIMIT %s OFFSET %s"
@@ -279,9 +279,9 @@ def get_news(news_id=None, limit=None, offset=None):
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    query += " ORDER BY id DESC"
+    query += " ORDER BY news.created_at DESC"
 
-    if limit is not None and offset is not None:
+    if None not in (limit, offset):
         query += " LIMIT %s OFFSET %s"
         params.extend([limit, offset])
 
