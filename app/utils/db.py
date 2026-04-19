@@ -161,9 +161,15 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     query += " GROUP BY content.id, category.name, category.type_id, platform.name"
     query += " ORDER BY content.updated_at DESC, content.id DESC"
 
-    if None not in (limit, offset):
-        query += " LIMIT %s OFFSET %s"
-        params.extend([limit, offset])
+    if limit is not None:
+        query += " LIMIT %s"
+        params.append(limit)
+
+    if offset is not None:
+        query += " OFFSET %s"
+        params.append(offset)
+
+    print(query, params)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -281,9 +287,13 @@ def get_news(news_id=None, limit=None, offset=None):
 
     query += " ORDER BY news.created_at DESC, news.id DESC"
 
-    if None not in (limit, offset):
-        query += " LIMIT %s OFFSET %s"
-        params.extend([limit, offset])
+    if limit is not None:
+        query += " LIMIT %s"
+        params.append(limit)
+
+    if offset is not None:
+        query += " OFFSET %s"
+        params.append(offset)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
