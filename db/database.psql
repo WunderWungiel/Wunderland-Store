@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict MwrLONTKFMMOcVqgEYV71fPfpmkhaunagbcY6pDFbBG0JyOcj3jToEOCvC42hwe
+\restrict 2SrwO1GShl35f8iwnnhwraifQIHGWocepDy37Gj9lAYbyvXXca3I8ZZ6X1dkcMX
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -100,7 +100,6 @@ CREATE TABLE public.content (
     addon_text text,
     addon_file text,
     uid text,
-    counter integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -134,6 +133,16 @@ CREATE TABLE public.content_legacy (
     type_id text NOT NULL,
     old_id integer NOT NULL,
     new_id integer NOT NULL
+);
+
+
+--
+-- Name: content_stats; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.content_stats (
+    content_id integer NOT NULL,
+    visited integer DEFAULT 0 NOT NULL
 );
 
 
@@ -380,6 +389,14 @@ ALTER TABLE ONLY public.content
 
 
 --
+-- Name: content_stats content_stats_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_stats
+    ADD CONSTRAINT content_stats_pkey PRIMARY KEY (content_id);
+
+
+--
 -- Name: content_types content_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -552,6 +569,14 @@ ALTER TABLE ONLY public.content
 
 
 --
+-- Name: content_stats content_stats_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_stats
+    ADD CONSTRAINT content_stats_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.content(id) ON DELETE CASCADE;
+
+
+--
 -- Name: platforms platforms_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -587,5 +612,5 @@ ALTER TABLE ONLY public.sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict MwrLONTKFMMOcVqgEYV71fPfpmkhaunagbcY6pDFbBG0JyOcj3jToEOCvC42hwe
+\unrestrict 2SrwO1GShl35f8iwnnhwraifQIHGWocepDy37Gj9lAYbyvXXca3I8ZZ6X1dkcMX
 

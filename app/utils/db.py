@@ -203,10 +203,10 @@ def increment_counter(content_id):
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(
-                "UPDATE content SET counter = counter + 1 WHERE id = %s",
-                (content_id,)
-            )
+            cursor.execute("""
+                INSERT INTO content_stats (content_id, visited) VALUES (%s, 1)
+                ON CONFLICT (content_id) DO UPDATE SET visited = content_stats.visited + 1
+            """,(content_id,))
 
 
 def get_categories(category_id=None, content_type_id=None, platform_id=None):
