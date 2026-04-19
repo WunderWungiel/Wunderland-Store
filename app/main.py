@@ -5,7 +5,8 @@ import humanize
 import atexit
 import logging
 
-from utils import config, database as db
+from utils import config
+from utils import db
 from utils.blueprints import auth, client, legacy, qtstore, store
 
 app = Flask(__name__)
