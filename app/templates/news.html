@@ -61,8 +61,8 @@
                     <br/>
                     <div class="viewWrapper">
                         <div class="noaOviTermsOfService">
-                            <h2>{{ title }}</h2>
-                            {{ content|safe }}
+                            <h2>{{ news['title'] }}</h2>
+                            {{ news['content']|safe }}
                         </div>
                         <br/>
                         {% if share is defined and share %}
