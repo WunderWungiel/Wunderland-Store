@@ -27,7 +27,7 @@ def rate(content_id):
     if not rating:
         return redirect(url_for('.item', content_id=content_id))
 
-    db.rate(rating, content_id=content_id, user_id=session['user_id'])
+    db.rate(rating, content_id=content_id, user_id=g.user['id'])
     return redirect(url_for('.item', content_id=content_id))
 
 
