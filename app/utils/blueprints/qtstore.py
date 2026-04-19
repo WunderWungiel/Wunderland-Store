@@ -38,6 +38,8 @@ def generate_content(content_type_id, content_name):
 
 def get_content(name, content_type_id):
 
+    print(name, content_type_id)
+
     results, total = db.get_content(content_type_id=content_type_id, search=name, limit=1)
     content = results[0] if results else None
 
@@ -89,14 +91,14 @@ def description(content_type_id, name):
     return description
 
 
-@qtstore.route("/StoreData/<content_type_id>/<app>/file<ext>")
-def file(content_type_id, app, ext):
+@qtstore.route("/StoreData/<content_type_id>/<name>/file<ext>")
+def file(content_type_id, name, ext):
 
     content_type = db.get_content_type_by_id(content_type_id.lower())
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type['id'])
+    content = get_content(name, content_type['id'])
     path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
 
     if content and os.path.isfile(path):
@@ -105,14 +107,15 @@ def file(content_type_id, app, ext):
         abort(404)
 
 
-@qtstore.route("/StoreData/<content_type_id>/<app>/preview.png")
-def preview(content_type_id, app):
+@qtstore.route("/StoreData/<content_type_id>/<name>/preview.png")
+def preview(content_type_id, name):
 
     content_type = db.get_content_type_by_id(content_type_id.lower())
     if not content_type:
         abort(404)
 
-    content = db.get_content(app, content_type['id'])
+
+    content = get_content(name, content_type['id'])
     path = os.path.join(current_app.root_path, "static", "content", "icons", content['icon'])
 
     if content and os.path.isfile(path):
