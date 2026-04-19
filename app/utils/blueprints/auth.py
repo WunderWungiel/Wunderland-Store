@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, g, request, session, flash, render_template, redirect, url_for
 import re
 
-from .. import database as db
+from .. import db
 from .. import email
 
 auth = Blueprint('auth', __name__, template_folder="templates")

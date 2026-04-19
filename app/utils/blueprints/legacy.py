@@ -1,6 +1,6 @@
 from flask import Blueprint, request, redirect, url_for
 
-from .. import database as db
+from .. import db
 
 legacy = Blueprint('legacy_store', __name__, template_folder="templates")
 

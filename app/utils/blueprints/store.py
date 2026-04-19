@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import Blueprint, current_app, g, request, session, flash, redirect, render_template, url_for
 
 from .. import config
-from .. import database as db
+from .. import db
 from .. import utils
 
 store = Blueprint('store', __name__, template_folder="templates")
