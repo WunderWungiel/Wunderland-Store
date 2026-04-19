@@ -279,7 +279,7 @@ def get_news(news_id=None, limit=None, offset=None):
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    query += " ORDER BY news.created_at DESC"
+    query += " ORDER BY news.created_at DESC, news.id DESC"
 
     if None not in (limit, offset):
         query += " LIMIT %s OFFSET %s"
