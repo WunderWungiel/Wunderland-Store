@@ -152,7 +152,7 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         params.append(f"%{search}%")
 
     if start is not None:
-        where_clauses.append("content.id < %s")
+        where_clauses.append("content.id >= %s")
         params.append(start)
 
     if where_clauses:

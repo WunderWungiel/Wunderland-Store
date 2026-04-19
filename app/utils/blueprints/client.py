@@ -18,7 +18,7 @@ def resolve_client_id(client_id):
 
     with db.pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT id, type_id FROM categories WHERE client_id = %s", (client_id))
+            cursor.execute("SELECT id, type_id FROM categories WHERE client_id = %s", (client_id,))
             row = cursor.fetchone()
             if row:
                 return row['id'], row['type_id']
