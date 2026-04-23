@@ -92,9 +92,7 @@
                         </table>
 
                         <div class="reviewDiv">
-                            {% if g.user %}
                             <a href="{{ url_for('store.rate', content_id=item['id']) }}" class="reviews">Rate</a>
-                            {% endif %}
                             {% for i in range(item['rating']) %}
                             <img src="{{ url_for('static', filename='img/star_p.png') }}" alt="{{ i+1 }} star"/>
                             {% endfor %}

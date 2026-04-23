@@ -17,8 +17,11 @@ def rate(content_id):
 
     item = db.get_item(content_id)
 
-    if not item or not g.user:
+    if not item:
         return redirect(url_for('.item', content_id=content_id))
+
+    if not g.user:
+        return redirect(url_for('auth.login'))
 
     if request.method == 'GET':
         return render_template("rate.html", item=item)

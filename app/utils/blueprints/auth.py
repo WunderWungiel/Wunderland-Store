@@ -58,7 +58,7 @@ def register():
 
     def fail(message):
         flash(message, "danger")
-        return render_template("auth/register.html")
+        return redirect(url_for('.register'))
 
     if not all([email, username, password]):
         return fail("Fill in the form!")
@@ -89,7 +89,7 @@ def register():
         return fail("Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username.")
 
     flash("Account created! Please confirm your email.", "success")
-    return render_template("auth/confirm.html", message=f"Please confirm your account using link sent to your email: {email}.")
+    return render_template("auth/confirm.html")
 
 
 @auth.route("/confirm/<token>")
