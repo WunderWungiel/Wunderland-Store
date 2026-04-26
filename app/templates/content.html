@@ -1,3 +1,12 @@
+{% macro content_url(page=none) -%}
+    {{- url_for('store.content',
+        content_type_id=content_type['id'],
+        category_id=category['id'] if category else none,
+        page=page if page else none,
+        sort=sort if sort else none,
+        order=order if order and order != -1 else none
+    ) -}}
+{%- endmacro %}
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
     <head>
@@ -107,10 +116,10 @@
                     {% if pages.previous or pages.next %}
                     <p class="pagination">
                         {% if pages.previous %}
-                        <a href="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category_id, page=pages.previous) }}">Previous</a>
+                        <a href="{{ content_url(page=pages.previous) }}">Previous</a>
                         {% endif %}
                         {% if pages.next %}
-                        <a href="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category_id, page=pages.next) }}">Next</a>
+                        <a href="{{ content_url(page=pages.next) }}">Next</a>
                         {% endif %}
                     </p>
                     {% endif %}
@@ -121,11 +130,12 @@
 
             <div id="bottom">
                 <div>
-                    <form action="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category_id) }}" method="get">
+                    <form action="{{ url_for('store.content', content_type_id=content_type['id']) }}" method="get">
+                        {% if category %}<input type="hidden" name="category_id" value="{{ category['id'] }}"/>{% endif %}
                         <label>Sorting</label>
                         <select name="sort" id="sort">
                             {% for key, field in sort_fields.items() %}
-                            <option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ field.label }}</option>
+                            <option value="{{ key }}" {% if sort == key or (not sort and key == 'updated_at') %}selected{% endif %}>{{ field.label }}</option>
                             {% endfor %}
                         </select>
                         <br>
@@ -138,6 +148,7 @@
                         <input type="submit" value="Apply"/>
                     </form>
                 </div>
+
                 <div id="searchContent">
                     <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                         <fieldset id="searchField">

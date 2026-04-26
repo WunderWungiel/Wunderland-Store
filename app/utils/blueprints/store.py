@@ -99,6 +99,10 @@ def search():
 
     query = request.args.get('query')
     page = request.args.get('page', 1, type=int)
+    sort_by = request.args.get('sort')
+    order = request.args.get('order', type=int, default=-1)
+
+    sort_order = "DESC" if order == -1 else "ASC"
 
     if not query:
         return render_template("search.html")
@@ -112,7 +116,10 @@ def search():
     results, total = db.get_content(
         search=query,
         platforms=[g.platform['id']] if g.platform else None,
-        offset=offset, limit=config['per_page']
+        offset=offset,
+        limit=config['per_page'],
+        sort_by=sort_by,
+        sort_order=sort_order
     )
 
     total_pages = max(1, math.ceil(total / config['per_page']))
@@ -121,7 +128,15 @@ def search():
         flash("Invalid page. Redirected to the last page.", "danger")
         return redirect(url_for('.search', **request.view_args, **request.args, page=total_pages))
 
-    return render_template("results.html", results=results, query=query, pages=utils.generate_pages(page, total_pages))
+    return render_template(
+        "results.html",
+        results=results,
+        query=query,
+        pages=utils.generate_pages(page, total_pages),
+        sort=sort_by,
+        order=order,
+        sort_fields=db.VALID_SORT_FIELDS,
+    )
 
 
 @store.route("/platforms", methods=['GET', 'POST'])

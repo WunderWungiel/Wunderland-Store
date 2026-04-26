@@ -1,3 +1,11 @@
+{% macro search_url(page=none) -%}
+    {{- url_for('store.search',
+        query=query,
+        page=page if page else none,
+        sort=sort if sort else none,
+        order=order if order and order != -1 else none
+    ) -}}
+{%- endmacro %}
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
     <head>
@@ -96,20 +104,50 @@
 
                     {% if pages.previous or pages.next %}
                     <p class="pagination">
-                        {% if pages.previous %}<a href="{{ url_for('store.search', query=query, page=pages.previous) }}">Previous</a>{% endif %}
-                        {% if pages.next %}<a href="{{ url_for('store.search', query=query, page=pages.next) }}">Next</a>{% endif %}
+                        {% if pages.previous %}
+                        <a href="{{ search_url(page=pages.previous) }}">Previous</a>
+                        {% endif %}
+                        {% if pages.next %}
+                        <a href="{{ search_url(page=pages.next) }}">Next</a>
+                        {% endif %}
                     </p>
                     {% endif %}
-
-                    <div class="homeLink">
-                        <a href="{{ url_for('store.root') }}">Home</a>
-                    </div>
 
                     <div class="beacon"></div>
                 </div>
             </div>
 
-            <div id="bottom"></div>
+            <div id="bottom">
+                <div>
+                    {% if results %}
+                    <form action="{{ url_for('store.search') }}" method="get">
+                        <input type="hidden" name="query" value="{{ query }}"/>
+                        <label>Sorting</label>
+                        <select name="sort" id="sort">
+                            {% for key, field in sort_fields.items() %}
+                            <option value="{{ key }}" {% if sort == key or (not sort and key == 'updated_at') %}selected{% endif %}>{{ field.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <br>
+                        <select name="order" id="order">
+                            <option value="-1" {% if order == -1 %}selected{% endif %}>Descending</option>
+                            <option value="1" {% if order == 1 %}selected{% endif %}>Ascending</option>
+                        </select>
+                        <br/>
+                        <input type="reset" value="Reset"/>
+                        <input type="submit" value="Apply"/>
+                    </form>
+                    {% endif %}
+                </div>
+
+                <div id="bottomNavigation">
+                    <h3>Browse categories</h3>
+                    <a href="{{ url_for('store.root') }}">Home</a><br/>
+                    {% for _content_type in get_content_types() %}
+                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}">{{ _content_type['name'] }}</a><br/>
+                    {% endfor %}
+                </div>
+            </div>
 
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
