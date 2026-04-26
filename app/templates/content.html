@@ -120,6 +120,24 @@
             </div>
 
             <div id="bottom">
+                <div>
+                    <form action="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category_id) }}" method="get">
+                        <label>Sorting</label>
+                        <select name="sort" id="sort">
+                            {% for key, field in sort_fields.items() %}
+                            <option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ field.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <br>
+                        <select name="order" id="order">
+                            <option value="-1" {% if order == -1 %}selected{% endif %}>Descending</option>
+                            <option value="1" {% if order == 1 %}selected{% endif %}>Ascending</option>
+                        </select>
+                        <br/>
+                        <input type="reset" value="Reset"/>
+                        <input type="submit" value="Apply"/>
+                    </form>
+                </div>
                 <div id="searchContent">
                     <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
                         <fieldset id="searchField">

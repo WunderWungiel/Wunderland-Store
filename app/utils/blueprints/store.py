@@ -153,6 +153,10 @@ def content(content_type_id):
 
     category_id = request.args.get('category_id', type=int)
     page = request.args.get('page', 1, type=int)
+    sort_by = request.args.get('sort')
+    order = request.args.get('order', type=int, default=-1)
+
+    sort_order = "DESC" if order == -1 else "ASC"
 
     category = db.get_category(category_id)
 
@@ -171,7 +175,9 @@ def content(content_type_id):
         category_id=category_id,
         platforms=[g.platform['id']] if g.platform else None,
         offset=offset,
-        limit=config['per_page']
+        limit=config['per_page'],
+        sort_by=sort_by,
+        sort_order=sort_order
     )
 
     total_pages = max(1, math.ceil(total / config['per_page']))
@@ -185,7 +191,10 @@ def content(content_type_id):
         content_type=content_type,
         results=results,
         category=category,
-        pages=utils.generate_pages(page, total_pages)
+        pages=utils.generate_pages(page, total_pages),
+        sort=sort_by,
+        order=order,
+        sort_fields=db.VALID_SORT_FIELDS,
     )
 
 

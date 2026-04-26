@@ -13,6 +13,14 @@ from . import config
 uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}:{config['database']['port']}/{config['database']['name']}"
 pool = ConnectionPool(uri, kwargs={"row_factory": dict_row})
 
+VALID_SORT_FIELDS = {
+    "updated_at": {"column": "content.updated_at", "label": "Updated"},
+    "created_at": {"column": "content.created_at", "label": "Created"},
+    "id": {"column": "content.id", "label": "ID"},
+    "title": {"column": "content.title", "label": "Title"},
+    "rating": {"column": "rating", "label": "Rating"}
+}
+
 
 def _format_content(results):
 
@@ -101,7 +109,7 @@ def get_platform(platform_id):
     return results[0] if results else None
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC"):
 
     PLATFORM_TREE_CTE = """
         WITH RECURSIVE platform_tree AS (
@@ -112,6 +120,8 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             JOIN platform_tree ON parent.id = platform_tree.parent_id
         )
     """
+
+    sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
     query = """
         SELECT
@@ -159,7 +169,14 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         query += " WHERE " + " AND ".join(where_clauses)
 
     query += " GROUP BY content.id, category.name, category.type_id, platform.name"
-    query += " ORDER BY content.updated_at DESC, content.id DESC"
+
+    sort_column = sort_fields.get(sort_by, "content.updated_at")
+    sort_order = "DESC" if sort_order.upper() == "DESC" else "ASC"
+
+    query += f" ORDER BY {sort_column} {sort_order}"
+
+    if sort_column != "content.id":
+        query += ", content.id DESC"
 
     if limit is not None:
         query += " LIMIT %s"
@@ -168,8 +185,6 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     if offset is not None:
         query += " OFFSET %s"
         params.append(offset)
-
-    print(query, params)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
@@ -206,7 +221,7 @@ def increment_counter(content_id):
             cursor.execute("""
                 INSERT INTO content_stats (content_id, visited) VALUES (%s, 1)
                 ON CONFLICT (content_id) DO UPDATE SET visited = content_stats.visited + 1
-            """,(content_id,))
+            """, (content_id,))
 
 
 def get_categories(category_id=None, content_type_id=None, platform_id=None):
@@ -321,6 +336,7 @@ def get_news(news_id=None, limit=None, offset=None):
         })
 
     return results, len(results)
+
 
 def generate_password(password):
     password = password.encode('utf-8')
