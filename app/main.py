@@ -1,9 +1,10 @@
+import atexit
+import logging
 from datetime import datetime
 
 from flask import Flask, g, session, send_from_directory
+from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
-import atexit
-import logging
 
 from utils import config
 from utils import db
@@ -20,18 +21,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-if config['proxy']:
-    from werkzeug.middleware.proxy_fix import ProxyFix
-    app.wsgi_app = ProxyFix(
-        app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
-    )
-
 app.register_blueprint(auth)
 app.register_blueprint(client)
 app.register_blueprint(legacy)
 app.register_blueprint(store)
 app.register_blueprint(qtstore)
 
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+)
 
 atexit.register(db.pool.close)
 
@@ -79,6 +77,3 @@ if not config['allow_indexing']:
     @app.route("/robots.txt")
     def robots():
         return send_from_directory(app.static_folder, "robots.txt")
-
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=config['port'])

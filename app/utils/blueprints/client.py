@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
@@ -6,6 +7,7 @@ from flask import Blueprint, current_app, request, url_for, send_from_directory
 
 from .. import db
 from .. import config
+from .. import utils
 
 client = Blueprint('client', __name__, template_folder="templates")
 
@@ -83,11 +85,16 @@ def format_results(results, content_type_id=None, widget=False):
             icon = SubElement(app, 'icon')
             icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", row['icon']))
             version = SubElement(app, 'version')
-            version.text = row['version']
+
+            try:
+                version.text = utils.to_version(row['version'])
+            except ValueError:
+                version.text = row['version']
+
             versionstore = SubElement(app, 'versionstore')
             versionunsigned = SubElement(app, 'unsigned')
             versiondate = SubElement(app, 'versiondate')
-            versiondate.text = "2024-03-30 20:54"
+            versiondate.text = row['updated_at'].strftime("%Y-%m-%d %H:%M")
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
 
@@ -147,6 +154,7 @@ def format_results(results, content_type_id=None, widget=False):
             downloadstore = SubElement(app, 'downloadstore')
             downloadunsigned = SubElement(app, 'downloadunsigned')
             downloadunsignedsize = SubElement(app, 'downloadunsignedsize')
+            downloadunsignedsize.text = "0"
 
         root.append(app)
 
