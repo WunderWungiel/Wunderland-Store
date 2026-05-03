@@ -144,7 +144,7 @@
                             <option value="1" {% if order == 1 %}selected{% endif %}>Ascending</option>
                         </select>
                         <br/>
-                        <input type="reset" value="Reset"/>
+                        <input type="button" value="Reset" data-url="{{ url_for('store.content', content_type_id=content_type['id'], category_id=category['id'] if category else none) }}" onclick="window.location.href=this.getAttribute('data-url')"/>
                         <input type="submit" value="Apply"/>
                     </form>
                 </div>
