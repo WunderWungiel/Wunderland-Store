@@ -12,6 +12,19 @@ from .. import utils
 store = Blueprint('store', __name__, template_folder="templates")
 
 
+@store.route("/content/upload", methods=['GET', 'POST'])
+def upload():
+
+    if (g.user and g.user['role'] != 'admin') or not g.user:
+        return redirect(url_for('.root'))
+
+    platforms = db.get_platforms()
+    categories = db.get_categories()
+
+    if request.method == 'GET':
+        return render_template("upload.html", platforms=platforms, categories=categories)
+
+
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):
 

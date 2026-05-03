@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor"/>
+        <title>Upload • Wunderland Store</title>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
+    </head>
+
+    <body>
+        <div id="wrapper">
+
+            <div id="header">
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                <a id="logoImg" href="{{ url_for('store.root') }}">
+                                    <img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store"/>
+                                </a>
+                            </td>
+                            <td id="searchLink">
+                                <span>
+                                    <a href="{{ url_for('store.platforms') }}">Platform</a>:
+                                    <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
+                                </span>
+                                |
+                                {% if g.user %}
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
+                                |
+                                {% endif %}
+                                <a href="{{ url_for('store.search') }}">Search</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div id="views">
+                <div class="view">
+                    <div class="contentItem">
+                        <h1>Upload</h1>
+                        <div id="uploadField">
+                            <form action="{{ url_for('store.upload') }}" method="POST" class="Form" enctype="multipart/form-data">
+                                <fieldset>
+                                    <label for="name">Title: </label>
+                                    <input type="text" id="title" name="title"/>
+                                    <label for="file">File: </label>
+                                    <input type="file" id="file" name="file"/>
+                                    <label for="category">Category: </label>
+                                    <select id="category" name="category">
+                                        {% for category in categories %}
+                                        <option value="{{ category['id'] }}">{{ category['content_type']['name'] }} / {{ category['name'] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="description">Description: </label>
+                                    <textarea id="description" name="description"></textarea>
+                                    <label for="publisher">Publisher: </label>
+                                    <input type="text" id="publisher" name="publisher"/>
+                                    <label for="version">Version: </label>
+                                    <input type="text" id="version" name="version"/>
+                                    <label for="platform">Platform: </label>
+                                    <select id="platform" name="platform">
+                                        {% for platform in platforms %}
+                                        <option value="{{ platform['id'] }}">{{ platform['name'] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="icon">Icon: </label>
+                                    <input type="file" id="icon" name="icon"/>
+                                    <label for="screenshots">Screenshots: </label>
+                                    <input type="file" id="screenshots" name="screenshots" multiple/>
+                                    <label for="addon_text">Extra file text: </label>
+                                    <textarea id="addon_text" name="addon_text"></textarea>
+                                    <label for="addon_file">Extra file: </label>
+                                    <input type="file" id="addon_file" name="addon_file"/>
+                                    <br><br>
+                                    <input type="submit" class="Btn" value="Upload"/>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="homeLink">
+                        <a href="{{ url_for('store.root') }}">Home</a>
+                    </div>
+
+                    <div class="beacon"></div>
+                </div>
+            </div>
+
+            <div id="bottom"></div>
+
+            <div id="footer">
+                <a href="{{ url_for('store.download') }}">Download</a> |
+                {% if not g.user %}
+                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
+                {% else %}
+                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
+                {% endif %}
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>
+
+        </div>
+    </body>
+</html>

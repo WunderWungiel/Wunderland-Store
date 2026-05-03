@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2SrwO1GShl35f8iwnnhwraifQIHGWocepDy37Gj9lAYbyvXXca3I8ZZ6X1dkcMX
+\restrict jQRd8hqpjdr9y0o8hZCgQlpi197Z2l0baOUNAKzAntB17ymnCMocT9A2gPrlTXi
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -133,6 +133,16 @@ CREATE TABLE public.content_legacy (
     type_id text NOT NULL,
     old_id integer NOT NULL,
     new_id integer NOT NULL
+);
+
+
+--
+-- Name: content_platforms; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.content_platforms (
+    content_id integer NOT NULL,
+    platform_id text NOT NULL
 );
 
 
@@ -389,6 +399,14 @@ ALTER TABLE ONLY public.content
 
 
 --
+-- Name: content_platforms content_platforms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_platforms
+    ADD CONSTRAINT content_platforms_pkey PRIMARY KEY (content_id, platform_id);
+
+
+--
 -- Name: content_stats content_stats_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -569,6 +587,22 @@ ALTER TABLE ONLY public.content
 
 
 --
+-- Name: content_platforms content_platforms_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_platforms
+    ADD CONSTRAINT content_platforms_content_id_fkey FOREIGN KEY (content_id) REFERENCES public.content(id) ON DELETE CASCADE;
+
+
+--
+-- Name: content_platforms content_platforms_platform_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.content_platforms
+    ADD CONSTRAINT content_platforms_platform_id_fkey FOREIGN KEY (platform_id) REFERENCES public.platforms(id);
+
+
+--
 -- Name: content_stats content_stats_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -612,5 +646,5 @@ ALTER TABLE ONLY public.sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2SrwO1GShl35f8iwnnhwraifQIHGWocepDy37Gj9lAYbyvXXca3I8ZZ6X1dkcMX
+\unrestrict jQRd8hqpjdr9y0o8hZCgQlpi197Z2l0baOUNAKzAntB17ymnCMocT9A2gPrlTXi
 

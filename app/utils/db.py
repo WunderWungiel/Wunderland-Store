@@ -228,15 +228,23 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
     where_clauses = []
     params = []
 
+    query = """
+        SELECT category.*,
+               jsonb_build_object(
+                   'id', content_types.id,
+                   'name', content_types.name,
+                   'prefix', content_types.prefix,
+                   'show_categories', content_types.show_categories,
+                   'show_icons', content_types.show_icons
+               ) AS content_type
+        FROM categories AS category
+        JOIN content_types ON category.type_id = content_types.id
+    """
+
     if platform_id is not None:
-        query = """
-            SELECT DISTINCT category.* FROM categories AS category
-            JOIN content ON category.id = content.category_id
-        """
+        query += " JOIN content ON category.id = content.category_id"
         where_clauses.append("content.platform_id = %s")
         params.append(platform_id)
-    else:
-        query = "SELECT * FROM categories AS category"
 
     if category_id is not None:
         where_clauses.append("category.id = %s")
@@ -249,7 +257,10 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    query += " ORDER BY name"
+    if platform_id is not None:
+        query += " GROUP BY category.id, content_types.id"
+
+    query += " ORDER BY category.type_id ASC, category.name ASC"
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
