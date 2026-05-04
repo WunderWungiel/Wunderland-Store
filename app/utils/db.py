@@ -23,21 +23,19 @@ VALID_SORT_FIELDS = {
 
 
 def _format_content(results):
-
     total = results[0]['total'] if results else 0
 
     for i, result in enumerate(results):
-
         result['category'] = {
-            'id': result['category_id'],
+            'id': result.pop('category_id'),
             'name': result.pop('category_name'),
             'type_id': result.pop('category_type_id'),
         }
 
-        result['platform'] = {
-            'id': result['platform_id'],
-            'name': result.pop('platform_name'),
-        } if result['platform_id'] is not None else None
+        result['platforms'] = [
+            {'id': platform[0], 'name': platform[1]}
+            for platform in (result.pop('platforms') or [])
+        ]
 
         result['screenshots'] = [
             f"{result['screenshot_prefix']}{n}.jpg"
@@ -49,9 +47,7 @@ def _format_content(results):
         )
 
         result['rating'] = int(result['rating'])
-
         result.pop('total')
-
         results[i] = result
 
     return results, total
@@ -109,17 +105,33 @@ def get_platform(platform_id):
     return results[0] if results else None
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC"):
-
-    PLATFORM_TREE_CTE = """
-        WITH RECURSIVE platform_tree AS (
-            SELECT id, parent_id FROM platforms WHERE id = ANY(%s)
-            UNION ALL
-            SELECT parent.id, parent.parent_id
-            FROM platforms parent
-            JOIN platform_tree ON parent.id = platform_tree.parent_id
-        )
+def upload(title, file, category_id, publisher, version, icon, screenshot_prefix, screenshot_count, description=None, addon_text=None, addon_file=None, uid=None, platforms=None):
+    
+    query = """
+        INSERT INTO content (
+            title, file, category_id, description, publisher, 
+            version, icon, screenshot_prefix, screenshot_count, 
+            addon_text, addon_file, uid
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+        RETURNING *
     """
+    params = (title, file, category_id, description, publisher, version, icon, screenshot_prefix, screenshot_count, addon_text, addon_file, uid)
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            result = cursor.fetchone()
+
+            if platforms:
+                cursor.executemany(
+                    "INSERT INTO content_platforms (content_id, platform_id) VALUES (%s, %s)",
+                    [(result['id'], platform_id) for platform_id in platforms]
+                )
+
+    return result
+
+
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC"):
 
     sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
@@ -128,12 +140,13 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             content.*,
             category.name AS category_name,
             category.type_id AS category_type_id,
-            platform.name AS platform_name,
+            ARRAY_AGG(DISTINCT (platform.id, platform.name)) FILTER (WHERE platform.id IS NOT NULL) AS platforms,
             COALESCE(ROUND(AVG(ratings.rating)), 0) AS rating,
             COUNT(*) OVER() AS total
         FROM content
         LEFT JOIN categories AS category ON content.category_id = category.id
-        LEFT JOIN platforms AS platform ON content.platform_id = platform.id
+        LEFT JOIN content_platforms ON content.id = content_platforms.content_id
+        LEFT JOIN platforms AS platform ON content_platforms.platform_id = platform.id
         LEFT JOIN ratings ON content.id = ratings.content_id
     """
 
@@ -141,8 +154,16 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     params = []
 
     if platforms is not None:
-        query = PLATFORM_TREE_CTE + query
-        where_clauses.append("(content.platform_id IN (SELECT id FROM platform_tree) OR content.platform_id IS NULL)")
+        where_clauses.append("""
+            (EXISTS (
+                SELECT 1 FROM content_platforms cp2
+                WHERE cp2.content_id = content.id
+                AND cp2.platform_id = ANY(%s)
+            ) OR NOT EXISTS (
+                SELECT 1 FROM content_platforms cp3
+                WHERE cp3.content_id = content.id
+            ))
+        """)
         params.append(platforms)
 
     if content_id is not None:
@@ -168,11 +189,10 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
-    query += " GROUP BY content.id, category.name, category.type_id, platform.name"
+    query += " GROUP BY content.id, category.name, category.type_id"
 
     sort_column = sort_fields.get(sort_by, "content.updated_at")
     sort_order = "DESC" if sort_order.upper() == "DESC" else "ASC"
-
     query += f" ORDER BY {sort_column} {sort_order}"
 
     if sort_column != "content.id":
@@ -242,8 +262,11 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
     """
 
     if platform_id is not None:
-        query += " JOIN content ON category.id = content.category_id"
-        where_clauses.append("content.platform_id = %s")
+        query += """
+            JOIN content ON category.id = content.category_id
+            JOIN content_platforms ON content.id = content_platforms.content_id
+        """
+        where_clauses.append("content_platforms.platform_id = %s")
         params.append(platform_id)
 
     if category_id is not None:

@@ -55,12 +55,14 @@
                         <div id="uploadField">
                             <form action="{{ url_for('store.upload') }}" method="POST" class="Form" enctype="multipart/form-data">
                                 <fieldset>
+                                    <label for="prefix">Prefix: </label>
+                                    <input type="text" id="prefix" name="prefix"/>
                                     <label for="name">Title: </label>
                                     <input type="text" id="title" name="title"/>
                                     <label for="file">File: </label>
                                     <input type="file" id="file" name="file"/>
-                                    <label for="category">Category: </label>
-                                    <select id="category" name="category">
+                                    <label for="category_id">Category: </label>
+                                    <select id="category_id" name="category_id">
                                         {% for category in categories %}
                                         <option value="{{ category['id'] }}">{{ category['content_type']['name'] }} / {{ category['name'] }}</option>
                                         {% endfor %}
@@ -71,8 +73,8 @@
                                     <input type="text" id="publisher" name="publisher"/>
                                     <label for="version">Version: </label>
                                     <input type="text" id="version" name="version"/>
-                                    <label for="platform">Platform: </label>
-                                    <select id="platform" name="platform">
+                                    <label for="platforms">Platforms: </label>
+                                    <select id="platforms" name="platforms" multiple>
                                         {% for platform in platforms %}
                                         <option value="{{ platform['id'] }}">{{ platform['name'] }}</option>
                                         {% endfor %}

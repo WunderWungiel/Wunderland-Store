@@ -4,6 +4,7 @@ import math
 from datetime import datetime
 
 from flask import Blueprint, current_app, g, request, session, flash, redirect, render_template, url_for
+from werkzeug.utils import secure_filename
 
 from .. import config
 from .. import db
@@ -18,12 +19,81 @@ def upload():
     if (g.user and g.user['role'] != 'admin') or not g.user:
         return redirect(url_for('.root'))
 
-    platforms = db.get_platforms()
-    categories = db.get_categories()
-
     if request.method == 'GET':
+        platforms = db.get_platforms()
+        categories = db.get_categories()
         return render_template("upload.html", platforms=platforms, categories=categories)
 
+    prefix = request.form.get('prefix')
+    title = request.form.get('title')
+    file = request.files.get('file')
+    category_id = request.form.get('category_id')
+    description = request.form.get('description')
+    publisher = request.form.get('publisher')
+    version = request.form.get('version')
+    platforms = request.form.getlist('platforms')
+    icon = request.files.get('icon')
+    screenshots = request.files.getlist('screenshots')
+    addon_text = request.form.get('addon_text')
+    addon_file = request.files.get('addon_file')
+    uid = request.form.get('uid')
+
+    if not any([prefix, title, file, category_id, description, publisher, version, platforms]):
+        flash("Missing required parameters!", "danger")
+        return redirect(url_for('.upload'))
+
+    if not db.get_category(category_id):
+        return redirect(url_for('.upload'))
+
+    if any(not db.get_platform(platform_id) for platform_id in platforms):
+        return redirect(url_for('.upload'))
+
+    prefix = secure_filename(prefix)
+
+    file_extension = os.path.splitext(file.filename)[1].lower().lstrip('.')
+    
+    icon_extension = os.path.splitext(icon.filename)[1].lower().lstrip('.')
+    if icon_extension != "png":
+        flash("Invalid icon extension.", "danger")
+        return redirect(url_for('.upload'))
+
+    screenshot_extensions = [os.path.splitext(screenshot.filename)[1].lower().lstrip('.') for screenshot in screenshots]
+    if not all(extension == "jpg" for extension in screenshot_extensions):
+        flash("Invalid screenshot extensions.", "danger")
+        return redirect(url_for('.upload'))
+
+    file_path = os.path.join(current_app.static_folder, "content", "files", f"{prefix}.{file_extension}")
+    file.save(file_path)
+
+    icon_path = os.path.join(current_app.static_folder, "content", "icons", f"{prefix}.{icon_extension}")
+    icon.save(icon_path)
+
+    if addon_file:
+        addon_file_path = os.path.join(current_app.static_folder, "content", "files", secure_filename(addon_file.filename))
+        addon_file.save(addon_file_path)
+
+    for i, screenshot in enumerate(screenshots):
+        screenshot_path = os.path.join(current_app.static_folder, "content", "screenshots", f"{prefix}{i+1}.{screenshot_extensions[i]}")
+        screenshot.save(screenshot_path)
+
+    db.upload(
+        title=title,
+        file=f"{prefix}.{file_extension}",
+        category_id=category_id,
+        description=description,
+        publisher=publisher,
+        version=version,
+        icon=f"{prefix}.{icon_extension}",
+        screenshot_prefix=prefix,
+        screenshot_count=len(screenshots),
+        addon_text=addon_text,
+        addon_file=secure_filename(addon_file.filename) if addon_file else None,
+        uid=uid,
+        platforms=platforms
+    )
+
+    return redirect(url_for('.root'))
+    
 
 @store.route("/content/<int:content_id>/rate", methods=['GET', 'POST'])
 def rate(content_id):
