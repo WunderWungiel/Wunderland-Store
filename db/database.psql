@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jQRd8hqpjdr9y0o8hZCgQlpi197Z2l0baOUNAKzAntB17ymnCMocT9A2gPrlTXi
+\restrict 6mzxRjLWbh5Sf9ML4c17m21gTJYFMRk1CrF4xpT6v9nTd1SLh6ksozrVpNJGk37
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -90,9 +90,8 @@ CREATE TABLE public.content (
     file text NOT NULL,
     category_id integer NOT NULL,
     description text,
-    publisher text DEFAULT 'Publisher'::text NOT NULL,
-    version text DEFAULT '1.00(0)'::text NOT NULL,
-    platform_id text,
+    publisher text NOT NULL,
+    version text NOT NULL,
     icon text DEFAULT 'Store.png'::text NOT NULL,
     screenshot_prefix text,
     screenshot_count integer DEFAULT 0 NOT NULL,
@@ -510,13 +509,6 @@ CREATE INDEX content_category_id_idx ON public.content USING btree (category_id)
 
 
 --
--- Name: content_platform_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX content_platform_id_idx ON public.content USING btree (platform_id);
-
-
---
 -- Name: content update_content_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -579,14 +571,6 @@ ALTER TABLE ONLY public.content_legacy
 
 
 --
--- Name: content content_platform_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.content
-    ADD CONSTRAINT content_platform_id_fkey FOREIGN KEY (platform_id) REFERENCES public.platforms(id);
-
-
---
 -- Name: content_platforms content_platforms_content_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -646,5 +630,5 @@ ALTER TABLE ONLY public.sessions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jQRd8hqpjdr9y0o8hZCgQlpi197Z2l0baOUNAKzAntB17ymnCMocT9A2gPrlTXi
+\unrestrict 6mzxRjLWbh5Sf9ML4c17m21gTJYFMRk1CrF4xpT6v9nTd1SLh6ksozrVpNJGk37
 
