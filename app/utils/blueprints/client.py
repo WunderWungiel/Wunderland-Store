@@ -176,9 +176,9 @@ def search(query, start=None):
     return format_results(results)
 
 
-def get_content(content_ids=None, category=None, start=None, widget=None, count=None, content_type_id=None):
+def get_content(content_ids=None, category=None, start=None, widget=None, count=None):
 
-    category_id, content_type_id = resolve_client_id(category) if category is not None else (None, content_type_id or 'apps')
+    category_id, content_type_id = resolve_client_id(category) if category is not None else (None, 'apps')
 
     if content_ids is None:
         results, total = db.get_content(
@@ -223,7 +223,7 @@ def php():
         content_ids = None
 
     if not query:
-        return get_content(content_ids=content_ids, category=category, start=start, widget=widget, count=count, content_type_id="apps")
+        return get_content(content_ids=content_ids, category=category, start=start, widget=widget, count=count)
     else:
         return search(query=query, start=start)
 
