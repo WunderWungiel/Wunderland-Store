@@ -67,8 +67,12 @@
                                     <div class="title"><h2 class="fn nokia-gray">{{ result['title'] }}</h2></div>
                                     <div>
                                         <p class="type">
-                                            {% if result['platform'] %}
-                                            <b>Platform</b>: {{ result['platform']['name'] }}<br/>
+                                            {% if result['platforms'] %}
+                                            <b>Platforms:
+                                            {% for platform in result['platforms'] %}
+                                            {{ platform['name'] }}{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                            <br/>
                                             {% endif %}
                                             <b>Version</b>: {{ result['version'] }}
                                         </p>

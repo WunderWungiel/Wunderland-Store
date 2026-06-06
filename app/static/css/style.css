@@ -42,3 +42,7 @@
 .alert-success {
     color: green;
 }
+
+.contentInfo .meta {
+    width: 280px;
+}

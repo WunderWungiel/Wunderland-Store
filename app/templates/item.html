@@ -69,8 +69,12 @@
                                     <div class="title"><h2 class="fn nokia-gray">{{ item['title'] }}</h2></div>
                                     <p class="type">
                                         <b>Size:</b> {{ item['size'] | naturalsize }}<br/>
-                                        {% if item['platform'] %}
-                                        <b>Platform:</b> {{ item['platform']['name'] }}<br/>
+                                        {% if item['platforms'] %}
+                                        <b>Platforms:</b>
+                                        {% for platform in item['platforms'] %}
+                                        {{ platform['name'] }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                        <br/>
                                         {% endif %}
                                         <b>Publisher:</b> {{ item['publisher'] }}<br/>
                                         <b>Version:</b> {{ item['version'] }}
