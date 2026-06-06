@@ -178,7 +178,7 @@ def search(query, start=None):
 
 def get_content(content_ids=None, category=None, start=None, widget=None, count=None):
 
-    category_id, content_type_id = resolve_client_id(category) if category is not None else (None, 'apps')
+    category_id, content_type_id = resolve_client_id(category) if category is not None else (None, None)
 
     if content_ids is None:
         results, total = db.get_content(
