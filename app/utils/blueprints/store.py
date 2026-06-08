@@ -192,7 +192,9 @@ def search():
 
     if page < 1:
         flash("Invalid page. Redirected to the first page.", "danger")
-        return redirect(url_for('.search', **request.view_args, **request.args, page=1))
+        request_args = request.args.to_dict()
+        request_args['page'] = 1
+        return redirect(url_for('.search', **request.view_args, **request_args))
 
     offset = (page - 1) * config['per_page']
 
@@ -209,7 +211,9 @@ def search():
 
     if page > total_pages:
         flash("Invalid page. Redirected to the last page.", "danger")
-        return redirect(url_for('.search', **request.view_args, **request.args, page=total_pages))
+        request_args = request.args.to_dict()
+        request_args['page'] = total_pages
+        return redirect(url_for('.search', **request.view_args, **request_args))
 
     return render_template(
         "results.html",
@@ -264,7 +268,9 @@ def content(content_type_id):
 
     if page < 1:
         flash("Invalid page. Redirected to the first page.", "danger")
-        return redirect(url_for('.content', **request.view_args, **request.args, page=1))
+        request_args = request.args.to_dict()
+        request_args['page'] = 1
+        return redirect(url_for('.content', **request.view_args, **request_args))
 
     offset = (page - 1) * config['per_page']
 
@@ -282,7 +288,9 @@ def content(content_type_id):
 
     if page > total_pages:
         flash("Invalid page. Redirected to the last page.", "danger")
-        return redirect(url_for('.content', **request.view_args, **request.args, page=total_pages))
+        request_args = request.args.to_dict()
+        request_args['page'] = total_pages
+        return redirect(url_for('.content', **request.view_args, **request_args))
 
     return render_template(
         "content.html",
@@ -364,7 +372,9 @@ def root():
 
     if page < 1:
         flash("Invalid page. Redirected to the first page.", "danger")
-        return redirect(url_for('.root', **request.view_args, **request.args, page=1))
+        request_args = request.args.to_dict()
+        request_args['page'] = 1
+        return redirect(url_for('.root', **request.view_args, **request_args))
 
     offset = (page - 1) * config['per_page']
 
@@ -374,6 +384,8 @@ def root():
 
     if page > total_pages:
         flash("Invalid page. Redirected to the last page.", "danger")
-        return redirect(url_for('.root', **request.view_args, **request.args, page=total_pages))
+        request_args = request.args.to_dict()
+        request_args['page'] = total_pages
+        return redirect(url_for('.root', **request.view_args, **request_args))
 
     return render_template("index.html", news=news, pages=utils.generate_pages(page, total_pages))
