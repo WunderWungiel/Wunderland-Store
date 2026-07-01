@@ -9,6 +9,8 @@ legacy = Blueprint('legacy_store', __name__, template_folder="templates")
 def rate(prefix, legacy_id):
 
     content_type = db.get_content_type_by_prefix(prefix)
+    if not content_type:
+        return redirect(url_for('store.root'))
 
     content_id = db.get_legacy_content_id(legacy_id, content_type['id'])
 
@@ -22,6 +24,8 @@ def rate(prefix, legacy_id):
 def item(prefix, legacy_id):
 
     content_type = db.get_content_type_by_prefix(prefix)
+    if not content_type:
+        return redirect(url_for('store.root'))
 
     content_id = db.get_legacy_content_id(legacy_id, content_type['id'])
 
@@ -35,6 +39,8 @@ def item(prefix, legacy_id):
 def images(prefix, legacy_id):
 
     content_type = db.get_content_type_by_prefix(prefix)
+    if not content_type:
+         return redirect(url_for('store.root'))
 
     content_id = db.get_legacy_content_id(legacy_id, content_type['id'])
 
