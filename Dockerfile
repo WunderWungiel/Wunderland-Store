@@ -1,4 +1,4 @@
-FROM python:3-bookworm
+FROM python:3-alpine
 WORKDIR /app
 COPY ./app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

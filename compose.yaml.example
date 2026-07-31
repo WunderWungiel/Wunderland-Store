@@ -2,29 +2,39 @@ services:
   app:
     build: .
     container_name: wunderland
-    restart: unless-stopped
+    environment:
+      TZ: Etc/UTC
     volumes:
-      - ./Ovi:/app/static/content # Replace
-    networks:
-      - server
+      - ./Ovi:/app/static/content
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    ports:
+      - 8080:80
+    stop_signal: SIGINT
+    stop_grace_period: 15s
+    restart: unless-stopped
 
   db:
-    image: postgres
+    image: postgres:18
     container_name: wunderland-db
-    networks:
-      - server
     environment:
+      TZ: Etc/UTC
       POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    restart: unless-stopped
     volumes:
-      - ./postgres-config:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
       - ./db/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - ./db/database.psql:/docker-entrypoint-initdb.d/database.psql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    restart: unless-stopped
 
-networks:
-  server:
-    external: true
-
+volumes:
+  db_data:
