@@ -1,10 +1,12 @@
 import os
 import time
+from urllib.parse import urlparse
 
-from flask import Blueprint, current_app, request, send_file, abort, url_for
+from flask import Blueprint, current_app, request, send_file, abort, redirect, url_for
 
 from .. import db
 from .. import config
+from .. import utils
 
 qtstore = Blueprint('qtstore', __name__, template_folder="templates")
 
@@ -17,14 +19,16 @@ def generate_content(content_type_id, content_name):
 
     for row in results:
 
-        path = os.path.join(current_app.static_folder, "content", "files", row['file'])
+        if row['latest_url']:
+            timestamp = int(row['updated_at'].timestamp())
+            name, extension = os.path.splitext(urlparse(row['latest_url']).path)
+        else:
+            try:
+                timestamp = int(os.path.getmtime(utils.get_file_path(row)))
+            except FileNotFoundError:
+                timestamp = time.time()
 
-        try:
-            timestamp = int(os.path.getmtime(path))
-        except FileNotFoundError:
-            timestamp = time.time()
-
-        name, extension = os.path.splitext(row['file'])
+            name, extension = os.path.splitext(row['file'])
 
         content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
         if extension in (".sis", ".sisx"):
@@ -99,9 +103,14 @@ def file(content_type_id, name, ext):
         abort(404)
 
     content = get_content(name, content_type['id'])
-    path = os.path.join(current_app.root_path, "static", "content", "files", content['file'])
+    if not content:
+        abort(404)
 
-    if content and os.path.isfile(path):
+    if content['latest_url']:
+        return redirect(content['latest_url'])
+
+    path = utils.get_file_path(content)
+    if path and os.path.isfile(path):
         return send_file(path)
     else:
         abort(404)

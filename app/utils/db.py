@@ -105,17 +105,17 @@ def get_platform(platform_id):
     return results[0] if results else None
 
 
-def upload(title, file, category_id, publisher, version, icon, screenshot_prefix, screenshot_count, description=None, addon_text=None, addon_file=None, uid=None, platforms=None):
+def upload(title, category_id, publisher, version, icon, screenshot_prefix, screenshot_count, file=None, latest_url=None, description=None, addon_text=None, addon_file=None, uid=None, platforms=None):
     
     query = """
         INSERT INTO content (
-            title, file, category_id, description, publisher, 
+            title, file, latest_url, category_id, description, publisher, 
             version, icon, screenshot_prefix, screenshot_count, 
             addon_text, addon_file, uid
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) 
         RETURNING *
     """
-    params = (title, file, category_id, description, publisher, version, icon, screenshot_prefix, screenshot_count, addon_text, addon_file, uid)
+    params = (title, file, latest_url, category_id, description, publisher, version, icon, screenshot_prefix, screenshot_count, addon_text, addon_file, uid)
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:

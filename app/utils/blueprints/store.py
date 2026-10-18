@@ -2,6 +2,7 @@ import os
 import random
 import math
 from datetime import datetime
+from urllib.parse import urlparse
 
 from flask import Blueprint, current_app, g, request, session, flash, redirect, render_template, url_for
 from werkzeug.utils import secure_filename
@@ -27,6 +28,7 @@ def upload():
     prefix = request.form.get('prefix')
     title = request.form.get('title')
     file = request.files.get('file')
+    latest_url = request.form.get('latest_url', '').strip() or None
     category_id = request.form.get('category_id')
     description = request.form.get('description')
     publisher = request.form.get('publisher')
@@ -42,6 +44,14 @@ def upload():
         flash("Missing required parameters!", "danger")
         return redirect(url_for('.upload'))
 
+    if not file and not latest_url:
+        flash("Either a file or a latest release URL is required!", "danger")
+        return redirect(url_for('.upload'))
+
+    if latest_url and urlparse(latest_url).scheme not in ("http", "https"):
+        flash("Latest release URL must be an http(s) URL.", "danger")
+        return redirect(url_for('.upload'))
+
     if not db.get_category(category_id):
         return redirect(url_for('.upload'))
 
@@ -50,8 +60,6 @@ def upload():
 
     prefix = secure_filename(prefix)
 
-    file_extension = os.path.splitext(file.filename)[1].lower().lstrip('.')
-    
     icon_extension = os.path.splitext(icon.filename)[1].lower().lstrip('.')
     if icon_extension != "png":
         flash("Invalid icon extension.", "danger")
@@ -62,8 +70,11 @@ def upload():
         flash("Invalid screenshot extensions.", "danger")
         return redirect(url_for('.upload'))
 
-    file_path = os.path.join(current_app.static_folder, "content", "files", f"{prefix}.{file_extension}")
-    file.save(file_path)
+    file_name = None
+    if file:
+        file_extension = os.path.splitext(file.filename)[1].lower().lstrip('.')
+        file_name = f"{prefix}.{file_extension}"
+        file.save(os.path.join(current_app.static_folder, "content", "files", file_name))
 
     icon_path = os.path.join(current_app.static_folder, "content", "icons", f"{prefix}.{icon_extension}")
     icon.save(icon_path)
@@ -78,7 +89,8 @@ def upload():
 
     db.upload(
         title=title,
-        file=f"{prefix}.{file_extension}",
+        file=file_name,
+        latest_url=latest_url,
         category_id=category_id,
         description=description,
         publisher=publisher,
@@ -128,8 +140,8 @@ def item(content_id):
     if (g.user and g.user['role'] != 'admin') or not g.user:
         db.increment_counter(content_id)
 
-    file_path = os.path.join(current_app.root_path, 'static', 'content', 'files', item['file'])
-    item['size'] = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
+    item['size'] = utils.get_file_size(item)
+    item['download_url'] = utils.get_download_url(item)
 
     platform_id = session.get('platform_id')
     recommended, _ = db.get_content(

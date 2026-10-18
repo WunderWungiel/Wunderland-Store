@@ -68,7 +68,9 @@
                                 <td class="meta item">
                                     <div class="title"><h2 class="fn nokia-gray">{{ item['title'] }}</h2></div>
                                     <p class="type">
+                                        {% if item['size'] is not none %}
                                         <b>Size:</b> {{ item['size'] | naturalsize }}<br/>
+                                        {% endif %}
                                         {% if item['platforms'] %}
                                         <b>Platforms:</b>
                                         {% for platform in item['platforms'] %}
@@ -88,7 +90,7 @@
                                 <td align="right">
                                     <div class="buy">
                                         <div class="buttons">
-                                            <a href="{{ url_for('static', filename='content/files/' ~ item['file']) }}" class="lite" target="_blank">Download</a>
+                                            <a href="{{ item['download_url'] }}" class="lite" target="_blank">Download</a>
                                         </div>
                                     </div>
                                 </td>

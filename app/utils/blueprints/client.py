@@ -142,14 +142,9 @@ def format_results(results, content_type_id=None, widget=False):
             changelog = SubElement(app, 'changelog')
             unsignednote = SubElement(app, 'unsignednote')
             download = SubElement(app, 'download')
-            download.text = url_for('static', _external=True, filename=os.path.join("content", "files", row['file']))
+            download.text = utils.get_download_url(row, external=True)
             downloadsize = SubElement(app, 'downloadsize')
-
-            file_path = os.path.join(current_app.static_folder, "content", "files", row['file'])
-            if os.path.isfile(file_path):
-                downloadsize.text = str(os.path.getsize(file_path))
-            else:
-                downloadsize.text = "0"
+            downloadsize.text = str(utils.get_file_size(row) or 0)
 
             downloadstore = SubElement(app, 'downloadstore')
             downloadunsigned = SubElement(app, 'downloadunsigned')

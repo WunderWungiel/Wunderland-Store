@@ -1,4 +1,7 @@
+import os
 import re
+
+from flask import current_app, url_for
 
 def generate_pages(page, total_pages):
 
@@ -32,3 +35,23 @@ def to_symbian_version(version):
         minor = minor.zfill(2)
 
     return f"{major}.{minor}({patch})"
+
+
+def get_file_path(item):
+    if not item['file']:
+        return None
+    return os.path.join(current_app.static_folder, "content", "files", item['file'])
+
+def get_download_url(item, external=False):
+    if item['latest_url']:
+        return item['latest_url']
+    if item['file']:
+        return url_for('static', _external=external, filename=os.path.join("content", "files", item['file']))
+    return None
+
+def get_file_size(item):
+    # Size of a remote latest_url is unknown
+    if item['latest_url']:
+        return None
+    path = get_file_path(item)
+    return os.path.getsize(path) if path and os.path.isfile(path) else 0

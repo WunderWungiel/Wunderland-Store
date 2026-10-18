@@ -87,7 +87,8 @@ CREATE TABLE public.categories_legacy (
 CREATE TABLE public.content (
     id integer NOT NULL,
     title text NOT NULL,
-    file text NOT NULL,
+    file text,
+    latest_url text,
     category_id integer NOT NULL,
     description text,
     publisher text NOT NULL,
@@ -100,7 +101,8 @@ CREATE TABLE public.content (
     addon_file text,
     uid text,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT content_file_or_latest_url CHECK (((file IS NOT NULL) OR (latest_url IS NOT NULL)))
 );
 
 
