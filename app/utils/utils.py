@@ -42,16 +42,18 @@ def get_file_path(item):
         return None
     return os.path.join(current_app.static_folder, "content", "files", item['file'])
 
+def get_file_url(item, external=False):
+    if not item['file']:
+        return None
+    return url_for('static', _external=external, filename=os.path.join("content", "files", item['file']))
+
 def get_download_url(item, external=False):
-    if item['latest_url']:
-        return item['latest_url']
-    if item['file']:
-        return url_for('static', _external=external, filename=os.path.join("content", "files", item['file']))
-    return None
+    # Clients that take a single link get latest_url when set
+    return item['latest_url'] or get_file_url(item, external)
 
 def get_file_size(item):
-    # Size of a remote latest_url is unknown
-    if item['latest_url']:
-        return None
+    # Size of the local file only; a remote latest_url has no known size
     path = get_file_path(item)
-    return os.path.getsize(path) if path and os.path.isfile(path) else 0
+    if not path:
+        return None
+    return os.path.getsize(path) if os.path.isfile(path) else 0

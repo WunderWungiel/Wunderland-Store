@@ -141,7 +141,7 @@ def item(content_id):
         db.increment_counter(content_id)
 
     item['size'] = utils.get_file_size(item)
-    item['download_url'] = utils.get_download_url(item)
+    item['file_url'] = utils.get_file_url(item)
 
     platform_id = session.get('platform_id')
     recommended, _ = db.get_content(

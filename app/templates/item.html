@@ -78,8 +78,10 @@
                                         {% endfor %}
                                         <br/>
                                         {% endif %}
-                                        <b>Publisher:</b> {{ item['publisher'] }}<br/>
-                                        <b>Version:</b> {{ item['version'] }}
+                                        <b>Publisher:</b> {{ item['publisher'] }}
+                                        {% if item['file'] %}
+                                        <br/><b>Version:</b> {{ item['version'] }}
+                                        {% endif %}
                                     </p>
                                 </td>
                             </tr>
@@ -90,7 +92,12 @@
                                 <td align="right">
                                     <div class="buy">
                                         <div class="buttons">
-                                            <a href="{{ item['download_url'] }}" class="lite" target="_blank">Download</a>
+                                            {% if item['file_url'] %}
+                                            <a href="{{ item['file_url'] }}" class="lite" target="_blank">{{ 'Local' if item['latest_url'] else 'Download' }}</a>
+                                            {% endif %}
+                                            {% if item['latest_url'] %}
+                                            <a href="{{ item['latest_url'] }}" class="lite" target="_blank">{{ 'Latest' if item['file_url'] else 'Download' }}</a>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </td>
