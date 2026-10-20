@@ -69,7 +69,7 @@
                                     <div class="title"><h2 class="fn nokia-gray">{{ item['title'] }}</h2></div>
                                     <p class="type">
                                         {% if item['size'] is not none %}
-                                        <b>Size:</b> {{ item['size'] | naturalsize }}<br/>
+                                        <b>{{ 'Local size' if item['latest_url'] else 'Size' }}:</b> {{ item['size'] | naturalsize }}<br/>
                                         {% endif %}
                                         {% if item['platforms'] %}
                                         <b>Platforms:</b>
@@ -80,7 +80,7 @@
                                         {% endif %}
                                         <b>Publisher:</b> {{ item['publisher'] }}
                                         {% if item['file'] %}
-                                        <br/><b>Version:</b> {{ item['version'] }}
+                                        <br/><b>{{ 'Local version' if item['latest_url'] else 'Version' }}:</b> {{ item['version'] }}
                                         {% endif %}
                                     </p>
                                 </td>
