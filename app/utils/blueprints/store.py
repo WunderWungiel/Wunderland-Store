@@ -182,6 +182,7 @@ def item(content_id):
     recommended = [d for d in recommended if d['id'] != item['id']] if recommended else []
     recommended = random.sample(recommended, k=min(10, len(recommended))) or None
 
+    item['meta_description'] = " ".join(item['description'].split()) if item['description'] else ""
     item['description'] = item['description'].replace("\n", "<br>") if item['description'] else None
     item['addon_text'] = item['addon_text'].replace("\n", "<br>") if item['addon_text'] else None
 
