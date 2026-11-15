@@ -150,8 +150,8 @@ def rate(content_id):
     if request.method == 'GET':
         return render_template("rate.html", item=item)
 
-    rating = request.form.get('rating')
-    if not rating:
+    rating = request.form.get('rating', type=int)
+    if rating is None or not 1 <= rating <= 5:
         return redirect(url_for('.item', content_id=content_id))
 
     db.rate(rating, content_id=content_id, user_id=g.user['id'])
