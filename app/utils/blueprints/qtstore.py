@@ -123,11 +123,12 @@ def preview(content_type_id, name):
     if not content_type:
         abort(404)
 
-
     content = get_content(name, content_type['id'])
-    path = os.path.join(current_app.root_path, "static", "content", "icons", content['icon'])
+    if not content:
+        abort(404)
 
-    if content and os.path.isfile(path):
+    path = os.path.join(current_app.root_path, "static", "content", "icons", content['icon'])
+    if os.path.isfile(path):
         return send_file(path)
     else:
         abort(404)
