@@ -303,7 +303,7 @@ def content(content_type_id):
 
     category = db.get_category(category_id)
 
-    if category_id and not category:
+    if category_id is not None and (not category or category['type_id'] != content_type['id']):
         flash("Invalid category.", "danger")
         return redirect(url_for('.content', content_type_id=content_type['id']))
 
