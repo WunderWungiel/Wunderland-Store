@@ -123,11 +123,14 @@ def format_results(results, content_type_id=None, widget=False):
             price = SubElement(app, 'price')
             price.text = "0.00"
             description = SubElement(app, 'description')
+            description_parts = []
             if row['description']:
-                description.text = row['description'].strip()
+                description_parts.append(row['description'].strip())
 
             if row['addon_text']:
-                description.text += f"\n\nExtra file: {row['addon_text']}"
+                description_parts.append(f"Extra file: {row['addon_text']}")
+
+            description.text = "\n\n".join(description_parts)
 
             screenshots = [f"{row['screenshot_prefix']}{i}.jpg" for i in range(1, row['screenshot_count'] + 1)]
 
