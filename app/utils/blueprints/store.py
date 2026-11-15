@@ -213,7 +213,8 @@ def browse_categories(content_type_id):
 
     categories = db.get_categories(
         content_type_id=content_type['id'],
-        platform_id=g.platform['id'] if g.platform else None
+        platform_id=g.platform['id'] if g.platform else None,
+        only_with_content=True
     )
 
     return render_template("categories.html", content_type=content_type, categories=categories)

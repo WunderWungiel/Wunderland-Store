@@ -256,7 +256,7 @@ def increment_counter(content_id):
             """, (content_id,))
 
 
-def get_categories(category_id=None, content_type_id=None, platform_id=None):
+def get_categories(category_id=None, content_type_id=None, platform_id=None, only_with_content=False):
     where_clauses = []
     params = []
 
@@ -273,12 +273,10 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
         JOIN content_types ON category.type_id = content_types.id
     """
 
-    if platform_id is not None:
-        where_clauses.append("""
-            EXISTS (
-                SELECT 1 FROM content
-                WHERE content.category_id = category.id
-                AND content.visible = TRUE
+    if only_with_content or platform_id is not None:
+        platform_clause = ""
+        if platform_id is not None:
+            platform_clause = """
                 AND (EXISTS (
                     SELECT 1 FROM content_platforms cp2
                     WHERE cp2.content_id = content.id
@@ -287,9 +285,17 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
                     SELECT 1 FROM content_platforms cp3
                     WHERE cp3.content_id = content.id
                 ))
+            """
+            params.append(platform_id)
+
+        where_clauses.append(f"""
+            EXISTS (
+                SELECT 1 FROM content
+                WHERE content.category_id = category.id
+                AND content.visible = TRUE
+                {platform_clause}
             )
         """)
-        params.append(platform_id)
 
     if category_id is not None:
         where_clauses.append("category.id = %s")
