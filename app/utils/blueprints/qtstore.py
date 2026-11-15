@@ -46,7 +46,12 @@ def get_content(name, content_type_id):
 
     print(name, content_type_id)
 
-    results, total = db.get_content(content_type_id=content_type_id, title=name, limit=1)
+    results, total = db.get_content(
+        content_type_id=content_type_id,
+        title=name,
+        platforms=config['platforms']['qtstore'],
+        limit=1
+    )
     content = results[0] if results else None
 
     if content:
