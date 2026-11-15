@@ -274,11 +274,21 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
     """
 
     if platform_id is not None:
-        query += """
-            JOIN content ON category.id = content.category_id
-            JOIN content_platforms ON content.id = content_platforms.content_id
-        """
-        where_clauses.append("content_platforms.platform_id = %s")
+        where_clauses.append("""
+            EXISTS (
+                SELECT 1 FROM content
+                WHERE content.category_id = category.id
+                AND content.visible = TRUE
+                AND (EXISTS (
+                    SELECT 1 FROM content_platforms cp2
+                    WHERE cp2.content_id = content.id
+                    AND cp2.platform_id = %s
+                ) OR NOT EXISTS (
+                    SELECT 1 FROM content_platforms cp3
+                    WHERE cp3.content_id = content.id
+                ))
+            )
+        """)
         params.append(platform_id)
 
     if category_id is not None:
@@ -291,9 +301,6 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None):
 
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
-
-    if platform_id is not None:
-        query += " GROUP BY category.id, content_types.id"
 
     query += " ORDER BY category.type_id ASC, category.name ASC"
 
