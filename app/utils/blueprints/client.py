@@ -211,7 +211,7 @@ def php():
     start = request.args.get('start', type=int)
     count = request.args.get('count', type=int)
     query = request.args.get('search')
-    widget = request.args.get('widget', type=bool)
+    widget = request.args.get('widget', '').strip().lower() in ('1', 'true', 'yes', 'on')
     category = request.args.get('category', type=int)
 
     if content_ids:
