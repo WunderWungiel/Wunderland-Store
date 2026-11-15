@@ -122,13 +122,13 @@
 
                         {% if item['description'] %}
                         <div class="description">
-                            <p>{{ item['description']|safe }}</p>
+                            <p>{{ item['description']|nl2br }}</p>
                         </div>
                         {% endif %}
 
                         {% if item['addon_text'] %}
                         <div style="color: green;">
-                            Extra file: {{ item['addon_text']|safe }}
+                            Extra file: {{ item['addon_text']|nl2br }}
                             {% if item['addon_file'] %}
                             <div class="buttons smallButtons">
                                 <a href="{{ url_for('static', filename='content/files/' ~ item['addon_file']) }}" class="lite" target="_blank">Download</a>

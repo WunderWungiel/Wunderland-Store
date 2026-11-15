@@ -2,6 +2,13 @@ import os
 import re
 
 from flask import current_app, url_for
+from markupsafe import Markup, escape
+
+def nl2br(text):
+    """Escape text and turn its newlines into <br> tags."""
+    if not text:
+        return text
+    return Markup("<br>").join(escape(line) for line in text.split("\n"))
 
 def generate_pages(page, total_pages):
 

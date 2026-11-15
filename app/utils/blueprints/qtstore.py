@@ -55,8 +55,8 @@ def get_content(name, content_type_id):
     content = results[0] if results else None
 
     if content:
-        content['description'] = content['description'].replace("\n", "<br>") if content['description'] else None
-        content['addon_text'] = content['addon_text'].replace("\n", "<br>") if content['addon_text'] else None
+        content['description'] = utils.nl2br(content['description']) or None
+        content['addon_text'] = utils.nl2br(content['addon_text']) or None
         return content
     else:
         return None

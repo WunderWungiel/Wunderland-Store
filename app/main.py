@@ -8,6 +8,7 @@ import humanize
 
 from utils import config
 from utils import db
+from utils import utils
 from utils.blueprints import auth, client, legacy, qtstore, store
 
 app = Flask(__name__)
@@ -37,6 +38,11 @@ atexit.register(db.pool.close)
 @app.template_filter('naturalsize')
 def naturalsize_filter(size):
     return humanize.naturalsize(size)
+
+
+@app.template_filter('nl2br')
+def nl2br_filter(text):
+    return utils.nl2br(text)
 
 
 @app.context_processor
