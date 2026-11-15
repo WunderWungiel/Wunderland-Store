@@ -384,9 +384,7 @@ def get_news(news_id=None, limit=None, offset=None):
             'id': row['id'],
             'title': row['title'],
             'content': html_content,
-            'date': datetime.fromtimestamp(
-                os.path.getmtime(file_path)
-            ).strftime("%a, %d %b %Y %H:%M:%S GMT")
+            'date': row['created_at'].astimezone(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
         })
 
     return results, total
