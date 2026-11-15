@@ -1,10 +1,12 @@
 import os
 import random
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlparse
+from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import Element, SubElement
 
-from flask import Blueprint, current_app, g, request, session, flash, redirect, render_template, url_for
+from flask import Blueprint, Response, current_app, g, request, session, flash, redirect, render_template, url_for
 from werkzeug.utils import secure_filename
 
 from .. import config
@@ -333,31 +335,30 @@ def download():
 @store.route("/feed.xml")
 def feed():
 
-    xml = f"""
-        <?xml version="1.0" encoding="windows-1252"?>
-        <rssversion="2.0">
-        <channel>
-        <title>Wunderland Store</title>
-        <description>News, content and programs for retro devices.</description>
-        <link>http://ovi.wunderwungiel.pl/</link>
-        <lastBuildDate>{datetime.now().strftime("%a, %d %b %Y %H:%M:%S GMT")}</lastBuildDate>
-    """
+    rss = Element('rss', version="2.0")
+    channel = SubElement(rss, 'channel')
+
+    SubElement(channel, 'title').text = "Wunderland Store"
+    SubElement(channel, 'description').text = "News, content and programs for retro devices."
+    SubElement(channel, 'link').text = "http://ovi.wunderwungiel.pl/"
+    SubElement(channel, 'lastBuildDate').text = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     news_items, total = db.get_news()
     for content in news_items:
-        xml += f"""
-            <item>
-                <title>{content['title']}</title>
-                <link>{url_for('.news', _external=True, news_id=content['id'])}</link>
-                <description></description>
-                <pubDate>{content['date']}</pubDate>
-                <guid>{url_for('.news', _external=True, news_id=content['id'])}</guid>
-            </item>
-        """
+        news_url = url_for('.news', _external=True, news_id=content['id'])
 
-    xml += "</channel></rss>"
+        item = SubElement(channel, 'item')
+        SubElement(item, 'title').text = content['title']
+        SubElement(item, 'link').text = news_url
+        SubElement(item, 'description').text = ""
+        SubElement(item, 'pubDate').text = content['date']
+        SubElement(item, 'guid').text = news_url
 
-    return xml
+    ET.indent(rss)
+
+    xml = ET.tostring(rss, encoding='utf-8', xml_declaration=True, short_empty_elements=False)
+
+    return Response(xml, mimetype='application/rss+xml')
 
 
 @store.route("/news/<int:news_id>")
