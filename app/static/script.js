@@ -44,7 +44,7 @@ function validateRegisterForm() {
     var username_label = document.getElementById('username_label');
     var username_required = username_label.getElementsByClassName('required')[0];
     var username_tip = document.getElementById('username_tip');
-    var username_pattern = /^[\w]{6,}$/;
+    var username_pattern = /^[A-Za-z0-9]{7,}$/;
 
     if (username == "") {
         username_required.style.display = "inline";
