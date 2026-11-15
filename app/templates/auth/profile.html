@@ -48,6 +48,7 @@
                         <h1><b>Change password:</b></h1>
 
                         <form action="{{ url_for('auth.change_password') }}" method="POST" id="changePasswordForm" onsubmit="return validateChangePasswordForm()">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <label for="current_password" id="current_password_label">Current password: <span class="required">*</span></label>
                             <input type="password" id="current_password" name="current_password" size="15" style="width: 63%; max-width: 300px;" title="" />
 
@@ -66,7 +67,7 @@
                         </form>
                         
 
-                        <input type="button" class="Btn" onclick="window.location.href='/logout'" value="Log out"></input>
+                        <input type="button" class="Btn" onclick="window.location.href='{{ url_for('auth.logout', csrf_token=csrf_token()) }}'" value="Log out"></input>
                     </div>
                     <br/>
                 </div>
@@ -76,7 +77,7 @@
                         
             <div id="footer">
                 <a href="{{ url_for('store.download') }}">Download</a> |
-                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
+                <a class="accountStatusChange" href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}">Log out</a>
                 <br/>
                 © Wunder Wungiel {{ now.year }}
             </div>

@@ -52,6 +52,7 @@
                         <h2>Platforms</h2>
                         <div id="categories">
                             <form action="{{ url_for('store.platforms') }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <select name="platform_id">
                                     <option value=""{% if not g.platform %}selected{% endif %}>All platforms</option>
                                     {% for platform in platforms %}
@@ -74,7 +75,7 @@
                 {% if not g.user %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
-                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
+                <a class="accountStatusChange" href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}">Log out</a>
                 {% endif %}
                 <br/>
                 © Wunder Wungiel {{ now.year }}

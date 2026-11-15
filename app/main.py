@@ -7,6 +7,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 
 from utils import config
+from utils import csrf
 from utils import db
 from utils import utils
 from utils.blueprints import auth, client, legacy, qtstore, store
@@ -49,6 +50,7 @@ def nl2br_filter(text):
 def utility_processor():
     return dict(
         now=datetime.now(),
+        csrf_token=csrf.generate_token,
         get_content_types=db.get_content_types
     )
 
@@ -77,6 +79,9 @@ def load_global_data():
         return
 
     g.user = user
+
+
+app.before_request(csrf.protect)
 
 
 if not config['allow_indexing']:

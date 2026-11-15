@@ -154,7 +154,7 @@
                 {% if not g.user %}
                 <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
                 {% else %}
-                <a class="accountStatusChange" href="{{ url_for('auth.logout') }}">Log out</a>
+                <a class="accountStatusChange" href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}">Log out</a>
                 {% endif %}
                 <br/>
                 © Wunder Wungiel {{ now.year }}

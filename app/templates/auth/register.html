@@ -41,6 +41,7 @@
                         <div id="loginField">
                             <form action="{{ url_for('auth.register') }}" method="POST" id="loginForm" onsubmit="return validateRegisterForm()">
                                 <fieldset>
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <label for="username" id="username_label">Username: <span class="required">*</span></label>
                                     <input type="text" id="username" name="username" size="15" style="width: 63%; max-width: 300px;" title="" />
                                     <span id="username_tip" class="tip">Wrong username. It should contain only letters and numbers and be 7-letters long or longer.</span>

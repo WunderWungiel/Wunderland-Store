@@ -4,6 +4,7 @@ import re
 from flask import Blueprint, current_app, g, request, session, flash, render_template, redirect, url_for
 from psycopg.errors import UniqueViolation
 
+from .. import csrf
 from .. import db
 from .. import email
 
@@ -148,6 +149,9 @@ def profile():
 def logout():
     if not g.user:
         return redirect(url_for('.login'))
+
+    if not csrf.is_valid(request.args.get(csrf.FIELD_NAME)):
+        return redirect(url_for('.profile'))
 
     db.delete_session(session.get('token'))
     session.pop('token', None)
