@@ -459,24 +459,19 @@ def confirm_user(user_id):
             cursor.execute(query, params)
 
 
-def login(email, password):
-
-    user = get_user_by_email(email)
-
-    if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
-        return None
+def create_session(user_id):
 
     token = secrets.token_urlsafe(32)
     expires_at = datetime.now(timezone.utc) + timedelta(days=30)
 
     query = "INSERT INTO sessions (user_id, token, expires_at) VALUES (%s, %s, %s)"
-    params = [user['id'], token, expires_at]
+    params = [user_id, token, expires_at]
 
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
 
-    return {'token': token}
+    return token
 
 
 def register(email, password, username):
@@ -513,7 +508,7 @@ def check_credentials(email, password):
 
     user = get_user_by_email(email)
 
-    if not user:
-        return False
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+        return None
 
-    return bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8'))
+    return user

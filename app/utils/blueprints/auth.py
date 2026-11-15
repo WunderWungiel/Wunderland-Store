@@ -25,19 +25,17 @@ def login():
         flash("Missing parameters!", "danger")
         return redirect(url_for('.login'))
 
-    result = db.login(email, password)
+    user = db.check_credentials(email, password)
 
-    if not result:
+    if not user:
         flash("Invalid credentials!", "danger")
         return redirect(url_for('.login'))
-
-    user = db.get_user_by_email(email)
 
     if not user['confirmed']:
         flash("Please confirm your email!", "danger")
         return redirect(url_for('.login'))
 
-    session['token'] = result['token']
+    session['token'] = db.create_session(user['id'])
 
     flash("Logged in!", "success")
     return redirect(url_for('store.root'))
