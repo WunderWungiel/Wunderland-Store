@@ -46,8 +46,7 @@ def format_results(results, content_type_id=None, widget=False):
 
     for row in results:
 
-        if not content_type_id:
-            content_type_id = row['content_type_id']
+        row_content_type_id = content_type_id or row['content_type_id']
 
         row = {key: value.strip() if isinstance(value, str) else value for (key, value) in row.items()}
 
@@ -100,7 +99,7 @@ def format_results(results, content_type_id=None, widget=False):
 
             client_id = mapping.get(row['category_id'])
             if client_id is None:
-                client_id = mapping.get(('all', content_type_id), 0)
+                client_id = mapping.get(('all', row_content_type_id), 0)
 
             category = SubElement(app, 'category')
             category.text = str(client_id)
