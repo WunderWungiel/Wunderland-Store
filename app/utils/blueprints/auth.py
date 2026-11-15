@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
-
-from flask import Blueprint, g, request, session, flash, render_template, redirect, url_for
 import re
+import smtplib
+
+from flask import Blueprint, current_app, g, request, session, flash, render_template, redirect, url_for
+from psycopg.errors import UniqueViolation
 
 from .. import db
 from .. import email
@@ -73,18 +75,26 @@ def register():
     if db.get_user_by_username(username):
         return fail("Username already taken.")
 
-    user = db.register(user_email, password, username)
+    try:
+        user = db.register(user_email, password, username)
+    except UniqueViolation as e:
+        if e.diag.constraint_name == 'users_username_key':
+            return fail("Username already taken.")
+        return fail("Account already exists.")
+
     confirm_url = url_for('.confirm', token=user['confirmation_token'], _external=True)
 
-    # try:
-    email.send_email(
-        "Confirm your account",
-        f"Please confirm your email by clicking the link below:\n{confirm_url}\nThank you.",
-        f"Please confirm your email by clicking the link below:<br><a href=\"{confirm_url}\">{confirm_url}</a><br>Thank you.",
-        user_email
-    )
-    # except Exception:
-    #     return fail("Error occured while sending confirmation email. Please contact admin, remember to provide your e-mail / username.")
+    try:
+        email.send_email(
+            "Confirm your account",
+            f"Please confirm your email by clicking the link below:\n{confirm_url}\nThank you.",
+            f"Please confirm your email by clicking the link below:<br><a href=\"{confirm_url}\">{confirm_url}</a><br>Thank you.",
+            user_email
+        )
+    except (smtplib.SMTPException, OSError):
+        current_app.logger.exception("Failed to send the confirmation email")
+        db.delete_user(user['id'])
+        return fail("Could not send the confirmation email. Please try again later.")
 
     flash("Account created! Please confirm your email.", "success")
     return render_template("auth/confirm.html")

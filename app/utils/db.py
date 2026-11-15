@@ -493,6 +493,16 @@ def register(email, password, username):
     return result
 
 
+def delete_user(user_id):
+
+    query = "DELETE FROM users WHERE id = %s"
+    params = [user_id]
+
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+
+
 def change_password(user_id, password):
 
     password_hash = generate_password(password)
