@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 import re
-import smtplib
 
 from flask import Blueprint, current_app, g, request, session, flash, render_template, redirect, url_for
 from psycopg.errors import UniqueViolation
@@ -91,7 +90,7 @@ def register():
             f"Please confirm your email by clicking the link below:<br><a href=\"{confirm_url}\">{confirm_url}</a><br>Thank you.",
             user_email
         )
-    except (smtplib.SMTPException, OSError):
+    except Exception:
         current_app.logger.exception("Failed to send the confirmation email")
         db.delete_user(user['id'])
         return fail("Could not send the confirmation email. Please try again later.")
