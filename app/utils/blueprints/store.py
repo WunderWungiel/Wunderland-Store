@@ -37,7 +37,7 @@ def upload():
     version = request.form.get('version')
     platforms = request.form.getlist('platforms')
     icon = request.files.get('icon')
-    screenshots = request.files.getlist('screenshots')
+    screenshots = [screenshot for screenshot in request.files.getlist('screenshots') if screenshot.filename]
     addon_text = request.form.get('addon_text')
     addon_file = request.files.get('addon_file')
     uid = request.form.get('uid')
