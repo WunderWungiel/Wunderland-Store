@@ -18,7 +18,7 @@ def login():
     if request.method == 'GET':
         return render_template("auth/login.html")
 
-    email = request.form.get('email')
+    email = request.form.get('email', '').strip().lower()
     password = request.form.get('password')
 
     if not email or not password:
@@ -50,7 +50,7 @@ def register():
     if request.method == 'GET':
         return render_template("auth/register.html")
 
-    user_email = request.form.get('email')
+    user_email = request.form.get('email', '').strip().lower()
     username = request.form.get('username')
     password = request.form.get('password')
 
