@@ -1,6 +1,6 @@
 import os
 import time
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from flask import Blueprint, current_app, request, send_file, abort, redirect, url_for
 
@@ -30,12 +30,14 @@ def generate_content(content_type_id, content_name):
 
             name, extension = os.path.splitext(row['file'])
 
-        content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[descr.txt]\n"
+        base = f"{request.scheme}://{request.host}/StoreData/{content_name}/{quote(row['title'], safe='')}/{timestamp}"
+
+        content += f"{base}[descr.txt]\n"
         if extension in (".sis", ".sisx"):
-            content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file.sis]\n"
+            content += f"{base}[file.sis]\n"
         else:
-            content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[file{extension}]\n"
-        content += f"{request.scheme}://{request.host}/StoreData/{content_name}/{row['title']}/{timestamp}[preview.png]\n"
+            content += f"{base}[file{extension}]\n"
+        content += f"{base}[preview.png]\n"
 
     return content
 
@@ -44,7 +46,7 @@ def get_content(name, content_type_id):
 
     print(name, content_type_id)
 
-    results, total = db.get_content(content_type_id=content_type_id, search=name, limit=1)
+    results, total = db.get_content(content_type_id=content_type_id, title=name, limit=1)
     content = results[0] if results else None
 
     if content:
@@ -64,7 +66,7 @@ def index():
     return content
 
 
-@qtstore.route("/StoreData/<content_type_id>/<name>/descr.txt")
+@qtstore.route("/StoreData/<content_type_id>/<path:name>/descr.txt")
 def description(content_type_id, name):
 
     content_type = db.get_content_type_by_id(content_type_id.lower())
@@ -95,7 +97,7 @@ def description(content_type_id, name):
     return description
 
 
-@qtstore.route("/StoreData/<content_type_id>/<name>/file<ext>")
+@qtstore.route("/StoreData/<content_type_id>/<path:name>/file<ext>")
 def file(content_type_id, name, ext):
 
     content_type = db.get_content_type_by_id(content_type_id.lower())
@@ -116,7 +118,7 @@ def file(content_type_id, name, ext):
         abort(404)
 
 
-@qtstore.route("/StoreData/<content_type_id>/<name>/preview.png")
+@qtstore.route("/StoreData/<content_type_id>/<path:name>/preview.png")
 def preview(content_type_id, name):
 
     content_type = db.get_content_type_by_id(content_type_id.lower())

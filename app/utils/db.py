@@ -131,7 +131,7 @@ def upload(title, category_id, publisher, version, icon, screenshot_prefix, scre
     return result
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC"):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC"):
 
     sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
@@ -181,6 +181,10 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     if search is not None:
         where_clauses.append("content.title ILIKE %s")
         params.append(f"%{search}%")
+
+    if title is not None:
+        where_clauses.append("content.title = %s")
+        params.append(title)
 
     if start is not None:
         where_clauses.append("content.id >= %s")
