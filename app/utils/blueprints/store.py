@@ -42,8 +42,17 @@ def upload():
     addon_file = request.files.get('addon_file')
     uid = request.form.get('uid')
 
-    if not any([prefix, title, file, category_id, description, publisher, version, platforms]):
+    if not all([prefix, title, category_id, description, publisher, version, platforms]):
         flash("Missing required parameters!", "danger")
+        return redirect(url_for('.upload'))
+
+    if not icon:
+        flash("An icon is required!", "danger")
+        return redirect(url_for('.upload'))
+
+    prefix = secure_filename(prefix)
+    if not prefix:
+        flash("Invalid prefix.", "danger")
         return redirect(url_for('.upload'))
 
     if not file and not latest_url:
@@ -59,8 +68,6 @@ def upload():
 
     if any(not db.get_platform(platform_id) for platform_id in platforms):
         return redirect(url_for('.upload'))
-
-    prefix = secure_filename(prefix)
 
     icon_extension = os.path.splitext(icon.filename)[1].lower().lstrip('.')
     if icon_extension != "png":
