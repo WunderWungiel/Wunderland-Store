@@ -79,39 +79,59 @@ def upload():
         flash("Invalid screenshot extensions.", "danger")
         return redirect(url_for('.upload'))
 
+    content_folder = os.path.join(current_app.static_folder, "content")
+
     file_name = None
     if file:
         file_extension = os.path.splitext(file.filename)[1].lower().lstrip('.')
         file_name = f"{prefix}.{file_extension}"
-        file.save(os.path.join(current_app.static_folder, "content", "files", file_name))
 
-    icon_path = os.path.join(current_app.static_folder, "content", "icons", f"{prefix}.{icon_extension}")
-    icon.save(icon_path)
-
+    addon_file_name = None
     if addon_file:
-        addon_file_path = os.path.join(current_app.static_folder, "content", "files", secure_filename(addon_file.filename))
-        addon_file.save(addon_file_path)
+        addon_extension = os.path.splitext(secure_filename(addon_file.filename))[1].lower().lstrip('.')
+        addon_file_name = f"{prefix}_addon.{addon_extension}" if addon_extension else f"{prefix}_addon"
 
+    uploads = [(icon, os.path.join(content_folder, "icons", f"{prefix}.{icon_extension}"))]
+    if file:
+        uploads.append((file, os.path.join(content_folder, "files", file_name)))
+    if addon_file:
+        uploads.append((addon_file, os.path.join(content_folder, "files", addon_file_name)))
     for i, screenshot in enumerate(screenshots):
-        screenshot_path = os.path.join(current_app.static_folder, "content", "screenshots", f"{prefix}{i+1}.{screenshot_extensions[i]}")
-        screenshot.save(screenshot_path)
+        uploads.append((screenshot, os.path.join(content_folder, "screenshots", f"{prefix}{i+1}.{screenshot_extensions[i]}")))
 
-    db.upload(
-        title=title,
-        file=file_name,
-        latest_url=latest_url,
-        category_id=category_id,
-        description=description,
-        publisher=publisher,
-        version=version,
-        icon=f"{prefix}.{icon_extension}",
-        screenshot_prefix=prefix,
-        screenshot_count=len(screenshots),
-        addon_text=addon_text,
-        addon_file=secure_filename(addon_file.filename) if addon_file else None,
-        uid=uid,
-        platforms=platforms
-    )
+    if db.prefix_in_use(prefix) or any(os.path.exists(path) for _, path in uploads):
+        flash("This prefix is already in use.", "danger")
+        return redirect(url_for('.upload'))
+
+    written = []
+    try:
+        for upload_file, path in uploads:
+            written.append(path)
+            upload_file.save(path)
+
+        db.upload(
+            title=title,
+            file=file_name,
+            latest_url=latest_url,
+            category_id=category_id,
+            description=description,
+            publisher=publisher,
+            version=version,
+            icon=f"{prefix}.{icon_extension}",
+            screenshot_prefix=prefix,
+            screenshot_count=len(screenshots),
+            addon_text=addon_text,
+            addon_file=addon_file_name,
+            uid=uid,
+            platforms=platforms
+        )
+    except Exception:
+        for path in written:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+        raise
 
     return redirect(url_for('.root'))
     

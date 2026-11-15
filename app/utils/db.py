@@ -105,6 +105,14 @@ def get_platform(platform_id):
     return results[0] if results else None
 
 
+def prefix_in_use(prefix):
+    query = "SELECT 1 FROM content WHERE screenshot_prefix = %s OR icon = %s LIMIT 1"
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(query, [prefix, f"{prefix}.png"])
+            return cursor.fetchone() is not None
+
+
 def upload(title, category_id, publisher, version, icon, screenshot_prefix, screenshot_count, file=None, latest_url=None, description=None, addon_text=None, addon_file=None, uid=None, platforms=None):
     
     query = """
