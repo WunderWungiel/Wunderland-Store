@@ -66,7 +66,7 @@ def format_results(results, content_type_id=None, widget=False):
             versionstore = SubElement(app, 'versionstore')
             versionunsigned = SubElement(app, 'unsigned')
             versiondate = SubElement(app, 'versiondate')
-            versiondate.text = "2024-03-30 20:54"
+            versiondate.text = row['updated_at'].strftime("%Y-%m-%d %H:%M")
             versiondatestore = SubElement(app, 'versiondatestore')
             versiondateunsigned = SubElement(app, 'versiondateunsigned')
 
