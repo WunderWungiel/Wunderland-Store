@@ -323,7 +323,7 @@ def get_content_types():
 
 
 def get_news(news_id=None, limit=None, offset=None):
-    query = "SELECT * FROM news"
+    query = "SELECT *, COUNT(*) OVER() AS total FROM news"
     where_clauses = []
     params = []
 
@@ -349,6 +349,7 @@ def get_news(news_id=None, limit=None, offset=None):
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
+    total = rows[0]['total'] if rows else 0
     results = []
 
     for row in rows:
@@ -369,7 +370,7 @@ def get_news(news_id=None, limit=None, offset=None):
             ).strftime("%a, %d %b %Y %H:%M:%S GMT")
         })
 
-    return results, len(results)
+    return results, total
 
 
 def generate_password(password):
