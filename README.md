@@ -1,49 +1,66 @@
-## Wunderland Store
+# Wunderland Store
 
-This project aims to partially revive the functionality of the Nokia Store.
-This will allow users to use web version of Nokia/Ovi Store as in 2015, and also it will be a place for downloading apps, games and themes.
+A revival project of the Nokia/Ovi Store. It's a web store for apps, games and themes for Symbian devices, with support for native clients.
 
-To do:
-
- - [x] Revive web interface
- - [x] Create and fill the apps / games / themes database
- - [x] Create a Java / Qt client that would open / embed website.
-
-Compatibility: Symbian S60v3 and later.
-
-### Running with Docker
-
-The app container runs as UID/GID 1000, so the host's `./Ovi` directory (mounted as the store content) must be writable by that user for admin uploads to work:
+## Running with Docker
 
 ```sh
-sudo chown -R 1000:1000 Ovi
+cp .env.example .env
+cp config.yaml.example config.yaml
+sudo chown -R 1000:1000 content
+docker compose up -d --build
 ```
 
-This also applies when upgrading: older images ran as root, so an existing `./Ovi` is root-owned and uploads fail with a permission error until it is chowned.
+Before the first start:
 
-To use a different UID, set `APP_UID` and `APP_GID` in `.env`.
+- In `.env`, set a real `POSTGRES_PASSWORD`. The other values have working defaults, and each one is explained in the file.
+- In `config.yaml`, set `secret_key` to a long random string and `base_url` to the store's public address. Fill in `email` if you want registration emails to go out. You can leave out the `database` section, because in Docker the app reads it from `.env`.
+- The app runs as UID 1000, and `content/` (uploaded files, icons, screenshots and news) must be writable by that user. To use another UID, set `APP_UID` and `APP_GID` in `.env`.
 
-The `clean` service runs `flask --app wunderland.app clean` once a day to delete expired unconfirmed users and expired sessions. Without Docker, run that command from cron instead.
+The store then listens on `127.0.0.1:8080`, which you can change with `BIND_ADDRESS` and `PORT`. It's meant to sit behind your own reverse proxy (with HTTPS). On the first start, Postgres creates the database from `db/schema.sql`.
 
-`compose.yaml` is committed. Put local changes in `.env` or in a `compose.override.yaml`, which compose reads automatically and git ignores.
+`docker compose ps` should show `app` and `db` as healthy. A `clean` service deletes expired unconfirmed accounts and sessions once a day.
 
-### Upgrading from an untracked compose.yaml
+To change something in `compose.yaml` only on your machine, put it in a `compose.override.yaml`. Compose reads that file automatically and git ignores it.
 
-`compose.yaml` used to be copied from `compose.yaml.example` and is now committed. It no longer sets container names, so the containers are now called `<project>-app-1`, `<project>-db-1` and so on, where the project name is the checkout directory's name in lowercase. Use `docker compose exec db ...` instead of `docker exec wunderland-db ...`. The database volume keeps its name, so the data stays where it is.
+## Running without Docker
 
-1. Stop the old stack while the old file is still in place: `docker compose down`.
-2. Rename the old file so `git pull` can create the new one: `mv compose.yaml compose.yaml.old`. Move anything it changed (such as `TZ`) into `.env`.
+You need Python 3 and a PostgreSQL database loaded from `db/schema.sql`.
+
+```sh
+pip install -r requirements.txt
+cp config.yaml.example config.yaml   # then fill in secret_key, base_url and database
+flask --app wunderland.app run --debug
+```
+
+Run commands from the repo root. For production, use `gunicorn wunderland.app:app`, which reads `gunicorn.conf.py`. Add a daily cron job for the cleanup:
+
+```sh
+flask --app wunderland.app clean
+```
+
+To use a config file somewhere else, point `WUNDERLAND_CONFIG` at it.
+
+## Smoke test
+
+There is no test suite, but there is a script that requests every page and both client APIs and checks the responses:
+
+```sh
+python -m tests.smoke_test
+```
+
+Run it against an empty, throwaway database created from `db/schema.sql`. It refuses to start if the tables already hold data. It adds its own test data, plus a few files under `content/`, and removes all of it when it finishes.
+
+## Upgrading from the old layout
+
+Older checkouts kept the code and `config.yaml` in `app/`, uploads in `Ovi/` and an untracked `compose.yaml`. To move a server to the current layout:
+
+1. Stop the stack while the old files are still in place: `docker compose down`.
+2. Move the old `compose.yaml` aside so `git pull` can create the new one: `mv compose.yaml compose.yaml.old`.
 3. `git pull`.
-4. `docker compose up -d --build`.
+4. `mv app/config.yaml config.yaml`
+5. Copy the uploads: `sudo cp -a Ovi/. content/`, then `sudo chown -R 1000:1000 content`. Delete `Ovi/` once the store shows them.
+6. Add the new settings from `.env.example` to your `.env`. The `POSTGRES_*` values must stay the ones the database was created with. Copy any local changes from `compose.yaml.old` (such as `TZ`) too.
+7. `docker compose up -d --build`, then check `docker compose ps`.
 
-The app containers now connect with `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` from `.env`, and with `db` as the host, so the `database` section of `config.yaml` is ignored in Docker. Check that `.env` holds the credentials the database was created with.
-
-Don't rename the checkout directory: the volume name comes from it, and compose would start on a new, empty volume.
-
-### Smoke test
-
-`app/scripts/smoke_test.py` requests every route, including `/applist.php` and `/StoreData/storeIndex.xml`, through the Flask test client and checks the responses. It needs an empty database created from `db/schema.sql`, with `config.yaml` pointing at it. It fills the tables with its own fixtures, writes a few files under `static/content`, and removes both when it finishes. It refuses to run if those tables already hold data.
-
-```sh
-cd app && python scripts/smoke_test.py
-```
+The database volume keeps its name, so the data stays where it was. Don't rename the checkout directory, because compose names the volume after it and would start on a new, empty one. Containers no longer have fixed names, so use `docker compose exec db psql ...` instead of `docker exec wunderland-db ...`.
