@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Request every route once and check the responses.
 
-Run it against a throwaway database created from db/database.psql, with
+Run it against a throwaway database created from db/schema.sql, with
 config.yaml pointing at that database. The script fills the empty tables
 with a small set of fixtures, requests each web page and both client XML
 APIs through the Flask test client, then empties the tables again and
@@ -59,7 +59,7 @@ def check_empty():
         busy = [table for table in TABLES if execute(cursor, f"SELECT EXISTS (SELECT 1 FROM {table}) AS e")['e']]
     if busy:
         sys.exit(f"Refusing to run: these tables already hold rows: {', '.join(busy)}. "
-                 "Point config.yaml at a fresh database created from db/database.psql.")
+                 "Point config.yaml at a fresh database created from db/schema.sql.")
     existing = [path for path in FIXTURE_FILES if os.path.exists(path)]
     if existing:
         sys.exit(f"Refusing to run: fixture files already exist: {', '.join(existing)}")

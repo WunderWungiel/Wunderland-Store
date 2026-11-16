@@ -27,7 +27,7 @@ The `clean` service in `compose.yaml.example` runs `app/scripts/clean.py` once a
 
 ### Smoke test
 
-`app/scripts/smoke_test.py` requests every route, including `/applist.php` and `/StoreData/storeIndex.xml`, through the Flask test client and checks the responses. It needs an empty database created from `db/database.psql`, with `config.yaml` pointing at it. It fills the tables with its own fixtures, writes a few files under `static/content`, and removes both when it finishes. It refuses to run if those tables already hold data.
+`app/scripts/smoke_test.py` requests every route, including `/applist.php` and `/StoreData/storeIndex.xml`, through the Flask test client and checks the responses. It needs an empty database created from `db/schema.sql`, with `config.yaml` pointing at it. It fills the tables with its own fixtures, writes a few files under `static/content`, and removes both when it finishes. It refuses to run if those tables already hold data.
 
 ```sh
 cd app && python scripts/smoke_test.py
