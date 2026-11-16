@@ -223,9 +223,10 @@ def php():
 
 @client.route("/version.xml")
 def version():
-    return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"))
+    # Update metadata must revalidate even when static assets have a cache lifetime.
+    return send_from_directory(current_app.static_folder, os.path.join("client", "version.xml"), max_age=0)
 
 
 @client.route("/changelog.xml")
 def changelog():
-    return send_from_directory(current_app.static_folder, os.path.join("client", "changelog.xml"))
+    return send_from_directory(current_app.static_folder, os.path.join("client", "changelog.xml"), max_age=0)
