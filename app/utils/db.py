@@ -10,8 +10,14 @@ from psycopg_pool import ConnectionPool
 
 from . import config
 
-uri = f"postgresql://{config['database']['user']}:{config['database']['password']}@{config['database']['host']}:{config['database']['port']}/{config['database']['name']}"
-pool = ConnectionPool(uri, kwargs={"row_factory": dict_row})
+pool = ConnectionPool(kwargs={
+    "host": config['database']['host'],
+    "port": config['database']['port'],
+    "dbname": config['database']['name'],
+    "user": config['database']['user'],
+    "password": config['database']['password'],
+    "row_factory": dict_row,
+})
 
 VALID_SORT_FIELDS = {
     "updated_at": {"column": "content.updated_at", "label": "Updated"},
