@@ -82,7 +82,7 @@ def format_results(results, content_type_id=None, widget=False):
             uidstore = SubElement(app, 'uidstore')
             uidunsigned = SubElement(app, 'uidunsigned')
             icon = SubElement(app, 'icon')
-            icon.text = url_for('static', _external=True, filename=os.path.join("content", "icons", row['icon']))
+            icon.text = utils.external_url_for('static', filename=os.path.join("content", "icons", row['icon']))
             version = SubElement(app, 'version')
 
             try:
@@ -112,11 +112,11 @@ def format_results(results, content_type_id=None, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, 'mail')
             website = SubElement(app, 'website')
-            website.text = url_for('store.item', _external=True, content_id=row['id'])
+            website.text = utils.external_url_for('store.item', content_id=row['id'])
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:
-                facebook.text = url_for('static', _external=True, filename=os.path.join(
+                facebook.text = utils.external_url_for('static', filename=os.path.join(
                     "content", "files", row['addon_file']))
             donation = SubElement(app, 'donation')
             price = SubElement(app, 'price')
@@ -136,8 +136,8 @@ def format_results(results, content_type_id=None, widget=False):
             for i in range(5):  # 5 - 1
                 image = SubElement(app, f'image{i + 1}')
                 if len(screenshots) >= i + 1:
-                    image.text = url_for(
-                        'static', _external=True, filename=os.path.join("content", "screenshots", screenshots[i])
+                    image.text = utils.external_url_for(
+                        'static', filename=os.path.join("content", "screenshots", screenshots[i])
                     )
 
             tags = SubElement(app, 'tags')

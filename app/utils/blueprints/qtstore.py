@@ -31,7 +31,7 @@ def generate_content(content_type_id, content_name):
 
             name, extension = os.path.splitext(row['file'])
 
-        base = f"{request.scheme}://{request.host}/StoreData/{content_name}/{quote(row['title'], safe='')}/{timestamp}"
+        base = f"{config['base_url'].rstrip('/')}/StoreData/{content_name}/{quote(row['title'], safe='')}/{timestamp}"
 
         content += f"{base}[descr.txt]\n"
         if extension in (".sis", ".sisx"):
@@ -89,13 +89,13 @@ def description(content_type_id, name):
         if description:
             description += Markup("<br><br>")
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", screenshot))
+            path = utils.external_url_for('static', filename=os.path.join("content", "screenshots", screenshot))
             description += Markup('<img src="{}" alt="screenshot{}" width="150"><br><br>').format(path, i)
 
     if content['addon_text']:
         description += Markup("<br><br>Extra file: {}").format(content['addon_text'])
     if content['addon_file']:
-        path = url_for('static', _external=True, filename=os.path.join("content", "files", content['addon_file']))
+        path = utils.external_url_for('static', filename=os.path.join("content", "files", content['addon_file']))
         description += Markup("<br><br>Link: {}").format(path)
 
     return description

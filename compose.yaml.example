@@ -10,7 +10,8 @@ services:
       db:
         condition: service_healthy
     ports:
-      - 8080:80
+      # Only the local reverse proxy should reach this port.
+      - "127.0.0.1:8080:80"
     stop_signal: SIGINT
     stop_grace_period: 15s
     restart: unless-stopped

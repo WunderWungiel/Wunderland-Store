@@ -7,6 +7,7 @@ from psycopg.errors import UniqueViolation
 from .. import csrf
 from .. import db
 from .. import email
+from .. import utils
 
 auth = Blueprint('auth', __name__, template_folder="templates")
 
@@ -82,7 +83,7 @@ def register():
             return fail("Username already taken.")
         return fail("Account already exists.")
 
-    confirm_url = url_for('.confirm', token=user['confirmation_token'], _external=True)
+    confirm_url = utils.external_url_for('auth.confirm', token=user['confirmation_token'])
 
     try:
         email.send_email(

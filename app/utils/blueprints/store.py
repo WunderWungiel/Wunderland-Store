@@ -372,12 +372,12 @@ def feed():
 
     SubElement(channel, 'title').text = "Wunderland Store"
     SubElement(channel, 'description').text = "News, content and programs for retro devices."
-    SubElement(channel, 'link').text = "http://ovi.wunderwungiel.pl/"
+    SubElement(channel, 'link').text = utils.external_url_for('store.root')
     SubElement(channel, 'lastBuildDate').text = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     news_items, total = db.get_news()
     for content in news_items:
-        news_url = url_for('.news', _external=True, news_id=content['id'])
+        news_url = utils.external_url_for('store.news', news_id=content['id'])
 
         item = SubElement(channel, 'item')
         SubElement(item, 'title').text = content['title']

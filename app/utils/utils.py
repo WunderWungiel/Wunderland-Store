@@ -1,8 +1,18 @@
 import os
 import re
+from urllib.parse import urlsplit
 
 from flask import current_app, url_for
 from markupsafe import Markup, escape
+
+from . import config
+
+
+def external_url_for(endpoint, **values):
+    """Build public URLs from configuration, never request/proxy headers."""
+    base = urlsplit(config['base_url'])
+    adapter = current_app.url_map.bind(base.netloc, script_name=base.path or '/', url_scheme=base.scheme)
+    return adapter.build(endpoint, values, force_external=True)
 
 def nl2br(text):
     """Escape text and turn its newlines into <br> tags."""
@@ -52,7 +62,8 @@ def get_file_path(item):
 def get_file_url(item, external=False):
     if not item['file']:
         return None
-    return url_for('static', _external=external, filename=os.path.join("content", "files", item['file']))
+    builder = external_url_for if external else url_for
+    return builder('static', filename=os.path.join("content", "files", item['file']))
 
 def get_download_url(item, external=False):
     # Clients that take a single link get latest_url when set
