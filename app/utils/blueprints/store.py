@@ -1,5 +1,4 @@
 import os
-import random
 import math
 from datetime import datetime, timezone
 from urllib.parse import urlparse
@@ -181,11 +180,13 @@ def item(content_id):
     recommended, _ = db.get_content(
         content_type_id=item['category']['type_id'],
         category_id=item['category']['id'],
-        platforms=[platform_id] if platform_id else None
+        platforms=[platform_id] if platform_id else None,
+        exclude_content_id=item['id'],
+        random_order=True,
+        limit=10
     )
 
-    recommended = [d for d in recommended if d['id'] != item['id']] if recommended else []
-    recommended = random.sample(recommended, k=min(10, len(recommended))) or None
+    recommended = recommended or None
 
     item['meta_description'] = " ".join(item['description'].split()) if item['description'] else ""
 

@@ -135,7 +135,7 @@ def upload(title, category_id, publisher, version, icon, screenshot_prefix, scre
     return result
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC"):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False):
 
     sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
@@ -174,6 +174,10 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         where_clauses.append("content.id = %s")
         params.append(content_id)
 
+    if exclude_content_id is not None:
+        where_clauses.append("content.id <> %s")
+        params.append(exclude_content_id)
+
     if content_type_id is not None:
         where_clauses.append("category.type_id = %s")
         params.append(content_type_id)
@@ -201,10 +205,12 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
 
     sort_column = sort_fields.get(sort_by, "content.updated_at")
     sort_order = "DESC" if sort_order.upper() == "DESC" else "ASC"
-    query += f" ORDER BY {sort_column} {sort_order}"
-
-    if sort_column != "content.id":
-        query += ", content.id DESC"
+    if random_order:
+        query += " ORDER BY random()"
+    else:
+        query += f" ORDER BY {sort_column} {sort_order}"
+        if sort_column != "content.id":
+            query += ", content.id DESC"
 
     if limit is not None:
         query += " LIMIT %s"
