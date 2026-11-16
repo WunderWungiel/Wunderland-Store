@@ -4,6 +4,7 @@ services:
     user: "${APP_UID:-1000}:${APP_GID:-1000}"
     environment:
       TZ: ${TZ:-Etc/UTC}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-8}
     volumes:
       - ./config.yaml:/srv/config.yaml:ro
       - ./content:/srv/content
