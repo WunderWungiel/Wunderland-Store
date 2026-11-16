@@ -9,7 +9,7 @@
 {% block header_navigation %}
                 <div id="crumbNav">
                     <a href="{{ url_for('store.content', content_type_id=item['content_type']['id']) }}" id="crumbNavContentArea">{{ item['content_type']['name'] }}</a>
-                    &gt; <a href="{{ url_for('store.content', content_type_id=item['content_type']['id'], category_id=item['category']['id']) }}" id="crumbNavContentArea">{{ item['category']['name'] }}</a>
+                    &gt; <a href="{{ url_for('store.content', content_type_id=item['content_type']['id'], category_id=item['category']['id']) }}" id="crumbNavCategory">{{ item['category']['name'] }}</a>
                     &gt; {{ item['title'] }}
                 </div>
 {% endblock %}

@@ -15,10 +15,10 @@ def external_url_for(endpoint, **values):
     return adapter.build(endpoint, values, force_external=True)
 
 def nl2br(text):
-    """Escape text and turn its newlines into <br> tags."""
+    """Escape text and turn its newlines into <br/> tags."""
     if not text:
         return text
-    return Markup("<br>").join(escape(line) for line in text.split("\n"))
+    return Markup("<br/>").join(escape(line) for line in text.split("\n"))
 
 def generate_pages(page, total_pages):
 

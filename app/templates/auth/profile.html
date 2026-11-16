@@ -30,15 +30,15 @@
                             <input type="password" id="new_password_confirm" size="15" style="width: 63%; max-width: 300px;" title="" />
                             <span id="passwords_tip" class="tip">Passwords don't match!</span>
 
-                            <br><br>
+                            <br/><br/>
 
-                            <input type="submit" class="Btn" value="Change password">
+                            <input type="submit" class="Btn" value="Change password"/>
 
-                            <br><br>
+                            <br/><br/>
                         </form>
                         
 
-                        <input type="button" class="Btn" onclick="window.location.href='{{ url_for('auth.logout', csrf_token=csrf_token()) }}'" value="Log out"></input>
+                        <input type="button" class="Btn" onclick="window.location.href='{{ url_for('auth.logout', csrf_token=csrf_token()) }}'" value="Log out"/>
                     </div>
                     <br/>
                 </div>
