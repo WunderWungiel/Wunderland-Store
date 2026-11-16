@@ -1,8 +1,7 @@
 function validateLoginForm() {
     var email_element = document.getElementById('email');
     var email = email_element.value; 
-    var email_label = document.getElementById('email_label');
-    var email_required = email_label.getElementsByClassName('required')[0];
+    var email_required = document.getElementById('email_required');
     var email_tip = document.getElementById('email_tip');
     var email_pattern = /^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
 
@@ -26,8 +25,7 @@ function validateLoginForm() {
 
     var password_element = document.getElementById('password');
     var password = password_element.value; 
-    var password_label = document.getElementById('password_label');
-    var password_required = password_label.getElementsByClassName('required')[0];
+    var password_required = document.getElementById('password_required');
 
     if (password == "") {
         password_required.style.display = "inline";
@@ -41,8 +39,7 @@ function validateRegisterForm() {
 
     var username_element = document.getElementById('username');
     var username = username_element.value; 
-    var username_label = document.getElementById('username_label');
-    var username_required = username_label.getElementsByClassName('required')[0];
+    var username_required = document.getElementById('username_required');
     var username_tip = document.getElementById('username_tip');
     var username_pattern = /^[A-Za-z0-9]{7,}$/;
 
@@ -66,8 +63,7 @@ function validateRegisterForm() {
     
     var email_element = document.getElementById('email');
     var email = email_element.value; 
-    var email_label = document.getElementById('email_label');
-    var email_required = email_label.getElementsByClassName('required')[0];
+    var email_required = document.getElementById('email_required');
     var email_tip = document.getElementById('email_tip');
     var email_pattern = /^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
 
@@ -91,8 +87,7 @@ function validateRegisterForm() {
 
     var password_element = document.getElementById('password');
     var password = password_element.value; 
-    var password_label = document.getElementById('password_label');
-    var password_required = password_label.getElementsByClassName('required')[0];
+    var password_required = document.getElementById('password_required');
 
     if (password == "") {
         password_required.style.display = "inline";
@@ -105,14 +100,11 @@ function validateRegisterForm() {
 function validateChangePasswordForm() {
 
     var current_password_input = document.getElementById("current_password");
-    var current_password_input_label = document.getElementById("current_password_label");
-    var current_password_input_required = current_password_input_label.getElementsByClassName("required")[0];
+    var current_password_input_required = document.getElementById("current_password_required");
     var new_password_input = document.getElementById("new_password");
-    var new_password_input_label = document.getElementById("new_password_label");
-    var new_password_input_required = new_password_input_label.getElementsByClassName("required")[0];
+    var new_password_input_required = document.getElementById("new_password_required");
     var new_password_confirm_input = document.getElementById("new_password_confirm");
-    var new_password_confirm_input_label = document.getElementById("new_password_confirm_label");
-    var new_password_confirm_input_required = new_password_confirm_input_label.getElementsByClassName("required")[0];
+    var new_password_confirm_input_required = document.getElementById("new_password_confirm_required");
     var passwords_tip = document.getElementById("passwords_tip");
 
     if (current_password_input.value === "") {

@@ -15,13 +15,13 @@
                             <form action="{{ url_for('auth.login') }}" method="POST" id="loginForm" onsubmit="return validateLoginForm()">
                                 <fieldset>
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <label for="email" id="email_label">E-mail address: <span class="required">*</span></label>
+                                    <label for="email" id="email_label">E-mail address: <span class="required" id="email_required">*</span></label>
                                     <input type="text" id="email" name="email" size="15" style="width: 63%; max-width: 300px;" title="" />
                                     <span id="email_tip" class="tip">Wrong e-mail address.</span>
 
                                     <br/>
 
-                                    <label for="password" id="password_label">Password: <span class="required">*</span></label>
+                                    <label for="password" id="password_label">Password: <span class="required" id="password_required">*</span></label>
                                     <input type="password" id="password" name="password" size="15" style="width: 63%; max-width: 300px;" title="" />
                                     
                                     <br/><br/>

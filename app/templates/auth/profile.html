@@ -20,13 +20,13 @@
 
                         <form action="{{ url_for('auth.change_password') }}" method="POST" id="changePasswordForm" onsubmit="return validateChangePasswordForm()">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <label for="current_password" id="current_password_label">Current password: <span class="required">*</span></label>
+                            <label for="current_password" id="current_password_label">Current password: <span class="required" id="current_password_required">*</span></label>
                             <input type="password" id="current_password" name="current_password" size="15" style="width: 63%; max-width: 300px;" title="" />
 
-                            <label for="new_password" id="new_password_label">New password: <span class="required">*</span></label>
+                            <label for="new_password" id="new_password_label">New password: <span class="required" id="new_password_required">*</span></label>
                             <input type="password" id="new_password" name="new_password" size="15" style="width: 63%; max-width: 300px;" title="" />
 
-                            <label for="new_password_confirm" id="new_password_confirm_label">Confirm new password: <span class="required">*</span></label>
+                            <label for="new_password_confirm" id="new_password_confirm_label">Confirm new password: <span class="required" id="new_password_confirm_required">*</span></label>
                             <input type="password" id="new_password_confirm" size="15" style="width: 63%; max-width: 300px;" title="" />
                             <span id="passwords_tip" class="tip">Passwords don't match!</span>
 
