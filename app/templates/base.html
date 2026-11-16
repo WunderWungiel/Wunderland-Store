@@ -1,3 +1,5 @@
+{# Pages are served as text/html on purpose: some old browsers render application/xhtml+xml
+   badly, so keep the meta below and the response type in sync. -#}
 {# Shared options: set these at the top level of a child template, outside blocks.
    account_page (default false): show the compact account header, without platform/search.
    profile_page (default false): add the username to the account header.
@@ -11,7 +13,7 @@
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
     <head>
-        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <meta name="navigation" content="cursor"/>
         {% block metadata %}{% endblock %}
         <title>{% block title %}Wunderland Store{% endblock %}</title>
