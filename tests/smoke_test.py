@@ -10,7 +10,10 @@ removes the fixture files it wrote under static/content.
 It refuses to run if any of the tables it uses already hold rows, so it
 can't touch a real store's data.
 
-    python app/scripts/smoke_test.py
+    python -m tests.smoke_test
+
+Run it from the repo root. WUNDERLAND_CONFIG can name a config file other
+than the repo root's config.yaml.
 
 Exit status is 0 when every check passes and 1 otherwise.
 """
@@ -19,11 +22,9 @@ import sys
 import traceback
 from xml.etree import ElementTree as ET
 
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
-
-from wunderland import db  # noqa: E402
-from wunderland.app import app  # noqa: E402
-from wunderland.config import config  # noqa: E402
+from wunderland import db
+from wunderland.app import app
+from wunderland.config import config
 
 # Every table the fixtures or the requests write to.
 TABLES = [
