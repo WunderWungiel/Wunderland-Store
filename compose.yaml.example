@@ -9,11 +9,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      # Only the local reverse proxy should reach this port.
-      - "127.0.0.1:8080:80"
+    expose:
+      - "80"
     stop_signal: SIGINT
     stop_grace_period: 15s
+    restart: unless-stopped
+
+  proxy:
+    image: nginx:stable-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      # Allow only the trusted public-facing reverse proxy to reach this port.
+      - "8080:80"
+    depends_on:
+      - app
     restart: unless-stopped
 
   db:
