@@ -1,3 +1,5 @@
+{% extends "base.html" %}
+
 {% macro search_url(page=none) -%}
     {{- url_for('store.search',
         query=query,
@@ -6,54 +8,10 @@
         order=order if order and order != -1 else none
     ) -}}
 {%- endmacro %}
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-    <head>
-        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
-        <meta name="navigation" content="cursor"/>
-        <title>Search • Wunderland Store</title>
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>
-        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
-    </head>
 
-    <body>
-        <div id="wrapper">
+{% block title %}Search • Wunderland Store{% endblock %}
 
-            <div id="header">
-                <div id="top">
-                    <table>
-                        <tr>
-                            <td id="logo">
-                                <a id="logoImg" href="{{ url_for('store.root') }}">
-                                    <img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store"/>
-                                </a>
-                            </td>
-                            <td id="searchLink">
-                                <span>
-                                    <a href="{{ url_for('store.platforms') }}">Platform</a>:
-                                    <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
-                                </span>
-                                {% if g.user %}
-                                |
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
+{% block content %}
             <div id="views">
                 <div class="view">
                     <div class="contentItem"{% if not results %} style="padding: 14px 5px 0;"{% endif %}>
@@ -116,7 +74,9 @@
                     <div class="beacon"></div>
                 </div>
             </div>
+{% endblock %}
 
+{% block bottom %}
             <div id="bottom">
                 <div>
                     {% if results %}
@@ -140,26 +100,6 @@
                     {% endif %}
                 </div>
 
-                <div id="bottomNavigation">
-                    <h3>Browse categories</h3>
-                    <a href="{{ url_for('store.root') }}">Home</a><br/>
-                    {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}">{{ _content_type['name'] }}</a><br/>
-                    {% endfor %}
-                </div>
+{% include 'includes/bottom_navigation.html' %}
             </div>
-
-            <div id="footer">
-                <a href="{{ url_for('store.download') }}">Download</a> |
-                {% if not g.user %}
-                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
-                {% else %}
-                <a class="accountStatusChange" href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}">Log out</a>
-                {% endif %}
-                <br/>
-                © Wunder Wungiel {{ now.year }}
-            </div>
-
-        </div>
-    </body>
-</html>
+{% endblock %}

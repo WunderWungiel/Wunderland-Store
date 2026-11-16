@@ -1,0 +1,11 @@
+            <div id="footer">
+                <a href="{{ url_for('store.download') }}">Download</a>{% if footer_mode|default("account") != "download_only" %} |
+                {% if footer_mode|default("account") == "sign_in" or not g.user %}
+                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
+                {% else %}
+                <a class="accountStatusChange" href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}">Log out</a>
+                {% endif %}
+                {% endif %}
+                <br/>
+                © Wunder Wungiel {{ now.year }}
+            </div>

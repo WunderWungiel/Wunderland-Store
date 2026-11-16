@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
+        <meta name="navigation" content="cursor"/>
+        {% block metadata %}{% endblock %}
+        <title>{% block title %}Wunderland Store{% endblock %}</title>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
+        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>
+        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
+        {% block scripts %}{% endblock %}
+    </head>
+
+    <body>
+        <div id="wrapper">
+
+            <div id="header">
+{% include 'includes/header.html' %}
+{% block header_navigation %}{% endblock %}
+            </div>
+
+{% block flashes %}{% include 'includes/flashes.html' %}{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block bottom %}            <div id="bottom"></div>{% endblock %}
+
+{% include 'includes/footer.html' %}
+
+        </div>
+    </body>
+</html>

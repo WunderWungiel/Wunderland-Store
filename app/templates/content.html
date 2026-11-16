@@ -1,3 +1,7 @@
+{% extends "base.html" %}
+
+{% set selected_content_type = content_type['id'] %}
+
 {% macro content_url(page=none) -%}
     {{- url_for('store.content',
         content_type_id=content_type['id'],
@@ -7,56 +11,15 @@
         order=order if order and order != -1 else none
     ) -}}
 {%- endmacro %}
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
-    <head>
-        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
-        <meta name="navigation" content="cursor"/>
-        <title>
+
+{% block title %}
             {{ content_type['name'] }}
             {% if category is defined and category %}:: {{ category['name'] }}{% endif %}
             • Wunderland Store
-        </title>
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>
-        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
-    </head>
+        {% endblock %}
 
-    <body>
-        <div id="wrapper">
-
-            <div id="header">
-                <div id="top">
-                    <table>
-                        <tr>
-                            <td id="logo">
-                                <a id="logoImg" href="{{ url_for('store.root') }}">
-                                    <img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store"/>
-                                </a>
-                            </td>
-                            <td id="searchLink">
-                                <span>
-                                    <a href="{{ url_for('store.platforms') }}">Platform</a>:
-                                    <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
-                                </span>
-                                |
-                                {% if g.user %}
-                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
-                                |
-                                {% endif %}
-                                <a href="{{ url_for('store.search') }}">Search</a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-
-                <div id="navigation">
-                    <a class="first" href="{{ url_for('store.root') }}">Home</a> <b>|</b>
-                    {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}" class="{{ 'selected' if content_type['id'] == _content_type['id'] }}">{{ _content_type['name'] }}</a>
-                    {% if not loop.last %}<b>|</b>{% endif %}
-                    {% endfor %}
-                </div>
+{% block header_navigation %}
+{% include 'includes/navigation.html' %}
 
                 <div id="crumbNav">
                     {% if content_type['show_categories'] %}
@@ -65,18 +28,9 @@
                     <a href="{{ url_for('store.browse_categories', content_type_id=content_type['id']) }}">Change</a>
                     {% endif %}
                 </div>
-            </div>
+{% endblock %}
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
-
+{% block content %}
             <div id="views">
                 <div class="view">
                     <table class="contentList" cellspacing="0" width="100%">
@@ -127,7 +81,9 @@
                     <div class="beacon"></div>
                 </div>
             </div>
+{% endblock %}
 
+{% block bottom %}
             <div id="bottom">
                 <div>
                     <form action="{{ url_for('store.content', content_type_id=content_type['id']) }}" method="get">
@@ -149,36 +105,8 @@
                     </form>
                 </div>
 
-                <div id="searchContent">
-                    <form action="{{ url_for('store.search') }}" method="get" id="searchForm">
-                        <fieldset id="searchField">
-                            <label for="search">Search</label>
-                            <input type="text" id="search" name="query" value=""/>
-                            <input type="submit" id="searchBtn" value="Search"/>
-                        </fieldset>
-                    </form>
-                </div>
+{% include 'includes/search.html' %}
 
-                <div id="bottomNavigation">
-                    <h3>Browse categories</h3>
-                    <a href="{{ url_for('store.root') }}">Home</a><br/>
-                    {% for _content_type in get_content_types() %}
-                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}" class="{{ 'selected' if content_type['id'] == _content_type['id'] }}">{{ _content_type['name'] }}</a><br/>
-                    {% endfor %}
-                </div>
+{% include 'includes/bottom_navigation.html' %}
             </div>
-
-            <div id="footer">
-                <a href="{{ url_for('store.download') }}">Download</a> |
-                {% if not g.user %}
-                <a class="accountStatusChange" href="{{ url_for('auth.login') }}">Sign in</a>
-                {% else %}
-                <a class="accountStatusChange" href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}">Log out</a>
-                {% endif %}
-                <br/>
-                © Wunder Wungiel {{ now.year }}
-            </div>
-
-        </div>
-    </body>
-</html>
+{% endblock %}

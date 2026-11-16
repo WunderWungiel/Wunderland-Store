@@ -1,0 +1,7 @@
+                <div id="bottomNavigation">
+                    <h3>Browse categories</h3>
+                    <a href="{{ url_for('store.root') }}"{% if home_selected|default(false) %} class="selected"{% endif %}>Home</a><br/>
+                    {% for _content_type in get_content_types() %}
+                    <a href="{{ url_for('store.content', content_type_id=_content_type['id']) }}"{% if selected_content_type is defined %} class="{{ 'selected' if selected_content_type == _content_type['id'] }}"{% endif %}>{{ _content_type['name'] }}</a><br/>
+                    {% endfor %}
+                </div>

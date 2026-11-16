@@ -1,28 +1,13 @@
-<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"  >
-    <head>
-        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8"/>
-        <meta name="navigation" content="cursor" />
-        <title>Confirm email • Wunderland Store</title>
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}" />
-        <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}" />
-        <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon"/>
-    </head>
+{% extends "base.html" %}
 
-    <body>
-        <div id="wrapper">
-            <div id="header">
-                <div id="top">
-                    <table>
-                        <tr>
-                            <td id="logo">
-                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+{% set account_page = true %}
+{% set footer_mode = "download_only" %}
 
+{% block title %}Confirm email • Wunderland Store{% endblock %}
+
+{% block flashes %}{% endblock %}
+
+{% block content %}
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages %}
@@ -37,15 +22,4 @@
             {% endfor %}
             {% endif %}
             {% endwith %}
-
-            <div id="bottom"></div>
-                        
-            <div id="footer">
-                <a href="{{ url_for('store.download') }}">Download</a>
-                <br/>
-                © Wunder Wungiel {{ now.year }}
-            </div>
-
-        </div>
-    </body>
-</html>
+{% endblock %}

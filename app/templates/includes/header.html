@@ -1,0 +1,34 @@
+                <div id="top">
+                    <table>
+                        <tr>
+                            <td id="logo">
+                                {% if account_page|default(false) -%}
+                                <a id="logoImg" href="{{ url_for('store.root') }}"><img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store" /></a>
+                                {%- else -%}
+                                <a id="logoImg" href="{{ url_for('store.root') }}">
+                                    <img src="{{ url_for('static', filename='img/logo_wunderland.png') }}" alt="Wunderland Store"/>
+                                </a>
+                                {%- endif %}
+                            </td>
+                            {% if not account_page|default(false) %}
+                            <td id="searchLink">
+                                <span>
+                                    <a href="{{ url_for('store.platforms') }}">Platform</a>:
+                                    <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
+                                </span>
+                                {% if show_search_link|default(true) %}|{% endif %}
+                                {% if g.user %}
+                                {% if not show_search_link|default(true) %}|{% endif %}
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
+                                {% if show_search_link|default(true) %}|{% endif %}
+                                {% endif %}
+                                {% if show_search_link|default(true) %}<a href="{{ url_for('store.search') }}">Search</a>{% endif %}
+                            </td>
+                            {% elif profile_page|default(false) %}
+                            <td id="searchLink">
+                                <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
+                            </td>
+                            {% endif %}
+                        </tr>
+                    </table>
+                </div>
