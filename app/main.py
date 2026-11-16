@@ -2,7 +2,7 @@ import atexit
 import logging
 from datetime import datetime
 
-from flask import Flask, g, request, session, send_from_directory
+from flask import Flask, g, render_template, request, session, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 
@@ -86,6 +86,36 @@ def load_global_data():
 
 
 app.before_request(csrf.protect)
+
+
+# Device clients parse these responses, so leave their errors untouched.
+XML_BLUEPRINTS = ('client', 'qtstore')
+
+
+@app.errorhandler(404)
+def not_found(e):
+    # Missing static files (icons, screenshots) don't need a full page.
+    if request.blueprint in XML_BLUEPRINTS or request.endpoint == 'static':
+        return e
+    return render_template(
+        'error.html',
+        title="Page not found",
+        message="The page you are looking for does not exist or has been removed.",
+        show_navigation=True
+    ), 404
+
+
+@app.errorhandler(500)
+def internal_error(e):
+    if request.blueprint in XML_BLUEPRINTS:
+        return e
+    # No navigation: it queries the DB, which may be what failed.
+    return render_template(
+        'error.html',
+        title="Server error",
+        message="Something went wrong on our side. Please try again later.",
+        show_navigation=False
+    ), 500
 
 
 if not config['allow_indexing']:

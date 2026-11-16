@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} • Wunderland Store{% endblock %}
+
+{% block header_navigation %}
+{% if show_navigation %}
+{% include 'includes/navigation.html' %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+            <div id="views">
+                <div class="view">
+                    <br/>
+                    <div class="viewWrapper">
+                        <h2>{{ title }}</h2>
+                        <p>{{ message }}</p>
+                        <p><a href="{{ url_for('store.root') }}">Back to the home page</a></p>
+                    </div>
+                </div>
+            </div>
+{% endblock %}

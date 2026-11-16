@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
-from flask import Blueprint, Response, current_app, g, request, session, flash, redirect, render_template, url_for
+from flask import Blueprint, Response, abort, current_app, g, request, session, flash, redirect, render_template, url_for
 from werkzeug.utils import secure_filename
 
 from .. import config
@@ -146,7 +146,7 @@ def rate(content_id):
     item = db.get_item(content_id)
 
     if not item:
-        return redirect(url_for('.item', content_id=content_id))
+        abort(404)
 
     if not g.user:
         return redirect(url_for('auth.login'))
@@ -168,7 +168,7 @@ def item(content_id):
     item = db.get_item(content_id=content_id)
 
     if not item:
-        return redirect(url_for('.root'))
+        abort(404)
 
     if (g.user and g.user['role'] != 'admin') or not g.user:
         db.increment_counter(content_id)
@@ -199,7 +199,7 @@ def images(content_id):
     item = db.get_item(content_id)
 
     if not item:
-        return redirect(url_for('.root'))
+        abort(404)
 
     if not item['screenshots']:
         return redirect(url_for('.item', content_id=content_id))

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, abort, request, redirect, url_for
 
 from .. import db
 
@@ -10,12 +10,12 @@ def rate(prefix, legacy_id):
 
     content_type = db.get_content_type_by_prefix(prefix)
     if not content_type:
-        return redirect(url_for('store.root'))
+        abort(404)
 
     content_id = db.get_legacy_content_id(legacy_id, content_type['id'])
 
     if not content_id:
-        return redirect(url_for('store.root'))
+        abort(404)
 
     return redirect(url_for('store.rate', content_id=content_id, **request.args), code=307)
 
@@ -25,12 +25,12 @@ def item(prefix, legacy_id):
 
     content_type = db.get_content_type_by_prefix(prefix)
     if not content_type:
-        return redirect(url_for('store.root'))
+        abort(404)
 
     content_id = db.get_legacy_content_id(legacy_id, content_type['id'])
 
     if not content_id:
-        return redirect(url_for('store.root'))
+        abort(404)
 
     return redirect(url_for('store.item', content_id=content_id, **request.args), code=307)
 
@@ -40,11 +40,11 @@ def images(prefix, legacy_id):
 
     content_type = db.get_content_type_by_prefix(prefix)
     if not content_type:
-         return redirect(url_for('store.root'))
+        abort(404)
 
     content_id = db.get_legacy_content_id(legacy_id, content_type['id'])
 
     if not content_id:
-        return redirect(url_for('store.root'))
+        abort(404)
 
     return redirect(url_for('store.images', content_id=content_id, **request.args), code=307)
