@@ -1,5 +1,7 @@
 import os
 import secrets
+from copy import deepcopy
+from functools import lru_cache
 from datetime import datetime, timezone, timedelta
 
 import bcrypt
@@ -74,27 +76,15 @@ def get_one_news(news_id):
 
 
 def get_content_type_by_id(type_id):
-    query = "SELECT * FROM content_types WHERE id = %s"
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, (type_id,))
-            return cursor.fetchone()
+    return next((row for row in get_content_types() if row['id'] == type_id), None)
 
 
 def get_content_type_by_name(name):
-    query = "SELECT * FROM content_types WHERE name = %s"
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, (name,))
-            return cursor.fetchone()
+    return next((row for row in get_content_types() if row['name'] == name), None)
 
 
 def get_content_type_by_prefix(prefix):
-    query = "SELECT * FROM content_types WHERE prefix = %s"
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query, (prefix,))
-            return cursor.fetchone()
+    return next((row for row in get_content_types() if row['prefix'] == prefix), None)
 
 
 def get_category(category_id):
@@ -322,35 +312,28 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None, onl
             return cursor.fetchall()
 
 
-def get_platforms(platform_id=None):
-
-    query = "SELECT * FROM platforms"
-    where_clauses = []
-    params = []
-
-    if platform_id is not None:
-        where_clauses.append("id = %s")
-        params.append(platform_id)
-
-    if where_clauses:
-        query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " ORDER BY name"
-
+@lru_cache(maxsize=2)
+def _get_reference_rows(table):
+    # These tables change only during maintenance; restart workers to refresh.
+    queries = {
+        'platforms': "SELECT * FROM platforms ORDER BY name",
+        'content_types': "SELECT * FROM content_types ORDER BY name ASC",
+    }
     with pool.connection() as connection:
         with connection.cursor() as cursor:
-            cursor.execute(query, params)
+            cursor.execute(queries[table])
             return cursor.fetchall()
+
+
+def get_platforms(platform_id=None):
+    rows = _get_reference_rows('platforms')
+    if platform_id is not None:
+        rows = [row for row in rows if row['id'] == platform_id]
+    return deepcopy(rows)
 
 
 def get_content_types():
-
-    query = "SELECT * FROM content_types ORDER BY name ASC"
-
-    with pool.connection() as connection:
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            return cursor.fetchall()
+    return deepcopy(_get_reference_rows('content_types'))
 
 
 def get_news(news_id=None, limit=None, offset=None):
