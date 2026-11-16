@@ -38,7 +38,7 @@
                         <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
                             <td class="thumbnail"{% if not content_type['show_icons'] %} style="width: 0;"{% endif %}>
                                 {% if content_type['show_icons'] %}
-                                <img src="{{ url_for('static', filename='content/icons/' ~ item['icon']) }}" width="46" height="46" alt="{{ item['title'] }}"/>
+                                <img src="{{ url_for('content', filename='icons/' ~ item['icon']) }}" width="46" height="46" alt="{{ item['title'] }}"/>
                                 {% endif %}
                             </td>
                             <td class="contentType">

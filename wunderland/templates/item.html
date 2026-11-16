@@ -22,7 +22,7 @@
                             <tr>
                                 {% if item['content_type']['show_icons'] %}
                                 <td class="feature">
-                                    <img src="{{ url_for('static', filename='content/icons/' ~ item['icon']) }}" alt="{{ item['title'] }}" width="66" height="66"/>
+                                    <img src="{{ url_for('content', filename='icons/' ~ item['icon']) }}" alt="{{ item['title'] }}" width="66" height="66"/>
                                 </td>
                                 {% endif %}
                                 <td class="meta item">
@@ -91,7 +91,7 @@
                             Extra file: {{ item['addon_text']|nl2br }}
                             {% if item['addon_file'] %}
                             <div class="buttons smallButtons">
-                                <a href="{{ url_for('static', filename='content/files/' ~ item['addon_file']) }}" class="lite" target="_blank">Download</a>
+                                <a href="{{ url_for('content', filename='files/' ~ item['addon_file']) }}" class="lite" target="_blank">Download</a>
                             </div>
                             {% endif %}
                         </div>
@@ -105,7 +105,7 @@
                                 {% for rec in recommended %}
                                 <tr class="{{ loop.cycle('contentItem', 'contentItem alt') }}">
                                     <td class="thumbnail">
-                                        <img src="{{ url_for('static', filename='content/icons/' ~ rec['icon']) }}" alt="thumbnail of {{ rec['title'] }}" width="46" height="46"/>
+                                        <img src="{{ url_for('content', filename='icons/' ~ rec['icon']) }}" alt="thumbnail of {{ rec['title'] }}" width="46" height="46"/>
                                     </td>
                                     <td class="contentType">
                                         <h2 class="title">

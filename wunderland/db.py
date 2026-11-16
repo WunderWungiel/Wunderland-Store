@@ -7,11 +7,10 @@ from datetime import datetime, timezone, timedelta
 
 import bcrypt
 from markdown import markdown
-from flask import current_app
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from .config import config
+from .config import CONTENT_DIR, config
 
 # Each worker owns a pool; keep idle connections low and cap concurrent queries.
 pool = ConnectionPool(min_size=1, max_size=4, kwargs={
@@ -406,7 +405,7 @@ def get_news(news_id=None, limit=None, offset=None):
     results = []
 
     for row in rows:
-        file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
+        file_path = os.path.join(CONTENT_DIR, "news", row['file'])
 
         try:
             file_stat = os.stat(file_path)

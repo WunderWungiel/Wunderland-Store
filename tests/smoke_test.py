@@ -5,7 +5,7 @@ Run it against a throwaway database created from db/database.psql, with
 config.yaml pointing at that database. The script fills the empty tables
 with a small set of fixtures, requests each web page and both client XML
 APIs through the Flask test client, then empties the tables again and
-removes the fixture files it wrote under static/content.
+removes the fixture files it wrote under the content directory.
 
 It refuses to run if any of the tables it uses already hold rows, so it
 can't touch a real store's data.
@@ -24,7 +24,7 @@ from xml.etree import ElementTree as ET
 
 from wunderland import db
 from wunderland.app import app
-from wunderland.config import config
+from wunderland.config import CONTENT_DIR, config
 
 # Every table the fixtures or the requests write to.
 TABLES = [
@@ -41,7 +41,6 @@ NEWS_TITLE = "Smoke test news"
 ADMIN_EMAIL = "smoke-admin@example.com"
 ADMIN_PASSWORD = "smoke-password"
 
-CONTENT_DIR = os.path.join(app.static_folder, "content")
 FIXTURE_FILES = {
     os.path.join(CONTENT_DIR, "files", f"{PREFIX}.sis"): b"not a real sis file",
     os.path.join(CONTENT_DIR, "icons", f"{PREFIX}.png"): b"\x89PNG\r\n\x1a\n",

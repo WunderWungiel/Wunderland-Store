@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 from flask import current_app, url_for
 from markupsafe import Markup, escape
 
-from .config import config
+from .config import CONTENT_DIR, config
 
 logger = logging.getLogger(__name__)
 
@@ -60,13 +60,13 @@ def to_symbian_version(version):
 def get_file_path(item):
     if not item['file']:
         return None
-    return os.path.join(current_app.static_folder, "content", "files", item['file'])
+    return os.path.join(CONTENT_DIR, "files", item['file'])
 
 def get_file_url(item, external=False):
     if not item['file']:
         return None
     builder = external_url_for if external else url_for
-    return builder('static', filename=os.path.join("content", "files", item['file']))
+    return builder('content', filename=os.path.join("files", item['file']))
 
 def get_download_url(item, external=False):
     # Clients that take a single link get latest_url when set

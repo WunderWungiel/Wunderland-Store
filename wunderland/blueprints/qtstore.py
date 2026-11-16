@@ -3,11 +3,11 @@ import os
 import time
 from urllib.parse import quote, urlparse
 
-from flask import Blueprint, current_app, request, send_file, abort, redirect, url_for
+from flask import Blueprint, request, send_file, abort, redirect, url_for
 from markupsafe import Markup
 
 from .. import db, helpers
-from ..config import config
+from ..config import CONTENT_DIR, config
 
 qtstore = Blueprint('qtstore', __name__)
 logger = logging.getLogger(__name__)
@@ -90,13 +90,13 @@ def description(content_type_id, name):
         if description:
             description += Markup("<br><br>")
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = helpers.external_url_for('static', filename=os.path.join("content", "screenshots", screenshot))
+            path = helpers.external_url_for('content', filename=os.path.join("screenshots", screenshot))
             description += Markup('<img src="{}" alt="screenshot{}" width="150"><br><br>').format(path, i)
 
     if content['addon_text']:
         description += Markup("<br><br>Extra file: {}").format(content['addon_text'])
     if content['addon_file']:
-        path = helpers.external_url_for('static', filename=os.path.join("content", "files", content['addon_file']))
+        path = helpers.external_url_for('content', filename=os.path.join("files", content['addon_file']))
         description += Markup("<br><br>Link: {}").format(path)
 
     return description
@@ -134,7 +134,7 @@ def preview(content_type_id, name):
     if not content:
         abort(404)
 
-    path = os.path.join(current_app.root_path, "static", "content", "icons", content['icon'])
+    path = os.path.join(CONTENT_DIR, "icons", content['icon'])
     if os.path.isfile(path):
         return send_file(path)
     else:

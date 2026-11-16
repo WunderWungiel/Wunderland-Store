@@ -81,7 +81,7 @@ def format_results(results, content_type_id=None, widget=False):
             uidstore = SubElement(app, 'uidstore')
             uidunsigned = SubElement(app, 'uidunsigned')
             icon = SubElement(app, 'icon')
-            icon.text = helpers.external_url_for('static', filename=os.path.join("content", "icons", row['icon']))
+            icon.text = helpers.external_url_for('content', filename=os.path.join("icons", row['icon']))
             version = SubElement(app, 'version')
 
             try:
@@ -115,8 +115,7 @@ def format_results(results, content_type_id=None, widget=False):
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:
-                facebook.text = helpers.external_url_for('static', filename=os.path.join(
-                    "content", "files", row['addon_file']))
+                facebook.text = helpers.external_url_for('content', filename=os.path.join("files", row['addon_file']))
             donation = SubElement(app, 'donation')
             price = SubElement(app, 'price')
             price.text = "0.00"
@@ -136,7 +135,7 @@ def format_results(results, content_type_id=None, widget=False):
                 image = SubElement(app, f'image{i + 1}')
                 if len(screenshots) >= i + 1:
                     image.text = helpers.external_url_for(
-                        'static', filename=os.path.join("content", "screenshots", screenshots[i])
+                        'content', filename=os.path.join("screenshots", screenshots[i])
                     )
 
             tags = SubElement(app, 'tags')

@@ -32,7 +32,7 @@
                         {% for result in results %}
                         <tr class="{{ loop.cycle('contentItem alt', 'contentItem') }}">
                             <td class="thumbnail">
-                                <img src="{{ url_for('static', filename='content/icons/' ~ result['icon']) }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46"/>
+                                <img src="{{ url_for('content', filename='icons/' ~ result['icon']) }}" alt="thumbnail of {{ result['title'] }}" width="46" height="46"/>
                             </td>
                             <td class="contentType">
                                 <h2 class="title">

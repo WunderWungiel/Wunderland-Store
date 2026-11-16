@@ -5,11 +5,11 @@ from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
-from flask import Blueprint, Response, abort, current_app, g, request, session, flash, redirect, render_template, url_for
+from flask import Blueprint, Response, abort, g, request, session, flash, redirect, render_template, url_for
 from werkzeug.utils import secure_filename
 
 from .. import db, helpers
-from ..config import config
+from ..config import CONTENT_DIR, config
 
 store = Blueprint('store', __name__)
 
@@ -77,8 +77,6 @@ def upload():
         flash("Invalid screenshot extensions.", "danger")
         return redirect(url_for('.upload'))
 
-    content_folder = os.path.join(current_app.static_folder, "content")
-
     file_name = None
     if file:
         file_extension = os.path.splitext(file.filename)[1].lower().lstrip('.')
@@ -89,13 +87,13 @@ def upload():
         addon_extension = os.path.splitext(secure_filename(addon_file.filename))[1].lower().lstrip('.')
         addon_file_name = f"{prefix}_addon.{addon_extension}" if addon_extension else f"{prefix}_addon"
 
-    uploads = [(icon, os.path.join(content_folder, "icons", f"{prefix}.{icon_extension}"))]
+    uploads = [(icon, os.path.join(CONTENT_DIR, "icons", f"{prefix}.{icon_extension}"))]
     if file:
-        uploads.append((file, os.path.join(content_folder, "files", file_name)))
+        uploads.append((file, os.path.join(CONTENT_DIR, "files", file_name)))
     if addon_file:
-        uploads.append((addon_file, os.path.join(content_folder, "files", addon_file_name)))
+        uploads.append((addon_file, os.path.join(CONTENT_DIR, "files", addon_file_name)))
     for i, screenshot in enumerate(screenshots):
-        uploads.append((screenshot, os.path.join(content_folder, "screenshots", f"{prefix}{i+1}.{screenshot_extensions[i]}")))
+        uploads.append((screenshot, os.path.join(CONTENT_DIR, "screenshots", f"{prefix}{i+1}.{screenshot_extensions[i]}")))
 
     if db.prefix_in_use(prefix) or any(os.path.exists(path) for _, path in uploads):
         flash("This prefix is already in use.", "danger")
