@@ -357,8 +357,7 @@ def download():
     if not config['clients']:
         return redirect(url_for('.root'))
 
-    results = [db.get_item(content_id=content_id) for content_id in config['clients']]
-    results = [item for item in results if item is not None]
+    results = db.get_items(config['clients'])
 
     content_type = db.get_content_type_by_id('apps')
 

@@ -68,6 +68,18 @@ def get_item(content_id):
     return results[0] if results else None
 
 
+def get_items(content_ids):
+    if not content_ids:
+        return []
+    content_ids = [int(content_id) for content_id in content_ids if content_id is not None]
+    if not content_ids:
+        return []
+    results, _ = get_content(content_ids=content_ids)
+    by_id = {row['id']: row for row in results}
+    # Explicit ID lists retain their order and repeated IDs, as individual lookups did.
+    return [deepcopy(by_id[content_id]) for content_id in content_ids if content_id in by_id]
+
+
 def get_one_news(news_id):
     if news_id is None:
         return None
@@ -135,7 +147,7 @@ def upload(title, category_id, publisher, version, icon, screenshot_prefix, scre
     return result
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False, content_ids=None):
 
     sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
@@ -181,6 +193,10 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
     if content_id is not None:
         where_clauses.append("content.id = %s")
         params.append(content_id)
+
+    if content_ids is not None:
+        where_clauses.append("content.id = ANY(%s)")
+        params.append(content_ids)
 
     if exclude_content_id is not None:
         where_clauses.append("content.id <> %s")

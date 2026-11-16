@@ -186,11 +186,7 @@ def get_content(content_ids=None, category=None, start=None, widget=None, count=
             limit=count
         )
     else:
-        results = []
-        for content_id in content_ids:
-            result = db.get_item(content_id=content_id)
-            if result:
-                results.append(result)
+        results = db.get_items(content_ids)
 
     for i, result in enumerate(results):
         result['category_id'] = result['category']['id']
