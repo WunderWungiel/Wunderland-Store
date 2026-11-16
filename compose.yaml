@@ -5,6 +5,11 @@ services:
     environment:
       TZ: ${TZ:-Etc/UTC}
       WEB_CONCURRENCY: ${WEB_CONCURRENCY:-8}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./config.yaml:/srv/config.yaml:ro
       - ./content:/srv/content
@@ -23,6 +28,11 @@ services:
     init: true
     environment:
       TZ: ${TZ:-Etc/UTC}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./config.yaml:/srv/config.yaml:ro
     depends_on:

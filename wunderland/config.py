@@ -10,6 +10,29 @@ path = os.environ.get("WUNDERLAND_CONFIG") or os.path.join(ROOT_DIR, "config.yam
 with open(path, "r") as f:
     config = yaml.safe_load(f.read())
 
+# These override the database section when set, so in Docker the credentials only live in .env.
+DATABASE_ENV = {
+    'host': 'POSTGRES_HOST',
+    'port': 'POSTGRES_PORT',
+    'name': 'POSTGRES_DB',
+    'user': 'POSTGRES_USER',
+    'password': 'POSTGRES_PASSWORD',
+}
+
+
+def _apply_database_env(data):
+    overrides = {key: os.environ[var] for key, var in DATABASE_ENV.items() if os.environ.get(var)}
+    if not overrides or not isinstance(data, dict):
+        return
+    # The database section is optional when the environment covers it.
+    if data.get('database') is None:
+        data['database'] = {}
+    if isinstance(data['database'], dict):
+        data['database'].update(overrides)
+
+
+_apply_database_env(config)
+
 
 class ConfigError(ValueError):
     pass
@@ -78,7 +101,9 @@ def _validate(data):
     for key, (check, expected) in REQUIRED_KEYS.items():
         value = _lookup(data, key)
         if value is _MISSING:
-            problems.append(f"{key} is missing")
+            section, _, name = key.partition('.')
+            hint = f" (or set {DATABASE_ENV[name]})" if section == 'database' else ""
+            problems.append(f"{key} is missing{hint}")
         elif not check(value):
             # Never echo secrets into the startup log.
             shown = type(value).__name__ if key in SECRET_KEYS else repr(value)

@@ -34,8 +34,9 @@ The `clean` service runs `flask --app wunderland.app clean` once a day to delete
 1. Stop the old stack while the old file is still in place: `docker compose down`.
 2. Rename the old file so `git pull` can create the new one: `mv compose.yaml compose.yaml.old`. Move anything it changed (such as `TZ`) into `.env`.
 3. `git pull`.
-4. In `config.yaml`, set `database.host` to `db`. The old `wunderland-db` container name no longer exists.
-5. `docker compose up -d --build`.
+4. `docker compose up -d --build`.
+
+The app containers now connect with `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` from `.env`, and with `db` as the host, so the `database` section of `config.yaml` is ignored in Docker. Check that `.env` holds the credentials the database was created with.
 
 Don't rename the checkout directory: the volume name comes from it, and compose would start on a new, empty volume.
 
