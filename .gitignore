@@ -228,8 +228,11 @@ __marimo__/
 /config.yaml
 /compose.yaml
 
-# Host-mounted uploaded store content
-/Ovi/
+# Uploaded store content (only the directory skeleton and default icon are tracked)
+/content/**
+!/content/*/
+!/content/*/.gitkeep
+!/content/icons/Store.png
 
 # Local PostgreSQL configuration
 /postgres-config
