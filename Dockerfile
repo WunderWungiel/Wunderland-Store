@@ -4,7 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 # The app runs as this user. The host's ./content directory must be writable by
-# the same UID for admin uploads to work. Compose passes APP_UID/APP_GID from .env.
+# the same UID for admin uploads to work. Compose can override it with APP_UID/APP_GID.
 ARG APP_UID=1000
 ARG APP_GID=1000
 RUN addgroup -g "$APP_GID" store && adduser -D -H -u "$APP_UID" -G store store

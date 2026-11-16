@@ -21,9 +21,23 @@ sudo chown -R 1000:1000 Ovi
 
 This also applies when upgrading: older images ran as root, so an existing `./Ovi` is root-owned and uploads fail with a permission error until it is chowned.
 
-To use a different UID, set `APP_UID` and `APP_GID` in `.env` and rebuild with `docker compose build`.
+To use a different UID, set `APP_UID` and `APP_GID` in `.env`.
 
-The `clean` service in `compose.yaml.example` runs `app/scripts/clean.py` once a day to delete expired unconfirmed users and expired sessions. If your `compose.yaml` was copied before that service was added, copy the `clean` block over. Without Docker, run `python app/scripts/clean.py` from cron instead.
+The `clean` service runs `flask --app wunderland.app clean` once a day to delete expired unconfirmed users and expired sessions. Without Docker, run that command from cron instead.
+
+`compose.yaml` is committed. Put local changes in `.env` or in a `compose.override.yaml`, which compose reads automatically and git ignores.
+
+### Upgrading from an untracked compose.yaml
+
+`compose.yaml` used to be copied from `compose.yaml.example` and is now committed. It no longer sets container names, so the containers are now called `<project>-app-1`, `<project>-db-1` and so on, where the project name is the checkout directory's name in lowercase. Use `docker compose exec db ...` instead of `docker exec wunderland-db ...`. The database volume keeps its name, so the data stays where it is.
+
+1. Stop the old stack while the old file is still in place: `docker compose down`.
+2. Rename the old file so `git pull` can create the new one: `mv compose.yaml compose.yaml.old`. Move anything it changed (such as `TZ`) into `.env`.
+3. `git pull`.
+4. In `config.yaml`, set `database.host` to `db`. The old `wunderland-db` container name no longer exists.
+5. `docker compose up -d --build`.
+
+Don't rename the checkout directory: the volume name comes from it, and compose would start on a new, empty volume.
 
 ### Smoke test
 

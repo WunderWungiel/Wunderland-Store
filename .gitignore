@@ -224,9 +224,9 @@ __marimo__/
 
 # Project-specific
 
-# Local configuration copied from the committed examples
+# Local configuration
 /config.yaml
-/compose.yaml
+/compose.override.yaml
 
 # Uploaded store content (only the directory skeleton and default icon are tracked)
 /content/**

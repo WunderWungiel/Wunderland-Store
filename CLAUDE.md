@@ -12,7 +12,7 @@ There is no test suite, linter config or build step, but `app/scripts/smoke_test
 
 Config: copy `app/config.yaml.example` to `app/config.yaml` (gitignored). `app/utils/config.py` loads it at import time, so nothing under `utils` imports without it. Docker also copies it into the image, so it has to exist before `docker compose build`.
 
-- **Docker (main path):** `cp compose.yaml.example compose.yaml && cp .env.example .env`, then `docker compose up --build`. The app listens on host port 8080 and runs gunicorn with 8 workers (`app/entrypoint.sh`). Postgres 18 is set up from `db/schema.sql`, which the postgres image's entrypoint only runs when the `db_data` volume is empty. `./Ovi` on the host is mounted as `app/static/content` (the uploaded files, icons, screenshots and news). In Docker, set `database.host` in `config.yaml` to `db`.
+- **Docker (main path):** `cp .env.example .env`, then `docker compose up --build`. The app listens on host port 8080 and runs gunicorn with 8 workers (`app/entrypoint.sh`). Postgres 18 is set up from `db/schema.sql`, which the postgres image's entrypoint only runs when the `db_data` volume is empty. `./Ovi` on the host is mounted as `app/static/content` (the uploaded files, icons, screenshots and news). In Docker, set `database.host` in `config.yaml` to `db`.
 - **Local:** `pip install -r app/requirements.txt`, then from inside `app/`: `flask --app main run --debug` or `gunicorn main:app`. Imports are relative to `app/` (`from utils import ...`), so commands must run from that directory.
 - **Maintenance:** `python app/scripts/clean.py` deletes expired unconfirmed users and expired sessions. In Docker the `clean` compose service runs it once a day; outside Docker it needs a cron job.
 
