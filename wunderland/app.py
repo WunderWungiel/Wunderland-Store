@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Flask, g, render_template, request, session, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
+import psycopg
 
 from . import cli, csrf, db, helpers
 from .blueprints import auth, client, legacy, qtstore, store
@@ -43,6 +44,20 @@ def content(filename):
     return send_from_directory(CONTENT_DIR, filename)
 
 
+# Probed by the Docker healthchecks. The short pool timeout keeps a dead DB
+# from outlasting the probe's own timeout.
+@app.route("/healthz")
+def healthz():
+    headers = {"Content-Type": "text/plain", "Cache-Control": "no-store"}
+    try:
+        with db.pool.connection(timeout=3) as connection:
+            connection.execute("SELECT 1")
+    except psycopg.Error as error:
+        logger.warning("Health check failed: %s", error)
+        return "db unavailable", 503, headers
+    return "ok", 200, headers
+
+
 @app.template_filter('naturalsize')
 def naturalsize_filter(size):
     return humanize.naturalsize(size)
@@ -64,11 +79,13 @@ def utility_processor():
 
 # Plain file endpoints: no session lookup, and a bare 404 for missing files.
 FILE_ENDPOINTS = ('static', 'content')
+# Health probes skip the session lookup too, so they don't hit the sessions table.
+SESSIONLESS_ENDPOINTS = FILE_ENDPOINTS + ('healthz',)
 
 
 @app.before_request
 def load_global_data():
-    if request.endpoint in FILE_ENDPOINTS:
+    if request.endpoint in SESSIONLESS_ENDPOINTS:
         return
 
     session.permanent = True

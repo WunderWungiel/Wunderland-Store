@@ -197,6 +197,8 @@ def run_checks(ids):
         run.check(client, 'GET', '/static/css/style.css', 200)
         run.check(client, 'GET', '/static/content/icons/missing.png', 404)
         run.check(client, 'GET', '/no/such/page', 404)
+        run.check(client, 'GET', '/healthz', 200, contains='ok')
+        run.check(client, 'HEAD', '/healthz', 200)
 
         # Old Ovi Store URLs.
         run.check(client, 'GET', f'/{LEGACY_PREFIX}/{LEGACY_ID}', 307, location=f'/item/{content_id}')
