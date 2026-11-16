@@ -144,14 +144,22 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             content.*,
             category.name AS category_name,
             category.type_id AS category_type_id,
-            ARRAY_AGG(DISTINCT (platform.id, platform.name)) FILTER (WHERE platform.id IS NOT NULL) AS platforms,
-            COALESCE(ROUND(AVG(ratings.rating)), 0) AS rating,
+            content_platform_data.platforms,
+            COALESCE(content_rating.rating, 0) AS rating,
             COUNT(*) OVER() AS total
         FROM content
         LEFT JOIN categories AS category ON content.category_id = category.id
-        LEFT JOIN content_platforms ON content.id = content_platforms.content_id
-        LEFT JOIN platforms AS platform ON content_platforms.platform_id = platform.id
-        LEFT JOIN ratings ON content.id = ratings.content_id
+        LEFT JOIN LATERAL (
+            SELECT ARRAY_AGG(DISTINCT (platform.id, platform.name)) AS platforms
+            FROM content_platforms
+            JOIN platforms AS platform ON content_platforms.platform_id = platform.id
+            WHERE content_platforms.content_id = content.id
+        ) AS content_platform_data ON TRUE
+        LEFT JOIN LATERAL (
+            SELECT ROUND(AVG(ratings.rating)) AS rating
+            FROM ratings
+            WHERE ratings.content_id = content.id
+        ) AS content_rating ON TRUE
     """
 
     where_clauses = ["content.visible = TRUE"]
@@ -200,8 +208,6 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
 
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
-
-    query += " GROUP BY content.id, category.name, category.type_id"
 
     sort_column = sort_fields.get(sort_by, "content.updated_at")
     sort_order = "DESC" if sort_order.upper() == "DESC" else "ASC"
