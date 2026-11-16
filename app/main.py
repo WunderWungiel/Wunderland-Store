@@ -2,7 +2,7 @@ import atexit
 import logging
 from datetime import datetime
 
-from flask import Flask, g, session, send_from_directory
+from flask import Flask, g, request, session, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 
@@ -57,6 +57,9 @@ def utility_processor():
 
 @app.before_request
 def load_global_data():
+    if request.endpoint == 'static':
+        return
+
     session.permanent = True
 
     platform_id = session.get('platform_id')
