@@ -38,7 +38,7 @@
                         </form>
                         
 
-                        <input type="button" class="Btn" onclick="window.location.href='{{ url_for('auth.logout', csrf_token=csrf_token()) }}'" value="Log out"/>
+                        <a href="{{ url_for('auth.logout', csrf_token=csrf_token()) }}" class="Btn">Log out</a>
                     </div>
                     <br/>
                 </div>

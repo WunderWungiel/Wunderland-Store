@@ -46,3 +46,15 @@
 .contentInfo .meta {
     width: 280px;
 }
+
+a.linkButton,
+a.linkButton:visited,
+a.linkButton:active,
+a.linkButton:hover {
+    border: 1px solid #cbcbcb;
+    background-color: #eee;
+    color: #000;
+    padding: 2px 6px;
+    font-size: 11px;
+    text-decoration: none;
+}

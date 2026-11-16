@@ -94,7 +94,7 @@
                             <option value="1" {% if order == 1 %}selected="selected"{% endif %}>Ascending</option>
                         </select>
                         <br/>
-                        <input type="button" value="Reset" data-url="{{ url_for('store.search', query=query) }}" onclick="window.location.href=this.getAttribute('data-url')"/>
+                        <a href="{{ url_for('store.search', query=query) }}" class="linkButton">Reset</a>
                         <input type="submit" value="Apply"/>
                     </form>
                     {% endif %}

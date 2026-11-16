@@ -30,7 +30,7 @@
 
                                     <br/><br/>
                                     <label for="loginBtn">Don't have an account yet?&nbsp;</label>
-                                    <input type="button" class="Btn" value="Register" data-url="{{ url_for('auth.register') }}" onclick="window.location.href=this.getAttribute('data-url')" />
+                                    <a href="{{ url_for('auth.register') }}" class="Btn">Register</a>
                                 </fieldset>
                             </form>
                         </div>
