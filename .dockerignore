@@ -1,10 +1,8 @@
-# Only app/ goes into the image, so send nothing else to the build
-# (this keeps .git, .env, .venv and the ./Ovi content out of the context).
+# Allowlist: only what the image needs goes into the build context. config.yaml
+# and content/ are mounted at run time.
 *
-!app/
+!requirements.txt
+!gunicorn.conf.py
+!wunderland/
 **/__pycache__
 **/*.py[cod]
-# Uploaded content is mounted at run time; keep only the empty folders and the default icon.
-app/static/content/**
-!app/static/content/*/.gitkeep
-!app/static/content/icons/Store.png

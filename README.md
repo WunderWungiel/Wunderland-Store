@@ -21,7 +21,7 @@ sudo chown -R 1000:1000 Ovi
 
 This also applies when upgrading: older images ran as root, so an existing `./Ovi` is root-owned and uploads fail with a permission error until it is chowned.
 
-To use a different UID, build with `docker compose build --build-arg APP_UID=<uid> --build-arg APP_GID=<gid>`.
+To use a different UID, set `APP_UID` and `APP_GID` in `.env` and rebuild with `docker compose build`.
 
 The `clean` service in `compose.yaml.example` runs `app/scripts/clean.py` once a day to delete expired unconfirmed users and expired sessions. If your `compose.yaml` was copied before that service was added, copy the `clean` block over. Without Docker, run `python app/scripts/clean.py` from cron instead.
 

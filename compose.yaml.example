@@ -1,27 +1,38 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     container_name: wunderland
     environment:
       TZ: Etc/UTC
     volumes:
-      - ./Ovi:/app/static/content
+      - ./config.yaml:/srv/config.yaml:ro
+      - ./content:/srv/content
     depends_on:
       db:
         condition: service_healthy
     expose:
-      - "80"
+      - "8000"
     stop_signal: SIGINT
     stop_grace_period: 15s
     restart: unless-stopped
 
   # Deletes expired unconfirmed users and sessions once a day.
   clean:
-    build: .
+    build:
+      context: .
+      args:
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
     container_name: wunderland-clean
     environment:
       TZ: Etc/UTC
-    entrypoint: ["sh", "-c", "while true; do python scripts/clean.py; sleep 86400; done"]
+    volumes:
+      - ./config.yaml:/srv/config.yaml:ro
+    command: ["sh", "-c", "while true; do flask --app wunderland.app clean; sleep 86400; done"]
     # Lets the container stop at once instead of waiting out the sleep.
     init: true
     depends_on:
