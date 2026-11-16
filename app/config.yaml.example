@@ -1,3 +1,4 @@
+# Required: generate a random signing key before starting the app.
 secret_key: ""
 # Public URL used for confirmation emails, feeds and client links.
 base_url: "http://ovi.wunderwungiel.pl"

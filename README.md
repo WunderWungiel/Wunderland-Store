@@ -19,3 +19,7 @@ Run the app behind a trusted reverse proxy that replaces forwarded headers.
 Port 8080 must only be reachable through that proxy; the Compose example binds
 it to localhost. For a proxy on another host or container network, restrict
 access with network/firewall rules rather than publishing it to the Internet.
+
+Set `secret_key` in `app/config.yaml` to a random signing key (for example,
+from `python -c 'import secrets; print(secrets.token_hex(32))'`). The store
+refuses to start if the key is missing or empty.
