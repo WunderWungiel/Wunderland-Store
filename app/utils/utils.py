@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from urllib.parse import urlsplit
@@ -6,6 +7,8 @@ from flask import current_app, url_for
 from markupsafe import Markup, escape
 
 from . import config
+
+logger = logging.getLogger(__name__)
 
 
 def external_url_for(endpoint, **values):
@@ -32,8 +35,8 @@ def generate_pages(page, total_pages):
 def to_version(symbian_version):
     match = re.match(r"(\d+)\.(\d+)\((\d+)\)", symbian_version)
     if not match:
-        print(symbian_version)
-        raise ValueError("Invalid Symbian version format")
+        logger.debug("Not a Symbian version string: %r", symbian_version)
+        raise ValueError(f"Invalid Symbian version format: {symbian_version!r}")
     
     major, minor, patch = match.groups()
     if len(minor) == 2 and minor.startswith("0"):

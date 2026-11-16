@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from urllib.parse import quote, urlparse
@@ -10,6 +11,7 @@ from .. import config
 from .. import utils
 
 qtstore = Blueprint('qtstore', __name__, template_folder="templates")
+logger = logging.getLogger(__name__)
 
 
 def generate_content(content_type_id, content_name):
@@ -45,7 +47,7 @@ def generate_content(content_type_id, content_name):
 
 def get_content(name, content_type_id):
 
-    print(name, content_type_id)
+    logger.debug("Qt store lookup: %r (%s)", name, content_type_id)
 
     results, total = db.get_content(
         content_type_id=content_type_id,
