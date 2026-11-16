@@ -2,9 +2,10 @@ import yaml
 import os
 from urllib.parse import urlsplit
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # WUNDERLAND_CONFIG overrides the default of config.yaml at the repo root.
-path = os.environ.get("WUNDERLAND_CONFIG") or os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
+path = os.environ.get("WUNDERLAND_CONFIG") or os.path.join(ROOT_DIR, "config.yaml")
 
 with open(path, "r") as f:
     config = yaml.safe_load(f.read())
@@ -83,6 +84,10 @@ def _validate(data):
             shown = type(value).__name__ if key in SECRET_KEYS else repr(value)
             problems.append(f"{key} must be {expected}, got {shown}")
 
+    content_dir = data.get('content_dir')
+    if content_dir is not None and not (_is_str(content_dir) and content_dir.strip()):
+        problems.append(f"content_dir must be a non-empty string, got {content_dir!r}")
+
     if problems:
         raise ConfigError(
             f"Invalid {path} (see config.yaml.example):\n" + "\n".join(f"  - {problem}" for problem in problems)
@@ -103,3 +108,6 @@ if (public_url.scheme not in ('http', 'https') or not public_url.hostname
         or public_url.username is not None or public_url.password is not None
         or public_url.query or public_url.fragment):
     raise ValueError("base_url must be an absolute HTTP(S) URL without credentials, query or fragment")
+
+# Uploaded files, icons, screenshots and news. Optional; a relative path is resolved against the repo root.
+CONTENT_DIR = os.path.normpath(os.path.join(ROOT_DIR, config.get('content_dir') or 'content'))
