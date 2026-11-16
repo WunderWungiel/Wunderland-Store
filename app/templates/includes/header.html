@@ -16,13 +16,13 @@
                                     <a href="{{ url_for('store.platforms') }}">Platform</a>:
                                     <b>{{ g.platform['name'] if g.platform else 'All' }}</b>
                                 </span>
-                                {% if show_search_link|default(true) %}|{% endif %}
                                 {% if g.user %}
-                                {% if not show_search_link|default(true) %}|{% endif %}
+                                |
                                 <span>Logged in as: <a href="{{ url_for('auth.profile') }}">{{ g.user['username'] }}</a></span>
-                                {% if show_search_link|default(true) %}|{% endif %}
                                 {% endif %}
-                                {% if show_search_link|default(true) %}<a href="{{ url_for('store.search') }}">Search</a>{% endif %}
+                                {% if show_search_link|default(true) %}
+                                | <a href="{{ url_for('store.search') }}">Search</a>
+                                {% endif %}
                             </td>
                             {% elif profile_page|default(false) %}
                             <td id="searchLink">

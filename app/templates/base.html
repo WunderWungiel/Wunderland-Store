@@ -1,3 +1,13 @@
+{# Shared options: set these at the top level of a child template, outside blocks.
+   account_page (default false): show the compact account header, without platform/search.
+   profile_page (default false): add the username to the account header.
+   show_search_link (default true): show Search in the standard header.
+   home_selected (default false): highlight Home in navigation; add the home search title.
+   selected_content_type (default undefined): content type ID to highlight in navigation.
+   footer_mode (default "account"): Download plus Sign in/Log out based on g.user.
+       "download_only": Download alone; "sign_in": always show Download and Sign in.
+   Override blocks for page content; includes inherit these options automatically.
+-#}
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
     <head>
