@@ -62,9 +62,13 @@ def utility_processor():
     )
 
 
+# Plain file endpoints: no session lookup, and a bare 404 for missing files.
+FILE_ENDPOINTS = ('static', 'content')
+
+
 @app.before_request
 def load_global_data():
-    if request.endpoint == 'static':
+    if request.endpoint in FILE_ENDPOINTS:
         return
 
     session.permanent = True
@@ -101,7 +105,7 @@ XML_BLUEPRINTS = ('client', 'qtstore')
 @app.errorhandler(404)
 def not_found(e):
     # Missing static files (icons, screenshots) don't need a full page.
-    if request.blueprint in XML_BLUEPRINTS or request.endpoint == 'static':
+    if request.blueprint in XML_BLUEPRINTS or request.endpoint in FILE_ENDPOINTS:
         return e
     return render_template(
         'error.html',
