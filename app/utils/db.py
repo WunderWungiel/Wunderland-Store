@@ -1,5 +1,6 @@
 import os
 import secrets
+import stat
 from copy import deepcopy
 from functools import lru_cache
 from datetime import datetime, timezone, timedelta
@@ -364,6 +365,13 @@ def get_content_types():
     return deepcopy(_get_reference_rows('content_types'))
 
 
+@lru_cache(maxsize=128)
+def _render_news(file_path, mtime_ns):
+    # The timestamp is part of the cache key, so edits invalidate rendered HTML.
+    with open(file_path, "r") as source:
+        return markdown(source.read())
+
+
 def get_news(news_id=None, limit=None, offset=None):
     query = "SELECT *, COUNT(*) OVER() AS total FROM news"
     where_clauses = []
@@ -397,11 +405,14 @@ def get_news(news_id=None, limit=None, offset=None):
     for row in rows:
         file_path = os.path.join(current_app.static_folder, "content", "news", row['file'])
 
-        if not os.path.isfile(file_path):
+        try:
+            file_stat = os.stat(file_path)
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISREG(file_stat.st_mode):
             continue
 
-        with open(file_path, "r") as f:
-            html_content = markdown(f.read())
+        html_content = _render_news(file_path, file_stat.st_mtime_ns)
 
         results.append({
             'id': row['id'],
