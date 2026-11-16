@@ -8,7 +8,7 @@ import humanize
 
 from . import cli, csrf, db, helpers
 from .blueprints import auth, client, legacy, qtstore, store
-from .config import config
+from .config import CONTENT_DIR, config
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -34,6 +34,13 @@ app.wsgi_app = ProxyFix(
 atexit.register(db.pool.close)
 
 app.cli.add_command(cli.clean)
+
+
+# Uploaded files live outside the package but keep their old /static/content/ URLs,
+# which device clients and old links rely on. This rule outranks the built-in /static/ one.
+@app.route("/static/content/<path:filename>")
+def content(filename):
+    return send_from_directory(CONTENT_DIR, filename)
 
 
 @app.template_filter('naturalsize')
