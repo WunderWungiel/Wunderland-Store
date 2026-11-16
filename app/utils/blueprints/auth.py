@@ -64,6 +64,9 @@ def register():
     if not all([user_email, username, password]):
         return fail("Fill in the form!")
 
+    if len(password.encode('utf-8')) > 72:
+        return fail("Password must be at most 72 bytes in UTF-8.")
+
     if not re.fullmatch(r"[A-Za-z0-9]{7,}", username):
         return fail("Wrong username. It should contain only letters and numbers and be 7-letters long or longer.")
 
@@ -126,6 +129,10 @@ def change_password():
 
     if not current_password or not new_password:
         flash("Fill in the form!", "danger")
+        return render_template("auth/profile.html")
+
+    if len(new_password.encode('utf-8')) > 72:
+        flash("Password must be at most 72 bytes in UTF-8.", "danger")
         return render_template("auth/profile.html")
 
     if not db.check_credentials(g.user['email'], current_password):

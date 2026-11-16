@@ -527,6 +527,9 @@ def change_password(user_id, password):
 
 def check_credentials(email, password):
 
+    if len(password.encode('utf-8')) > 72:
+        return None
+
     user = get_user_by_email(email)
 
     if not user or not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
