@@ -13,7 +13,8 @@ from psycopg_pool import ConnectionPool
 
 from . import config
 
-pool = ConnectionPool(kwargs={
+# Each worker owns a pool; keep idle connections low and cap concurrent queries.
+pool = ConnectionPool(min_size=1, max_size=4, kwargs={
     "host": config['database']['host'],
     "port": config['database']['port'],
     "dbname": config['database']['name'],
