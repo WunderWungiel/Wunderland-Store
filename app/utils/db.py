@@ -214,6 +214,8 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
 
     if search is not None:
         where_clauses.append("content.title ILIKE %s")
+        # PostgreSQL LIKE uses backslash to escape pattern metacharacters.
+        search = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         params.append(f"%{search}%")
 
     if title is not None:

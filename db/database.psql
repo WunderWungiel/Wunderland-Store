@@ -511,6 +511,13 @@ CREATE INDEX content_category_id_idx ON public.content USING btree (category_id)
 
 
 --
+-- Name: content_platforms_platform_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX content_platforms_platform_id_idx ON public.content_platforms USING btree (platform_id);
+
+
+--
 -- Name: content update_content_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
