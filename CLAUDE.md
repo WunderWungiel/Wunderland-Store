@@ -8,7 +8,7 @@ Wunderland Store is a partial revival of the Nokia/Ovi Store (circa 2015) for Sy
 
 ## Running
 
-There is no test suite, linter config or build step. The only formatter setting is autopep8 with `--max-line-length=120` (`.vscode/settings.json`).
+There is no test suite, linter config or build step, but `app/scripts/smoke_test.py` requests every route against an empty database (see the README). The only formatter setting is autopep8 with `--max-line-length=120` (`.vscode/settings.json`).
 
 Config: copy `app/config.yaml.example` to `app/config.yaml` (gitignored). `app/utils/config.py` loads it at import time, so nothing under `utils` imports without it. Docker also copies it into the image, so it has to exist before `docker compose build`.
 
