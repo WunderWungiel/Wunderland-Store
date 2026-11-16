@@ -15,7 +15,6 @@ from utils.blueprints import auth, client, legacy, qtstore, store
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SECRET_KEY'] = config['secret_key']
-app.config['SECURITY_PASSWORD_SALT'] = app.config['SECRET_KEY']
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 86400
 
 logging.basicConfig(
