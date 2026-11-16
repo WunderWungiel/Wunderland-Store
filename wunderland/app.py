@@ -6,7 +6,7 @@ from flask import Flask, g, render_template, request, session, send_from_directo
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 
-from . import csrf, db, helpers
+from . import cli, csrf, db, helpers
 from .blueprints import auth, client, legacy, qtstore, store
 from .config import config
 
@@ -32,6 +32,8 @@ app.wsgi_app = ProxyFix(
 )
 
 atexit.register(db.pool.close)
+
+app.cli.add_command(cli.clean)
 
 
 @app.template_filter('naturalsize')
