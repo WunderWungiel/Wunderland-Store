@@ -6,11 +6,9 @@ from flask import Flask, g, render_template, request, session, send_from_directo
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 
-from utils import config
-from utils import csrf
-from utils import db
-from utils import utils
-from utils.blueprints import auth, client, legacy, qtstore, store
+from . import csrf, db, helpers
+from .blueprints import auth, client, legacy, qtstore, store
+from .config import config
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -43,7 +41,7 @@ def naturalsize_filter(size):
 
 @app.template_filter('nl2br')
 def nl2br_filter(text):
-    return utils.nl2br(text)
+    return helpers.nl2br(text)
 
 
 @app.context_processor

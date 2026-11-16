@@ -2,7 +2,7 @@ from flask import Blueprint, abort, request, redirect, url_for
 
 from .. import db
 
-legacy = Blueprint('legacy_store', __name__, template_folder="templates")
+legacy = Blueprint('legacy_store', __name__)
 
 
 @legacy.route("/<prefix>/<int:legacy_id>/rate", methods=['GET', 'POST'])

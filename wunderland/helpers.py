@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 from flask import current_app, url_for
 from markupsafe import Markup, escape
 
-from . import config
+from .config import config
 
 logger = logging.getLogger(__name__)
 

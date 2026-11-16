@@ -225,7 +225,7 @@ __marimo__/
 # Project-specific
 
 # Local configuration copied from the committed examples
-/app/config.yaml
+/config.yaml
 /compose.yaml
 
 # Host-mounted uploaded store content

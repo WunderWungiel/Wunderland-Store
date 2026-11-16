@@ -6,11 +6,10 @@ from urllib.parse import quote, urlparse
 from flask import Blueprint, current_app, request, send_file, abort, redirect, url_for
 from markupsafe import Markup
 
-from .. import db
-from .. import config
-from .. import utils
+from .. import db, helpers
+from ..config import config
 
-qtstore = Blueprint('qtstore', __name__, template_folder="templates")
+qtstore = Blueprint('qtstore', __name__)
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +26,7 @@ def generate_content(content_type_id, content_name):
             name, extension = os.path.splitext(urlparse(row['latest_url']).path)
         else:
             try:
-                timestamp = int(os.path.getmtime(utils.get_file_path(row)))
+                timestamp = int(os.path.getmtime(helpers.get_file_path(row)))
             except FileNotFoundError:
                 timestamp = time.time()
 
@@ -58,8 +57,8 @@ def get_content(name, content_type_id):
     content = results[0] if results else None
 
     if content:
-        content['description'] = utils.nl2br(content['description']) or None
-        content['addon_text'] = utils.nl2br(content['addon_text']) or None
+        content['description'] = helpers.nl2br(content['description']) or None
+        content['addon_text'] = helpers.nl2br(content['addon_text']) or None
         return content
     else:
         return None
@@ -91,13 +90,13 @@ def description(content_type_id, name):
         if description:
             description += Markup("<br><br>")
         for i, screenshot in enumerate(content['screenshots'], start=1):
-            path = utils.external_url_for('static', filename=os.path.join("content", "screenshots", screenshot))
+            path = helpers.external_url_for('static', filename=os.path.join("content", "screenshots", screenshot))
             description += Markup('<img src="{}" alt="screenshot{}" width="150"><br><br>').format(path, i)
 
     if content['addon_text']:
         description += Markup("<br><br>Extra file: {}").format(content['addon_text'])
     if content['addon_file']:
-        path = utils.external_url_for('static', filename=os.path.join("content", "files", content['addon_file']))
+        path = helpers.external_url_for('static', filename=os.path.join("content", "files", content['addon_file']))
         description += Markup("<br><br>Link: {}").format(path)
 
     return description
@@ -117,7 +116,7 @@ def file(content_type_id, name, ext):
     if content['latest_url']:
         return redirect(content['latest_url'])
 
-    path = utils.get_file_path(content)
+    path = helpers.get_file_path(content)
     if path and os.path.isfile(path):
         return send_file(path)
     else:

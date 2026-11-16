@@ -5,11 +5,10 @@ from xml.etree.ElementTree import Element, SubElement
 
 from flask import Blueprint, current_app, request, url_for, send_from_directory
 
-from .. import db
-from .. import config
-from .. import utils
+from .. import db, helpers
+from ..config import config
 
-client = Blueprint('client', __name__, template_folder="templates")
+client = Blueprint('client', __name__)
 
 
 def resolve_client_id(client_id):
@@ -82,11 +81,11 @@ def format_results(results, content_type_id=None, widget=False):
             uidstore = SubElement(app, 'uidstore')
             uidunsigned = SubElement(app, 'uidunsigned')
             icon = SubElement(app, 'icon')
-            icon.text = utils.external_url_for('static', filename=os.path.join("content", "icons", row['icon']))
+            icon.text = helpers.external_url_for('static', filename=os.path.join("content", "icons", row['icon']))
             version = SubElement(app, 'version')
 
             try:
-                version.text = utils.to_version(row['version'])
+                version.text = helpers.to_version(row['version'])
             except ValueError:
                 version.text = row['version']
 
@@ -112,11 +111,11 @@ def format_results(results, content_type_id=None, widget=False):
             developer.text = row['publisher']
             mail = SubElement(app, 'mail')
             website = SubElement(app, 'website')
-            website.text = utils.external_url_for('store.item', content_id=row['id'])
+            website.text = helpers.external_url_for('store.item', content_id=row['id'])
             twitter = SubElement(app, 'twitter')
             facebook = SubElement(app, 'facebook')
             if row['addon_file']:
-                facebook.text = utils.external_url_for('static', filename=os.path.join(
+                facebook.text = helpers.external_url_for('static', filename=os.path.join(
                     "content", "files", row['addon_file']))
             donation = SubElement(app, 'donation')
             price = SubElement(app, 'price')
@@ -136,7 +135,7 @@ def format_results(results, content_type_id=None, widget=False):
             for i in range(5):  # 5 - 1
                 image = SubElement(app, f'image{i + 1}')
                 if len(screenshots) >= i + 1:
-                    image.text = utils.external_url_for(
+                    image.text = helpers.external_url_for(
                         'static', filename=os.path.join("content", "screenshots", screenshots[i])
                     )
 
@@ -144,9 +143,9 @@ def format_results(results, content_type_id=None, widget=False):
             changelog = SubElement(app, 'changelog')
             unsignednote = SubElement(app, 'unsignednote')
             download = SubElement(app, 'download')
-            download.text = utils.get_download_url(row, external=True)
+            download.text = helpers.get_download_url(row, external=True)
             downloadsize = SubElement(app, 'downloadsize')
-            downloadsize.text = str(utils.get_file_size(row) or 0)
+            downloadsize.text = str(helpers.get_file_size(row) or 0)
 
             downloadstore = SubElement(app, 'downloadstore')
             downloadunsigned = SubElement(app, 'downloadunsigned')

@@ -8,11 +8,10 @@ from xml.etree.ElementTree import Element, SubElement
 from flask import Blueprint, Response, abort, current_app, g, request, session, flash, redirect, render_template, url_for
 from werkzeug.utils import secure_filename
 
-from .. import config
-from .. import db
-from .. import utils
+from .. import db, helpers
+from ..config import config
 
-store = Blueprint('store', __name__, template_folder="templates")
+store = Blueprint('store', __name__)
 
 
 @store.route("/content/upload", methods=['GET', 'POST'])
@@ -173,8 +172,8 @@ def item(content_id):
     if (g.user and g.user['role'] != 'admin') or not g.user:
         db.increment_counter(content_id)
 
-    item['size'] = utils.get_file_size(item)
-    item['file_url'] = utils.get_file_url(item)
+    item['size'] = helpers.get_file_size(item)
+    item['file_url'] = helpers.get_file_url(item)
 
     platform_id = session.get('platform_id')
     recommended, _ = db.get_content(
@@ -266,7 +265,7 @@ def search():
         "results.html",
         results=results,
         query=query,
-        pages=utils.generate_pages(page, total_pages),
+        pages=helpers.generate_pages(page, total_pages),
         sort=sort_by,
         order=order,
         sort_fields=db.VALID_SORT_FIELDS,
@@ -344,7 +343,7 @@ def content(content_type_id):
         content_type=content_type,
         results=results,
         category=category,
-        pages=utils.generate_pages(page, total_pages),
+        pages=helpers.generate_pages(page, total_pages),
         sort=sort_by,
         order=order,
         sort_fields=db.VALID_SORT_FIELDS,
@@ -372,12 +371,12 @@ def feed():
 
     SubElement(channel, 'title').text = "Wunderland Store"
     SubElement(channel, 'description').text = "News, content and programs for retro devices."
-    SubElement(channel, 'link').text = utils.external_url_for('store.root')
+    SubElement(channel, 'link').text = helpers.external_url_for('store.root')
     SubElement(channel, 'lastBuildDate').text = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     news_items, total = db.get_news()
     for content in news_items:
-        news_url = utils.external_url_for('store.news', news_id=content['id'])
+        news_url = helpers.external_url_for('store.news', news_id=content['id'])
 
         item = SubElement(channel, 'item')
         SubElement(item, 'title').text = content['title']
@@ -433,4 +432,4 @@ def root():
         request_args['page'] = total_pages
         return redirect(url_for('.root', **request.view_args, **request_args))
 
-    return render_template("index.html", news=news, pages=utils.generate_pages(page, total_pages))
+    return render_template("index.html", news=news, pages=helpers.generate_pages(page, total_pages))

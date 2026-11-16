@@ -4,12 +4,9 @@ import re
 from flask import Blueprint, current_app, g, request, session, flash, render_template, redirect, url_for
 from psycopg.errors import UniqueViolation
 
-from .. import csrf
-from .. import db
-from .. import email
-from .. import utils
+from .. import csrf, db, helpers, mail
 
-auth = Blueprint('auth', __name__, template_folder="templates")
+auth = Blueprint('auth', __name__)
 
 
 @auth.route("/login", methods=['GET', 'POST'])
@@ -89,10 +86,10 @@ def register():
             return fail("Username already taken.")
         return fail("Account already exists.")
 
-    confirm_url = utils.external_url_for('auth.confirm', token=user['confirmation_token'])
+    confirm_url = helpers.external_url_for('auth.confirm', token=user['confirmation_token'])
 
     try:
-        email.send_email(
+        mail.send_email(
             "Confirm your account",
             f"Please confirm your email by clicking the link below:\n{confirm_url}\nThank you.",
             f"Please confirm your email by clicking the link below:<br><a href=\"{confirm_url}\">{confirm_url}</a><br>Thank you.",

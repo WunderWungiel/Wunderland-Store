@@ -11,7 +11,7 @@ from flask import current_app
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from . import config
+from .config import config
 
 # Each worker owns a pool; keep idle connections low and cap concurrent queries.
 pool = ConnectionPool(min_size=1, max_size=4, kwargs={
