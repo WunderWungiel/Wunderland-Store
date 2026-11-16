@@ -38,7 +38,10 @@ def login():
         flash("Please confirm your email!", "danger")
         return redirect(url_for('.login'))
 
-    session['token'] = db.create_session(user['id'])
+    token = db.create_session(user['id'])
+    session.clear()
+    session.permanent = True
+    session['token'] = token
 
     flash("Logged in!", "success")
     return redirect(url_for('store.root'))
@@ -139,7 +142,7 @@ def change_password():
         flash("Wrong current password!", "danger")
         return render_template("auth/profile.html")
 
-    db.change_password(g.user['id'], new_password)
+    db.change_password(g.user['id'], new_password, current_token=session.get('token'))
     flash("Password changed!", "success")
 
     return render_template("auth/profile.html")

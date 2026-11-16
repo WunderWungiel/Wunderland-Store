@@ -406,7 +406,7 @@ def generate_password(password):
 
 def get_session(token):
 
-    query = "SELECT sessions.*, users.id, users.username, users.email, users.role FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token = %s AND sessions.expires_at > NOW()"
+    query = "SELECT users.id, users.username, users.email, users.role, sessions.token, sessions.user_id, sessions.expires_at FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token = %s AND sessions.expires_at > NOW()"
     params = [token]
 
     with pool.connection() as connection:
@@ -514,7 +514,7 @@ def delete_user(user_id):
             cursor.execute(query, params)
 
 
-def change_password(user_id, password):
+def change_password(user_id, password, current_token=None):
 
     password_hash = generate_password(password)
     query = "UPDATE users SET password = %s WHERE id = %s"
@@ -523,6 +523,10 @@ def change_password(user_id, password):
     with pool.connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(query, params)
+            cursor.execute(
+                "DELETE FROM sessions WHERE user_id = %s AND token IS DISTINCT FROM %s",
+                (user_id, current_token)
+            )
 
 
 def check_credentials(email, password):
