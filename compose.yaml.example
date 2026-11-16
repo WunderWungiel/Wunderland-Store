@@ -15,6 +15,20 @@ services:
     stop_grace_period: 15s
     restart: unless-stopped
 
+  # Deletes expired unconfirmed users and sessions once a day.
+  clean:
+    build: .
+    container_name: wunderland-clean
+    environment:
+      TZ: Etc/UTC
+    entrypoint: ["sh", "-c", "while true; do python scripts/clean.py; sleep 86400; done"]
+    # Lets the container stop at once instead of waiting out the sleep.
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
   proxy:
     image: nginx:stable-alpine
     volumes:

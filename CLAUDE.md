@@ -14,7 +14,7 @@ Config: copy `app/config.yaml.example` to `app/config.yaml` (gitignored). `app/u
 
 - **Docker (main path):** `cp compose.yaml.example compose.yaml && cp .env.example .env`, then `docker compose up --build`. The app listens on host port 8080 and runs gunicorn with 8 workers (`app/entrypoint.sh`). Postgres 18 is set up from `db/database.psql` through `db/init-db.sh`, which only runs when the `db_data` volume is empty. `./Ovi` on the host is mounted as `app/static/content` (the uploaded files, icons, screenshots and news). In Docker, set `database.host` in `config.yaml` to `db`.
 - **Local:** `pip install -r app/requirements.txt`, then from inside `app/`: `flask --app main run --debug` or `gunicorn main:app`. Imports are relative to `app/` (`from utils import ...`), so commands must run from that directory.
-- **Maintenance:** `python app/scripts/clean.py` deletes expired unconfirmed users and expired sessions.
+- **Maintenance:** `python app/scripts/clean.py` deletes expired unconfirmed users and expired sessions. In Docker the `clean` compose service runs it once a day; outside Docker it needs a cron job.
 
 ## Architecture
 
