@@ -3,6 +3,7 @@ import time
 from urllib.parse import quote, urlparse
 
 from flask import Blueprint, current_app, request, send_file, abort, redirect, url_for
+from markupsafe import Markup
 
 from .. import db
 from .. import config
@@ -82,22 +83,20 @@ def description(content_type_id, name):
     if not content:
         return abort(404)
 
-    description = content['description']
-    if not description:
-        description = ""
+    description = content['description'] or Markup("")
 
     if len(content['screenshots']) > 0:
         if description:
-            description += "<br><br>"
+            description += Markup("<br><br>")
         for i, screenshot in enumerate(content['screenshots'], start=1):
             path = url_for('static', _external=True, filename=os.path.join("content", "screenshots", screenshot))
-            description += f'<img src="{path}" alt="screenshot{i}" width="150"><br><br>'
+            description += Markup('<img src="{}" alt="screenshot{}" width="150"><br><br>').format(path, i)
 
     if content['addon_text']:
-        description += f"<br><br>Extra file: {content['addon_text']}"
+        description += Markup("<br><br>Extra file: {}").format(content['addon_text'])
     if content['addon_file']:
         path = url_for('static', _external=True, filename=os.path.join("content", "files", content['addon_file']))
-        description += f"<br><br>Link: {path}"
+        description += Markup("<br><br>Link: {}").format(path)
 
     return description
 

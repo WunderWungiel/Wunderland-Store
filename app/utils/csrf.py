@@ -17,7 +17,7 @@ def generate_token():
 
 def is_valid(token):
     expected = session.get(FIELD_NAME)
-    if not expected or not token:
+    if not expected or not token or not token.isascii():
         return False
     return hmac.compare_digest(expected, token)
 

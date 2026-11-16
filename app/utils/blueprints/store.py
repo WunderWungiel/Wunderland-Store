@@ -106,8 +106,10 @@ def upload():
     written = []
     try:
         for upload_file, path in uploads:
-            written.append(path)
-            upload_file.save(path)
+            # Exclusively create each file; preflight checks alone can race.
+            with open(path, 'xb') as destination:
+                written.append(path)
+                upload_file.save(destination)
 
         db.upload(
             title=title,
@@ -125,12 +127,15 @@ def upload():
             uid=uid,
             platforms=platforms
         )
-    except Exception:
+    except Exception as error:
         for path in written:
             try:
                 os.remove(path)
             except OSError:
                 pass
+        if isinstance(error, FileExistsError):
+            flash("This prefix is already in use.", "danger")
+            return redirect(url_for('.upload'))
         raise
 
     return redirect(url_for('.root'))
