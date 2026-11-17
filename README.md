@@ -61,6 +61,8 @@ Older checkouts kept the code and `config.yaml` in `app/`, uploads in `Ovi/` and
 4. `mv app/config.yaml config.yaml`
 5. Copy the uploads: `sudo cp -a Ovi/. content/`, then `sudo chown -R 1000:1000 content`. Delete `Ovi/` once the store shows them.
 6. Add the new settings from `.env.example` to your `.env`. The `POSTGRES_*` values must stay the ones the database was created with. Copy any local changes from `compose.yaml.old` (such as `TZ`) too.
+
+   In Docker the app now ignores the `database` section of `config.yaml` and connects with the `POSTGRES_*` values from `.env`. If the two name different databases (for example, you created a second one by hand and pointed `config.yaml` at it), the upgraded store would open the other one and look empty, without any error. Compare `name` in `config.yaml` with `POSTGRES_DB` in `.env` and, if they differ, set `POSTGRES_DB` to the database that holds the data. Do the same for `user` and `password`.
 7. `docker compose up -d --build`, then check `docker compose ps`.
 
 The database volume keeps its name, so the data stays where it was. Don't rename the checkout directory, because compose names the volume after it and would start on a new, empty one. Containers no longer have fixed names, so use `docker compose exec db psql ...` instead of `docker exec wunderland-db ...`.
