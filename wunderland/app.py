@@ -4,12 +4,14 @@ from datetime import datetime
 
 from flask import Flask, g, render_template, request, session, send_from_directory
 from flask.sessions import SecureCookieSessionInterface
+from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 import psycopg
 
 from . import cli, csrf, db, helpers
 from .blueprints import api, auth, client, legacy, qtstore, store
+from .blueprints.api import error_response as api_error_response, is_api_request
 from .config import CONTENT_DIR, config
 
 app = Flask(__name__)
@@ -87,14 +89,11 @@ def utility_processor():
 FILE_ENDPOINTS = ('static', 'content')
 # Health probes skip the session lookup too, so they don't hit the sessions table.
 SESSIONLESS_ENDPOINTS = FILE_ENDPOINTS + ('healthz',)
-# The JSON API is stateless: it neither reads nor sets the cookie session. Checked by
-# path rather than blueprint, so unknown /api/ URLs (no blueprint, or the legacy one
-# for /api/<number>) are stateless too.
-API_PREFIX = '/api/'
 
 
 def is_sessionless():
-    return request.endpoint in SESSIONLESS_ENDPOINTS or request.path.startswith(API_PREFIX)
+    # The JSON API is stateless: it neither reads nor sets the cookie session.
+    return request.endpoint in SESSIONLESS_ENDPOINTS or is_api_request()
 
 
 class SessionInterface(SecureCookieSessionInterface):
@@ -154,8 +153,18 @@ def check_csrf():
 XML_BLUEPRINTS = ('client', 'qtstore')
 
 
+@app.errorhandler(HTTPException)
+def http_error(e):
+    # Every other HTTP error keeps Werkzeug's default page, except under the JSON API.
+    if is_api_request():
+        return api_error_response(e)
+    return e
+
+
 @app.errorhandler(404)
 def not_found(e):
+    if is_api_request():
+        return api_error_response(e)
     # Missing static files (icons, screenshots) don't need a full page.
     if request.blueprint in XML_BLUEPRINTS or request.endpoint in FILE_ENDPOINTS:
         return e
@@ -169,6 +178,8 @@ def not_found(e):
 
 @app.errorhandler(500)
 def internal_error(e):
+    if is_api_request():
+        return api_error_response(e)
     if request.blueprint in XML_BLUEPRINTS:
         return e
     # No navigation: it queries the DB, which may be what failed.
