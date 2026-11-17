@@ -424,6 +424,29 @@ def get_news(news_id=None, limit=None, offset=None):
     return results, total
 
 
+def get_sitemap_entries():
+    """IDs and timestamps for the sitemap, without get_content's aggregation.
+
+    Returns (items, news): visible items with updated_at and whether they have
+    screenshots, and news rows with created_at. News whose file is missing is left
+    out, as get_news does, since its page would be a 404.
+    """
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id, updated_at, screenshot_count > 0 AS has_screenshots
+                FROM content
+                WHERE visible = TRUE
+                ORDER BY id
+            """)
+            items = cursor.fetchall()
+            cursor.execute("SELECT id, file, created_at FROM news ORDER BY id")
+            news = cursor.fetchall()
+
+    news = [row for row in news if os.path.isfile(os.path.join(CONTENT_DIR, "news", row['file']))]
+    return items, news
+
+
 def generate_password(password):
     password = password.encode('utf-8')
     salt = bcrypt.gensalt()

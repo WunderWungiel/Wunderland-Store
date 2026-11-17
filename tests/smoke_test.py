@@ -198,7 +198,12 @@ def run_checks(ids):
         run.check(client, 'GET', '/profile', 302, location='/login')
         run.check(client, 'GET', '/content/upload', 302)
         run.check(client, 'GET', '/confirm/not-a-real-token', 200)
-        run.check(client, 'GET', '/robots.txt', 404 if config['allow_indexing'] else 200)
+        run.check(client, 'GET', '/robots.txt', 200,
+                  contains=['Disallow: /StoreData/', 'Sitemap: https://'] if config['allow_indexing'] else 'Disallow: /')
+        run.check(client, 'GET', '/sitemap.xml', 200, xml=True, contains=[
+            '/home</loc>', '/content/apps</loc>', f"/content/apps?category_id={ids['category_id']}</loc>",
+            f'/item/{content_id}</loc>', f'/content/{content_id}/images</loc>', f'/news/{news_id}</loc>',
+            '<lastmod>'])
         run.check(client, 'GET', '/static/css/style.css', 200)
         run.check(client, 'GET', f'/static/content/icons/{PREFIX}.png', 200, contains='PNG')
         run.check(client, 'GET', f'/static/content/files/{PREFIX}.sis', 200, contains='not a real sis file')

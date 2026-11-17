@@ -2,7 +2,7 @@ import atexit
 import logging
 from datetime import datetime
 
-from flask import Flask, g, render_template, request, session, send_from_directory
+from flask import Flask, Response, g, render_template, request, session, send_from_directory
 from flask.sessions import SecureCookieSessionInterface
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -90,8 +90,8 @@ def utility_processor():
 
 # Plain file endpoints: no session lookup, and a bare 404 for missing files.
 FILE_ENDPOINTS = ('static', 'content')
-# Health probes skip the session lookup too, so they don't hit the sessions table.
-SESSIONLESS_ENDPOINTS = FILE_ENDPOINTS + ('healthz',)
+# Health probes and crawler files skip the session lookup too, so they don't hit the sessions table.
+SESSIONLESS_ENDPOINTS = FILE_ENDPOINTS + ('healthz', 'robots', 'store.sitemap')
 
 
 def is_sessionless():
@@ -194,7 +194,21 @@ def internal_error(e):
     ), 500
 
 
-if not config['allow_indexing']:
-    @app.route("/robots.txt")
-    def robots():
+# Only paths that aren't web pages, or that no crawler can open. The noindex pages
+# (search, platforms, rate) stay crawlable, because Google can only see a noindex tag
+# on a page it is allowed to fetch.
+ROBOTS_DISALLOW = (
+    '/api/',
+    '/StoreData/',
+    '/content/upload',
+)
+
+
+@app.route("/robots.txt")
+def robots():
+    if not config['allow_indexing']:
         return send_from_directory(app.static_folder, "robots.txt")
+    lines = ["User-agent: *"]
+    lines += [f"Disallow: {path}" for path in ROBOTS_DISALLOW]
+    lines.append(f"Sitemap: {helpers.canonical_url_for('store.sitemap')}")
+    return Response("\n".join(lines) + "\n", mimetype='text/plain')

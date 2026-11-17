@@ -401,6 +401,51 @@ def feed():
     return Response(xml, mimetype='application/rss+xml')
 
 
+SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
+
+
+def _w3c_datetime(value):
+    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+@store.route("/sitemap.xml")
+def sitemap():
+    # Sessionless (see app.py), so g.platform isn't set: list everything, unfiltered.
+    urlset = Element('urlset', xmlns=SITEMAP_NS)
+
+    def add(endpoint, lastmod=None, **values):
+        url = SubElement(urlset, 'url')
+        SubElement(url, 'loc').text = helpers.canonical_url_for(endpoint, **values)
+        if lastmod is not None:
+            SubElement(url, 'lastmod').text = _w3c_datetime(lastmod)
+
+    add('store.root')
+
+    for content_type in db.get_content_types():
+        add('store.content', content_type_id=content_type['id'])
+        if content_type['show_categories']:
+            add('store.browse_categories', content_type_id=content_type['id'])
+
+    for category in db.get_categories(only_with_content=True):
+        add('store.content', content_type_id=category['type_id'], category_id=category['id'])
+
+    items, news_rows = db.get_sitemap_entries()
+
+    for item in items:
+        add('store.item', lastmod=item['updated_at'], content_id=item['id'])
+        if item['has_screenshots']:
+            add('store.images', lastmod=item['updated_at'], content_id=item['id'])
+
+    for news_row in news_rows:
+        add('store.news', lastmod=news_row['created_at'], news_id=news_row['id'])
+
+    ET.indent(urlset)
+
+    xml = ET.tostring(urlset, encoding='utf-8', xml_declaration=True)
+
+    return Response(xml, mimetype='application/xml')
+
+
 @store.route("/news/<int:news_id>")
 def news(news_id):
 
