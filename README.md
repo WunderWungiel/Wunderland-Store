@@ -44,6 +44,17 @@ flask --app wunderland.app clean
 
 To use a config file somewhere else, point `WUNDERLAND_CONFIG` at it.
 
+## Search engines
+
+`allow_indexing` in `config.yaml` decides what crawlers get:
+
+- `false`: `/robots.txt` is `static/robots.txt`, which disallows everything.
+- `true`: `/robots.txt` is generated. It blocks only the JSON API, the Qt store data and the upload page, and points at `/sitemap.xml`, which lists the home page, every content type and category with content, every visible item (with its screenshots page) and every news post.
+
+Canonical links, `og:url`, `og:image` and the sitemap use `canonical_url`, which defaults to `base_url` over HTTPS without its port. Devices keep using plain HTTP; only search engines are pointed at HTTPS. Set `canonical_url` if the HTTPS address differs.
+
+To verify the site in Google Search Console with the HTML tag method, put the tag's `content` value in `google_site_verification`. DNS verification needs no config.
+
 ## Smoke test
 
 There is no test suite, but there is a script that requests every page and both client APIs and checks the responses:
