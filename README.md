@@ -33,7 +33,7 @@ cp config.yaml.example config.yaml   # then fill in secret_key, base_url and dat
 flask --app wunderland.app run --debug
 ```
 
-Run commands from the repo root. For production, use `gunicorn wunderland.app:app`, which reads `gunicorn.conf.py`. Add a daily cron job for the cleanup:
+Run commands from the repo root. For production, use `gunicorn wunderland.app:app`, which reads `gunicorn.conf.py` and listens on `127.0.0.1:8000`. Put a reverse proxy in front of it. The app trusts the proxy's `X-Forwarded-*` headers, so anyone who can reach the port directly can fake the client address, host and scheme. If you change the address with `GUNICORN_BIND`, keep the port closed to everything but the proxy. Add a daily cron job for the cleanup:
 
 ```sh
 flask --app wunderland.app clean

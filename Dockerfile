@@ -1,7 +1,8 @@
 FROM python:3.15-alpine3.24
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    GUNICORN_BIND=0.0.0.0:8000
 
 # The app runs as this user. The host's ./content directory must be writable by
 # the same UID for admin uploads to work. Compose can override it with APP_UID/APP_GID.
