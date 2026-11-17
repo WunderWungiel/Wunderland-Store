@@ -195,6 +195,8 @@ def run_checks(ids):
         run.check(client, 'GET', '/confirm/not-a-real-token', 200)
         run.check(client, 'GET', '/robots.txt', 404 if config['allow_indexing'] else 200)
         run.check(client, 'GET', '/static/css/style.css', 200)
+        run.check(client, 'GET', f'/static/content/icons/{PREFIX}.png', 200, contains='PNG')
+        run.check(client, 'GET', f'/static/content/files/{PREFIX}.sis', 200, contains='not a real sis file')
         run.check(client, 'GET', '/static/content/icons/missing.png', 404)
         run.check(client, 'GET', '/no/such/page', 404)
         run.check(client, 'GET', '/healthz', 200, contains='ok')
