@@ -41,6 +41,8 @@ flask --app wunderland.app clean
 
 To use a config file somewhere else, point `WUNDERLAND_CONFIG` at it.
 
+The `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER` and `POSTGRES_PASSWORD` environment variables override the `database` section when set. If python-dotenv is installed, the `flask` command also loads `.env` from the current directory, so a Docker `.env` in the repo root would replace the database name, user and password from `config.yaml`. Set `FLASK_SKIP_DOTENV=1` to stop that. gunicorn doesn't read `.env`.
+
 ## Smoke test
 
 There is no test suite, but there is a script that requests every page and both client APIs and checks the responses:
