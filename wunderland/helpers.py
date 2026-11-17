@@ -42,22 +42,27 @@ def _positive_arg(name):
     return value if value is not None and value > 0 else None
 
 
+# The query args each listing reads to pick what it shows. Every other page, and every
+# other arg (sort, order, query, junk), is left out of its canonical URL.
+CANONICAL_ARGS = {
+    'store.content': ('category_id', 'page'),
+    'store.root': ('page',),
+}
+
+
 def canonical_for_request():
     """The canonical URL of the current page, or None outside a matched route.
 
-    Keeps the path and only the query args that pick a different listing: category_id,
-    and page past the first. sort, order, query and anything else are dropped, so every
-    ordering of a listing points at one URL.
+    Keeps the path and only the query args in CANONICAL_ARGS for its endpoint, with
+    page left out on the first page, so every ordering of a listing points at one URL.
     """
     if not has_request_context() or request.url_rule is None:
         return None
     values = dict(request.view_args or {})
-    category_id = _positive_arg('category_id')
-    if category_id:
-        values['category_id'] = category_id
-    page = _positive_arg('page')
-    if page and page > 1:
-        values['page'] = page
+    for name in CANONICAL_ARGS.get(request.endpoint, ()):
+        value = _positive_arg(name)
+        if value and not (name == 'page' and value == 1):
+            values[name] = value
     return canonical_url_for(request.endpoint, **values)
 
 

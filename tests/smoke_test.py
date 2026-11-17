@@ -177,6 +177,10 @@ def run_checks(ids):
         run.check(client, 'GET', '/content/apps/browse', 200, contains='Utilities')
         run.check(client, 'GET', f'/item/{content_id}', 200, contains=[
             TITLE, 'Line one<br/>Line two', f'<title>{TITLE} for Platform ', 'content="Line one Line two"'])
+        # Listing args on a page that isn't a listing stay out of its canonical URL.
+        run.check(client, 'GET', f'/item/{content_id}?page=3&category_id=9', 200,
+                  contains=['rel="canonical" href="https://', f'/item/{content_id}"/>'])
+        run.check(client, 'GET', '/home?page=1&sort=title', 200, contains='/home"/>')
         run.check(client, 'GET', '/item/999999', 404)
         run.check(client, 'GET', f'/content/{content_id}/images', 200, contains=f'{PREFIX}1.jpg')
         run.check(client, 'GET', f'/content/{content_id}/rate', 302, location='/login')
