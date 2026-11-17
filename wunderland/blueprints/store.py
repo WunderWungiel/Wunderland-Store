@@ -13,6 +13,43 @@ from ..config import CONTENT_DIR, config
 
 store = Blueprint('store', __name__)
 
+# PostgreSQL's OFFSET is a bigint; a larger one is an error, not an empty page.
+MAX_OFFSET = 2**63 - 1
+
+
+def _redirect_to_page(page, message):
+    flash(message, "danger")
+    request_args = request.args.to_dict()
+    request_args['page'] = page
+    return redirect(url_for(request.endpoint, **request.view_args, **request_args))
+
+
+def _paginate(fetch):
+    """Fetch the page that ?page= asks for.
+
+    fetch(offset, limit) returns (rows, total). Returns (rows, pages, None), or
+    (None, None, redirect) when the page is out of range.
+    """
+    page = request.args.get('page', 1, type=int)
+    per_page = config['per_page']
+
+    if page < 1:
+        return None, None, _redirect_to_page(1, "Invalid page. Redirected to the first page.")
+
+    offset = (page - 1) * per_page
+    rows, total = fetch(offset, per_page) if offset <= MAX_OFFSET else ([], 0)
+
+    # Past the end the query returns no rows, so it can't report the total either.
+    if not rows and page > 1:
+        _, total = fetch(0, 1)
+
+    total_pages = max(1, math.ceil(total / per_page))
+
+    if page > total_pages:
+        return None, None, _redirect_to_page(total_pages, "Invalid page. Redirected to the last page.")
+
+    return rows, helpers.generate_pages(page, total_pages), None
+
 
 @store.route("/content/upload", methods=['GET', 'POST'])
 def upload():
@@ -225,7 +262,6 @@ def browse_categories(content_type_id):
 def search():
 
     query = request.args.get('query')
-    page = request.args.get('page', 1, type=int)
     sort_by = request.args.get('sort')
     order = request.args.get('order', type=int, default=-1)
 
@@ -234,36 +270,23 @@ def search():
     if not query:
         return render_template("search.html")
 
-    if page < 1:
-        flash("Invalid page. Redirected to the first page.", "danger")
-        request_args = request.args.to_dict()
-        request_args['page'] = 1
-        return redirect(url_for('.search', **request.view_args, **request_args))
-
-    offset = (page - 1) * config['per_page']
-
-    results, total = db.get_content(
+    results, pages, out_of_range = _paginate(lambda offset, limit: db.get_content(
         search=query,
         platforms=[g.platform['id']] if g.platform else None,
         offset=offset,
-        limit=config['per_page'],
+        limit=limit,
         sort_by=sort_by,
         sort_order=sort_order
-    )
+    ))
 
-    total_pages = max(1, math.ceil(total / config['per_page']))
-
-    if page > total_pages:
-        flash("Invalid page. Redirected to the last page.", "danger")
-        request_args = request.args.to_dict()
-        request_args['page'] = total_pages
-        return redirect(url_for('.search', **request.view_args, **request_args))
+    if out_of_range:
+        return out_of_range
 
     return render_template(
         "results.html",
         results=results,
         query=query,
-        pages=helpers.generate_pages(page, total_pages),
+        pages=pages,
         sort=sort_by,
         order=order,
         sort_fields=db.VALID_SORT_FIELDS,
@@ -298,7 +321,6 @@ def content(content_type_id):
         return redirect(url_for('.root'))
 
     category_id = request.args.get('category_id', type=int)
-    page = request.args.get('page', 1, type=int)
     sort_by = request.args.get('sort')
     order = request.args.get('order', type=int, default=-1)
 
@@ -310,38 +332,25 @@ def content(content_type_id):
         flash("Invalid category.", "danger")
         return redirect(url_for('.content', content_type_id=content_type['id']))
 
-    if page < 1:
-        flash("Invalid page. Redirected to the first page.", "danger")
-        request_args = request.args.to_dict()
-        request_args['page'] = 1
-        return redirect(url_for('.content', **request.view_args, **request_args))
-
-    offset = (page - 1) * config['per_page']
-
-    results, total = db.get_content(
+    results, pages, out_of_range = _paginate(lambda offset, limit: db.get_content(
         content_type_id=content_type['id'],
         category_id=category_id,
         platforms=[g.platform['id']] if g.platform else None,
         offset=offset,
-        limit=config['per_page'],
+        limit=limit,
         sort_by=sort_by,
         sort_order=sort_order
-    )
+    ))
 
-    total_pages = max(1, math.ceil(total / config['per_page']))
-
-    if page > total_pages:
-        flash("Invalid page. Redirected to the last page.", "danger")
-        request_args = request.args.to_dict()
-        request_args['page'] = total_pages
-        return redirect(url_for('.content', **request.view_args, **request_args))
+    if out_of_range:
+        return out_of_range
 
     return render_template(
         "content.html",
         content_type=content_type,
         results=results,
         category=category,
-        pages=helpers.generate_pages(page, total_pages),
+        pages=pages,
         sort=sort_by,
         order=order,
         sort_fields=db.VALID_SORT_FIELDS,
@@ -410,24 +419,9 @@ def _root():
 @store.route("/home")
 def root():
 
-    page = request.args.get('page', 1, type=int)
+    news, pages, out_of_range = _paginate(lambda offset, limit: db.get_news(offset=offset, limit=limit))
 
-    if page < 1:
-        flash("Invalid page. Redirected to the first page.", "danger")
-        request_args = request.args.to_dict()
-        request_args['page'] = 1
-        return redirect(url_for('.root', **request.view_args, **request_args))
+    if out_of_range:
+        return out_of_range
 
-    offset = (page - 1) * config['per_page']
-
-    news, total = db.get_news(offset=offset, limit=config['per_page'])
-
-    total_pages = max(1, math.ceil(total / config['per_page']))
-
-    if page > total_pages:
-        flash("Invalid page. Redirected to the last page.", "danger")
-        request_args = request.args.to_dict()
-        request_args['page'] = total_pages
-        return redirect(url_for('.root', **request.view_args, **request_args))
-
-    return render_template("index.html", news=news, pages=helpers.generate_pages(page, total_pages))
+    return render_template("index.html", news=news, pages=pages)
