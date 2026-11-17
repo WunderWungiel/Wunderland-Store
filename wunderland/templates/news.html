@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% set og_type = "article" %}
+{% set meta_description = news['content']|striptags|truncate(160) %}
 
 {% block title %}{% if title is defined %}{{ title }} • {% endif %}Wunderland Store{% endblock %}
 

@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% set noindex = true %}
+
 {% macro search_url(page=none) -%}
     {{- url_for('store.search',
         query=query,

@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% set show_search_link = false %}
+{% set meta_description = 'Browse ' ~ content_type['name']|lower ~ ' by category' %}
 
 {% block title %}{{ content_type['name'] }} • Wunderland Store{% endblock %}
 

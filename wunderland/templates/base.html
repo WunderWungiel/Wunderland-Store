@@ -23,7 +23,7 @@
         <meta name="navigation" content="cursor"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         {% block metadata %}{% endblock %}
-        {%- set description = meta_description|default('', true) or "Apps, games and themes for Symbian S60 and Symbian^3 phones: a revival of the Nokia Ovi Store." %}
+        {%- set description = meta_description|default('', true) or "Apps, games and themes for classic mobile phones: a revival of the Nokia Ovi Store." %}
         {%- set canonical = none if noindex|default(false) else canonical_url() %}
         <meta name="description" content="{{ description }}"/>
         {% if noindex|default(false) %}<meta name="robots" content="noindex, follow"/>

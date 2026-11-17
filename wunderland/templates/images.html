@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
 {% set og_item = item %}
+{% set meta_description = 'Screenshots of ' ~ item['title'] %}
 
-{% block title %}Screenshots • Wunderland Store{% endblock %}
+{% block title %}Screenshots of {{ item['title'] }} • Wunderland Store{% endblock %}
 
 {% block content %}
             <div id="views">

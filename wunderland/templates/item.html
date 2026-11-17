@@ -4,7 +4,7 @@
 {% set meta_description = item['meta_description']|truncate(160) %}
 {% set og_item = item %}
 
-{% block title %}{{ item['title'] }} • Wunderland Store{% endblock %}
+{% block title %}{{ item['title'] }}{% if item['platforms'] %} for {{ item['platforms']|map(attribute='name')|join(', ') }}{% endif %} • Wunderland Store{% endblock %}
 
 {% block header_navigation %}
                 <div id="crumbNav">

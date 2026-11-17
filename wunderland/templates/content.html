@@ -12,7 +12,9 @@
     ) -}}
 {%- endmacro %}
 
-{% block title %}{{ content_type['name'] }}{% if category is defined and category %} :: {{ category['name'] }}{% endif %} • Wunderland Store{% endblock %}
+{% set meta_description = category['name'] ~ ' ' ~ content_type['name']|lower if category else content_type['name'] %}
+
+{% block title %}{{ content_type['name'] }}{% if category %} • {{ category['name'] }}{% endif %} • Wunderland Store{% endblock %}
 
 {% block header_navigation %}
 {% include 'includes/navigation.html' %}

@@ -222,7 +222,9 @@ def item(content_id):
 
     recommended = recommended or None
 
-    item['meta_description'] = " ".join(item['description'].split()) if item['description'] else ""
+    item['meta_description'] = " ".join((item['description'] or "").split()) or (
+        f"{item['title']} by {item['publisher']}, in {item['category']['name']} {item['content_type']['name'].lower()}"
+    )
 
     return render_template("item.html", item=item, recommended=recommended)
 
@@ -407,7 +409,7 @@ def news(news_id):
     if not news:
         return redirect(url_for('.root'))
 
-    return render_template("news.html", news=news, share=True)
+    return render_template("news.html", news=news, title=news['title'], share=True)
 
 
 @store.route("/")

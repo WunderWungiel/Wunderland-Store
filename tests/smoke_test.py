@@ -167,18 +167,20 @@ def run_checks(ids):
         run.check(client, 'GET', '/home?page=0', 302)
         run.check(client, 'GET', '/home?page=99', 302)
         run.check(client, 'GET', '/content/apps', 200, contains=TITLE)
-        run.check(client, 'GET', f"/content/apps?category_id={ids['category_id']}", 200, contains=TITLE)
+        run.check(client, 'GET', f"/content/apps?category_id={ids['category_id']}", 200,
+                  contains=[TITLE, 'Applications • Utilities • ', 'content="Utilities applications"'])
         run.check(client, 'GET', '/content/apps?sort=title&order=1', 200, contains=TITLE)
         run.check(client, 'GET', '/content/apps?sort=bogus', 200, contains=TITLE)
         run.check(client, 'GET', '/content/games', 200)
         run.check(client, 'GET', '/content/nonexistent', 302)
         run.check(client, 'GET', '/content/apps/browse', 200, contains='Utilities')
-        run.check(client, 'GET', f'/item/{content_id}', 200, contains=[TITLE, 'Line one<br/>Line two'])
+        run.check(client, 'GET', f'/item/{content_id}', 200, contains=[
+            TITLE, 'Line one<br/>Line two', f'<title>{TITLE} for Platform ', 'content="Line one Line two"'])
         run.check(client, 'GET', '/item/999999', 404)
         run.check(client, 'GET', f'/content/{content_id}/images', 200, contains=f'{PREFIX}1.jpg')
         run.check(client, 'GET', f'/content/{content_id}/rate', 302, location='/login')
         run.check(client, 'GET', '/search', 200)
-        run.check(client, 'GET', '/search?query=Smoke', 200, contains=TITLE)
+        run.check(client, 'GET', '/search?query=Smoke', 200, contains=[TITLE, 'noindex'])
         run.check(client, 'GET', '/search?query=nothing-matches-this', 200)
         run.check(client, 'GET', '/platforms', 200)
         run.check(client, 'POST', '/platforms', 302, data={
@@ -187,7 +189,8 @@ def run_checks(ids):
         run.check(client, 'POST', '/platforms', 302, data={'platform_id': ''})  # no CSRF token
         run.check(client, 'GET', '/download', 200)
         run.check(client, 'GET', '/feed.xml', 200, contains=NEWS_TITLE, xml=True)
-        run.check(client, 'GET', f'/news/{news_id}', 200, contains='Smoke test news body.')
+        run.check(client, 'GET', f'/news/{news_id}', 200,
+                  contains=['Smoke test news body.', f'<title>{NEWS_TITLE} • ', 'content="Smoke test news body.'])
         run.check(client, 'GET', '/news/999999', 302)
         run.check(client, 'GET', '/login', 200)
         run.check(client, 'GET', '/register', 200)
