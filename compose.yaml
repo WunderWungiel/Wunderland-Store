@@ -77,10 +77,13 @@ services:
     volumes:
       - db_data:/var/lib/postgresql
       - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    # Over TCP, because on a fresh volume the server that loads schema.sql
+    # only listens on the Unix socket and would already pass a socket check.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
+      start_period: 30s
       retries: 5
     stop_grace_period: 30s
     restart: unless-stopped
