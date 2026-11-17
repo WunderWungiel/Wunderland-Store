@@ -9,7 +9,7 @@ import humanize
 import psycopg
 
 from . import cli, csrf, db, helpers
-from .blueprints import auth, client, legacy, qtstore, store
+from .blueprints import api, auth, client, legacy, qtstore, store
 from .config import CONTENT_DIR, config
 
 app = Flask(__name__)
@@ -23,6 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+app.register_blueprint(api, url_prefix='/api/v1')
 app.register_blueprint(auth)
 app.register_blueprint(client)
 app.register_blueprint(legacy)
@@ -86,17 +87,25 @@ def utility_processor():
 FILE_ENDPOINTS = ('static', 'content')
 # Health probes skip the session lookup too, so they don't hit the sessions table.
 SESSIONLESS_ENDPOINTS = FILE_ENDPOINTS + ('healthz',)
+# The JSON API is stateless: it neither reads nor sets the cookie session. Checked by
+# path rather than blueprint, so unknown /api/ URLs (no blueprint, or the legacy one
+# for /api/<number>) are stateless too.
+API_PREFIX = '/api/'
+
+
+def is_sessionless():
+    return request.endpoint in SESSIONLESS_ENDPOINTS or request.path.startswith(API_PREFIX)
 
 
 class SessionInterface(SecureCookieSessionInterface):
-    """Don't refresh the permanent session cookie on sessionless endpoints.
+    """Don't refresh the permanent session cookie on sessionless requests.
 
     Otherwise every icon and stylesheet carries Set-Cookie and Vary: Cookie,
     which wastes bytes and keeps shared caches from storing them.
     """
 
     def should_set_cookie(self, app, session):
-        if request.endpoint in SESSIONLESS_ENDPOINTS:
+        if is_sessionless():
             return session.modified
         return super().should_set_cookie(app, session)
 
@@ -106,7 +115,7 @@ app.session_interface = SessionInterface()
 
 @app.before_request
 def load_global_data():
-    if request.endpoint in SESSIONLESS_ENDPOINTS:
+    if is_sessionless():
         return
 
     session.permanent = True
@@ -133,7 +142,12 @@ def load_global_data():
     g.user = user
 
 
-app.before_request(csrf.protect)
+@app.before_request
+def check_csrf():
+    # API clients won't authenticate with the cookie, so there is nothing to forge.
+    if is_sessionless():
+        return None
+    return csrf.protect()
 
 
 # Device clients parse these responses, so leave their errors untouched.
