@@ -1,6 +1,8 @@
 # Required: generate a random signing key before starting the app.
 secret_key: ""
-# Public URL used for confirmation emails, feeds and client links.
+# Public URL used for confirmation emails, feeds and client links. Its host and
+# path are always used; links keep the scheme (http or https) of the request
+# they're built for, so this scheme matters only outside a request.
 base_url: "http://ovi.wunderwungiel.pl"
 # The database connection isn't set here but with the POSTGRES_* environment
 # variables; see .env.example.

@@ -3,7 +3,7 @@ import os
 import re
 from urllib.parse import urlsplit
 
-from flask import current_app, url_for
+from flask import current_app, has_request_context, request, url_for
 from markupsafe import Markup, escape
 
 from .config import CONTENT_DIR, config
@@ -12,9 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 def external_url_for(endpoint, **values):
-    """Build public URLs from configuration, never request/proxy headers."""
+    """Build a public URL on base_url's host, never the request's Host header.
+
+    The store serves both HTTP (old Symbian devices that can't do modern TLS) and
+    HTTPS, so inside a request the link keeps the scheme the visitor used, as
+    passed on by the proxy. base_url's scheme applies only outside a request.
+    """
     base = urlsplit(config['base_url'])
-    adapter = current_app.url_map.bind(base.netloc, script_name=base.path or '/', url_scheme=base.scheme)
+    scheme = request.scheme if has_request_context() else base.scheme
+    adapter = current_app.url_map.bind(base.netloc, script_name=base.path or '/', url_scheme=scheme)
     return adapter.build(endpoint, values, force_external=True)
 
 def nl2br(text):
