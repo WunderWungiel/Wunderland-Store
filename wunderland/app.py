@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 from flask import Flask, g, render_template, request, session, send_from_directory
+from flask.sessions import SecureCookieSessionInterface
 from werkzeug.middleware.proxy_fix import ProxyFix
 import humanize
 import psycopg
@@ -81,6 +82,22 @@ def utility_processor():
 FILE_ENDPOINTS = ('static', 'content')
 # Health probes skip the session lookup too, so they don't hit the sessions table.
 SESSIONLESS_ENDPOINTS = FILE_ENDPOINTS + ('healthz',)
+
+
+class SessionInterface(SecureCookieSessionInterface):
+    """Don't refresh the permanent session cookie on sessionless endpoints.
+
+    Otherwise every icon and stylesheet carries Set-Cookie and Vary: Cookie,
+    which wastes bytes and keeps shared caches from storing them.
+    """
+
+    def should_set_cookie(self, app, session):
+        if request.endpoint in SESSIONLESS_ENDPOINTS:
+            return session.modified
+        return super().should_set_cookie(app, session)
+
+
+app.session_interface = SessionInterface()
 
 
 @app.before_request
