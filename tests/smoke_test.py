@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Request every route once and check the responses.
 
-Run it against a throwaway database created from db/schema.sql, with
-config.yaml pointing at that database. The POSTGRES_* environment
-variables override config.yaml's database section, so unset them or
-point them at the throwaway database too. The script fills the empty tables
-with a small set of fixtures, requests each web page and both client XML
-APIs through the Flask test client, then empties the tables again and
-removes the fixture files it wrote under the content directory.
+Run it against a throwaway database created from db/schema.sql, with the
+POSTGRES_* environment variables pointing at that database. The script
+fills the empty tables with a small set of fixtures, requests each web page
+and both client XML APIs through the Flask test client, then empties the
+tables again and removes the fixture files it wrote under the content
+directory.
 
 It refuses to run if any of the tables it uses already hold rows, so it
 can't touch a real store's data.
@@ -61,8 +60,7 @@ def check_empty():
         busy = [table for table in TABLES if execute(cursor, f"SELECT EXISTS (SELECT 1 FROM {table}) AS e")['e']]
     if busy:
         sys.exit(f"Refusing to run: these tables already hold rows: {', '.join(busy)}. "
-                 "Point config.yaml (or the POSTGRES_* variables, which override it) "
-                 "at a fresh database created from db/schema.sql.")
+                 "Point the POSTGRES_* variables at a fresh database created from db/schema.sql.")
     existing = [path for path in FIXTURE_FILES if os.path.exists(path)]
     if existing:
         sys.exit(f"Refusing to run: fixture files already exist: {', '.join(existing)}")

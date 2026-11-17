@@ -10,15 +10,11 @@ from markdown import markdown
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
-from .config import CONTENT_DIR, config
+from .config import CONTENT_DIR, DATABASE
 
 # Each worker owns a pool; keep idle connections low and cap concurrent queries.
 pool = ConnectionPool(min_size=1, max_size=4, kwargs={
-    "host": config['database']['host'],
-    "port": config['database']['port'],
-    "dbname": config['database']['name'],
-    "user": config['database']['user'],
-    "password": config['database']['password'],
+    **DATABASE,
     # Without it, connecting to an unreachable host waits on the OS TCP timeout.
     "connect_timeout": 5,
     "row_factory": dict_row,

@@ -10,30 +10,6 @@ path = os.environ.get("WUNDERLAND_CONFIG") or os.path.join(ROOT_DIR, "config.yam
 with open(path, "r") as f:
     config = yaml.safe_load(f.read())
 
-# These override the database section when set, so in Docker the credentials only live in .env.
-DATABASE_ENV = {
-    'host': 'POSTGRES_HOST',
-    'port': 'POSTGRES_PORT',
-    'name': 'POSTGRES_DB',
-    'user': 'POSTGRES_USER',
-    'password': 'POSTGRES_PASSWORD',
-}
-
-
-def _apply_database_env(data):
-    overrides = {key: os.environ[var] for key, var in DATABASE_ENV.items() if os.environ.get(var)}
-    if not overrides or not isinstance(data, dict):
-        return
-    # The database section is optional when the environment covers it.
-    if data.get('database') is None:
-        data['database'] = {}
-    if isinstance(data['database'], dict):
-        data['database'].update(overrides)
-
-
-_apply_database_env(config)
-
-
 class ConfigError(ValueError):
     pass
 
@@ -55,20 +31,10 @@ def _is_port(value):
     return _is_int(value) or (isinstance(value, str) and value.strip().isdigit())
 
 
-def _is_optional_str(value):
-    # Blank means the libpq default: the Unix socket, or no password.
-    return value is None or isinstance(value, (str, int))
-
-
 # Every key the app reads, with a check for the value and what the check expects.
 REQUIRED_KEYS = {
     'secret_key': (_is_str, "a string"),
     'base_url': (_is_str, "a string"),
-    'database.host': (_is_optional_str, "a string"),
-    'database.port': (_is_port, "a port number"),
-    'database.name': (_is_str, "a string"),
-    'database.user': (_is_str, "a string"),
-    'database.password': (_is_optional_str, "a string"),
     'email.address': (_is_str, "a string"),
     'email.password': (_is_str, "a string"),
     'email.smtp.port': (_is_port, "a port number"),
@@ -80,7 +46,33 @@ REQUIRED_KEYS = {
     'clients': (lambda value: value is None or _is_list_of(_is_int)(value), "a list of content IDs"),
 }
 
-SECRET_KEYS = {'secret_key', 'database.password', 'email.password'}
+SECRET_KEYS = {'secret_key', 'email.password'}
+
+# The database connection comes only from these, which Docker compose sets from .env, the
+# same values the db container is created with. Unset host, port and password fall back to
+# the libpq defaults; set but empty, host means the Unix socket and password means none.
+DATABASE_ENV = {
+    'host': 'POSTGRES_HOST',
+    'port': 'POSTGRES_PORT',
+    'dbname': 'POSTGRES_DB',
+    'user': 'POSTGRES_USER',
+    'password': 'POSTGRES_PASSWORD',
+}
+REQUIRED_DATABASE_ENV = ('dbname', 'user')
+
+DATABASE = {key: os.environ[var] for key, var in DATABASE_ENV.items() if var in os.environ}
+
+
+def _database_problems():
+    problems = []
+    for key in REQUIRED_DATABASE_ENV:
+        if not DATABASE.get(key):
+            problems.append(f"set the {DATABASE_ENV[key]} environment variable")
+    port = DATABASE.get('port')
+    if port and not port.strip().isdigit():
+        problems.append(f"POSTGRES_PORT must be a port number, got {port!r}")
+    return problems
+
 
 _MISSING = object()
 
@@ -98,12 +90,15 @@ def _validate(data):
         raise ConfigError(f"{path} must contain a YAML mapping; see config.yaml.example")
 
     problems = []
+    # Ignoring an old section could connect to a different database than the one it names.
+    if 'database' in data:
+        problems.append("the database section is no longer read; remove it and set the POSTGRES_HOST, "
+                        "POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER and POSTGRES_PASSWORD environment "
+                        "variables (in Docker, in .env) to the same values")
     for key, (check, expected) in REQUIRED_KEYS.items():
         value = _lookup(data, key)
         if value is _MISSING:
-            section, _, name = key.partition('.')
-            hint = f" (or set {DATABASE_ENV[name]})" if section == 'database' else ""
-            problems.append(f"{key} is missing{hint}")
+            problems.append(f"{key} is missing")
         elif not check(value):
             # Never echo secrets into the startup log.
             shown = type(value).__name__ if key in SECRET_KEYS else repr(value)
@@ -113,9 +108,12 @@ def _validate(data):
     if content_dir is not None and not (_is_str(content_dir) and content_dir.strip()):
         problems.append(f"content_dir must be a non-empty string, got {content_dir!r}")
 
+    problems += _database_problems()
+
     if problems:
         raise ConfigError(
-            f"Invalid {path} (see config.yaml.example):\n" + "\n".join(f"  - {problem}" for problem in problems)
+            f"Invalid configuration in {path} or the environment (see config.yaml.example and .env.example):\n"
+            + "\n".join(f"  - {problem}" for problem in problems)
         )
 
 

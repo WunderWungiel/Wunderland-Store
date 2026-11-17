@@ -2,15 +2,8 @@
 secret_key: ""
 # Public URL used for confirmation emails, feeds and client links.
 base_url: "http://ovi.wunderwungiel.pl"
-# The POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB, POSTGRES_USER and
-# POSTGRES_PASSWORD environment variables override these when set. Docker
-# compose sets them from .env, so in Docker this section can be left out.
-database:
-  host: "localhost"
-  port: 5432
-  name: "wunderland"
-  user: "postgres"
-  password: "change-me"
+# The database connection isn't set here but with the POSTGRES_* environment
+# variables; see .env.example.
 email:
   address: "email@address.com"
   password: ""
