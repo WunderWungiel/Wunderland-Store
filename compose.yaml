@@ -15,9 +15,14 @@ services:
       - ./content:/srv/content
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
     depends_on:
       db:
         condition: service_healthy
+    stop_grace_period: 15s
     restart: unless-stopped
 
   # Deletes expired unconfirmed users and sessions once a day.
@@ -63,6 +68,9 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 30s
     restart: unless-stopped
 
 volumes:
