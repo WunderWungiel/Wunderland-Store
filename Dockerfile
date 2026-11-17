@@ -4,8 +4,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     GUNICORN_BIND=0.0.0.0:8000
 
-# The app runs as this user. The host's ./content directory must be writable by
-# the same UID for admin uploads to work. Compose can override it with APP_UID/APP_GID.
+# Default user for running the image directly; change it with --build-arg. The
+# mounted content directory must be writable by this UID for admin uploads to work.
+# Compose ignores it and runs as APP_UID/APP_GID from .env (user: in compose.yaml).
 ARG APP_UID=1000
 ARG APP_GID=1000
 RUN addgroup -g "$APP_GID" store && adduser -D -H -u "$APP_UID" -G store store
