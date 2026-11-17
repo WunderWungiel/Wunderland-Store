@@ -4,6 +4,15 @@ secret_key: ""
 # path are always used; links keep the scheme (http or https) of the request
 # they're built for, so this scheme matters only outside a request.
 base_url: "http://ovi.wunderwungiel.pl"
+# Optional. The address search engines should index: canonical links, og:url,
+# the sitemap and structured data always use this scheme and host, whatever the
+# request used. Left out, it's base_url with the scheme switched to https and
+# any port dropped.
+# canonical_url: "https://ovi.wunderwungiel.pl"
+# Optional. To verify the site in Google Search Console with the HTML tag
+# method, put the tag's content value here and it's printed on every page.
+# DNS verification (a TXT record) needs nothing here.
+# google_site_verification: ""
 # The database connection isn't set here but with the POSTGRES_* environment
 # variables; see .env.example.
 email:

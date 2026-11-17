@@ -108,6 +108,10 @@ def _validate(data):
     if content_dir is not None and not (_is_str(content_dir) and content_dir.strip()):
         problems.append(f"content_dir must be a non-empty string, got {content_dir!r}")
 
+    verification = data.get('google_site_verification')
+    if verification is not None and not (_is_str(verification) and verification.strip()):
+        problems.append(f"google_site_verification must be a non-empty string, got {verification!r}")
+
     problems += _database_problems()
 
     if problems:
@@ -123,14 +127,33 @@ secret_key = config.get('secret_key')
 if not isinstance(secret_key, str) or not secret_key.strip():
     raise ValueError(f"Set secret_key in {path} to a non-empty random string before starting the store")
 
+
+def _check_public_url(key, value):
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"Set {key} in {path} to the public HTTP(S) URL of the store")
+    url = urlsplit(value)
+    if (url.scheme not in ('http', 'https') or not url.hostname
+            or url.username is not None or url.password is not None
+            or url.query or url.fragment):
+        raise ValueError(f"{key} must be an absolute HTTP(S) URL without credentials, query or fragment")
+    return url
+
+
 base_url = config.get('base_url')
-if not isinstance(base_url, str) or not base_url.strip():
-    raise ValueError(f"Set base_url in {path} to the public HTTP(S) URL of the store")
-public_url = urlsplit(base_url)
-if (public_url.scheme not in ('http', 'https') or not public_url.hostname
-        or public_url.username is not None or public_url.password is not None
-        or public_url.query or public_url.fragment):
-    raise ValueError("base_url must be an absolute HTTP(S) URL without credentials, query or fragment")
+public_url = _check_public_url('base_url', base_url)
+
+# Where search engines should index the store: canonical links, og:url, the sitemap and
+# structured data. Optional; it defaults to base_url over HTTPS, since devices keep using
+# HTTP but search results shouldn't. base_url's port is an HTTP port, so the default drops it.
+canonical_url = config.get('canonical_url')
+if canonical_url is None:
+    host = f"[{public_url.hostname}]" if ':' in public_url.hostname else public_url.hostname
+    CANONICAL_URL = public_url._replace(scheme='https', netloc=host)
+else:
+    CANONICAL_URL = _check_public_url('canonical_url', canonical_url)
+
+# Optional Search Console HTML tag verification token, printed as a meta tag on every page.
+GOOGLE_SITE_VERIFICATION = config.get('google_site_verification')
 
 # Uploaded files, icons, screenshots and news. Optional; a relative path is resolved against the repo root.
 CONTENT_DIR = os.path.normpath(os.path.join(ROOT_DIR, config.get('content_dir') or 'content'))

@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 from flask import current_app, has_request_context, request, url_for
 from markupsafe import Markup, escape
 
-from .config import CONTENT_DIR, config
+from .config import CANONICAL_URL, CONTENT_DIR, config
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,19 @@ def external_url_for(endpoint, **values):
     base = urlsplit(config['base_url'])
     scheme = request.scheme if has_request_context() else base.scheme
     adapter = current_app.url_map.bind(base.netloc, script_name=base.path or '/', url_scheme=scheme)
+    return adapter.build(endpoint, values, force_external=True)
+
+
+def canonical_url_for(endpoint, **values):
+    """Build the URL search engines should index, on canonical_url's scheme and host.
+
+    Unlike external_url_for, the scheme never follows the request, so a page fetched
+    over HTTP still names its HTTPS address. Use it only for canonical links, og:url,
+    the sitemap and structured data; emails, the feed and client links need
+    external_url_for.
+    """
+    adapter = current_app.url_map.bind(CANONICAL_URL.netloc, script_name=CANONICAL_URL.path or '/',
+                                       url_scheme=CANONICAL_URL.scheme)
     return adapter.build(endpoint, values, force_external=True)
 
 def nl2br(text):
