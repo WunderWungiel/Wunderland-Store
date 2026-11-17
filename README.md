@@ -49,7 +49,7 @@ There is no test suite, but there is a script that requests every page and both 
 python -m tests.smoke_test
 ```
 
-Run it against an empty, throwaway database created from `db/schema.sql`. It refuses to start if the tables already hold data. It adds its own test data, plus a few files under `content/`, and removes all of it when it finishes.
+Run it against an empty, throwaway database created from `db/schema.sql`. Point `config.yaml` at it, and remember that the `POSTGRES_*` environment variables override that section when set. It refuses to start if the tables already hold data. It adds its own test data, plus a few files under `content/`, and removes all of it when it finishes.
 
 ## Upgrading from the old layout
 
