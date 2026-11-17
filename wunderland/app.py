@@ -45,13 +45,17 @@ def content(filename):
     return send_from_directory(CONTENT_DIR, filename)
 
 
-# Probed by the Docker healthchecks. The short pool timeout keeps a dead DB
-# from outlasting the probe's own timeout.
+# Probed by the Docker healthchecks, whose timeout is 5s. The pool timeout bounds the
+# wait for a connection and the statement timeout bounds the query, so a DB that is
+# down or overloaded fails the probe instead of holding a worker thread. The statement
+# timeout is enforced by the server, so it can't help if the server stops responding
+# altogether. SET LOCAL lasts only until the pool commits on leaving the block.
 @app.route("/healthz")
 def healthz():
     headers = {"Content-Type": "text/plain", "Cache-Control": "no-store"}
     try:
-        with db.pool.connection(timeout=3) as connection:
+        with db.pool.connection(timeout=2) as connection:
+            connection.execute("SET LOCAL statement_timeout = '2s'")
             connection.execute("SELECT 1")
     except psycopg.Error as error:
         logger.warning("Health check failed: %s", error)

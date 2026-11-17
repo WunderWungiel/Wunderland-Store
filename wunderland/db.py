@@ -19,6 +19,8 @@ pool = ConnectionPool(min_size=1, max_size=4, kwargs={
     "dbname": config['database']['name'],
     "user": config['database']['user'],
     "password": config['database']['password'],
+    # Without it, connecting to an unreachable host waits on the OS TCP timeout.
+    "connect_timeout": 5,
     "row_factory": dict_row,
 })
 
