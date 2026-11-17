@@ -121,7 +121,7 @@ class Runner:
         self.failures = 0
         self.count = 0
 
-    def check(self, client, method, path, status, contains=None, xml=False, location=None, data=None):
+    def check(self, client, method, path, status, contains=None, xml=False, location=None, data=None, lacks=None):
         self.count += 1
         label = f"{method} {path}"
         try:
@@ -133,6 +133,9 @@ class Runner:
             for text in ([contains] if isinstance(contains, str) else contains or []):
                 if text.encode() not in body:
                     problems.append(f"body lacks {text!r}")
+            for text in ([lacks] if isinstance(lacks, str) else lacks or []):
+                if text.encode() in body:
+                    problems.append(f"body has {text!r}")
             if xml:
                 try:
                     ET.fromstring(body)
@@ -207,7 +210,7 @@ def run_checks(ids):
         run.check(client, 'GET', '/sitemap.xml', 200, xml=True, contains=[
             '/home</loc>', '/content/apps</loc>', f"/content/apps?category_id={ids['category_id']}</loc>",
             f'/item/{content_id}</loc>', f'/content/{content_id}/images</loc>', f'/news/{news_id}</loc>',
-            '<lastmod>'])
+            '<lastmod>'], lacks='/content/games</loc>')  # the seed data has no games
         run.check(client, 'GET', '/static/css/style.css', 200)
         run.check(client, 'GET', f'/static/content/icons/{PREFIX}.png', 200, contains='PNG')
         run.check(client, 'GET', f'/static/content/files/{PREFIX}.sis', 200, contains='not a real sis file')

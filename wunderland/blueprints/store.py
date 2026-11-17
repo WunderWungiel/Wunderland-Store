@@ -421,12 +421,19 @@ def sitemap():
 
     add('store.root')
 
+    categories = db.get_categories(only_with_content=True)
+    # Every item has a category, so a type with no listed category has no visible items,
+    # and its listing and browse pages would be empty.
+    type_ids = {category['type_id'] for category in categories}
+
     for content_type in db.get_content_types():
+        if content_type['id'] not in type_ids:
+            continue
         add('store.content', content_type_id=content_type['id'])
         if content_type['show_categories']:
             add('store.browse_categories', content_type_id=content_type['id'])
 
-    for category in db.get_categories(only_with_content=True):
+    for category in categories:
         add('store.content', content_type_id=category['type_id'], category_id=category['id'])
 
     items, news_rows = db.get_sitemap_entries()
