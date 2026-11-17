@@ -12,7 +12,7 @@ import psycopg
 from . import cli, csrf, db, helpers
 from .blueprints import api, auth, client, legacy, qtstore, store
 from .blueprints.api import error_response as api_error_response, is_api_request
-from .config import CONTENT_DIR, config
+from .config import CONTENT_DIR, GOOGLE_SITE_VERIFICATION, config
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -81,7 +81,10 @@ def utility_processor():
     return dict(
         now=datetime.now(),
         csrf_token=csrf.generate_token,
-        get_content_types=db.get_content_types
+        get_content_types=db.get_content_types,
+        canonical_url=helpers.canonical_for_request,
+        og_image_for=helpers.og_image_for,
+        google_site_verification=GOOGLE_SITE_VERIFICATION,
     )
 
 

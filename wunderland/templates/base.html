@@ -8,6 +8,12 @@
    selected_content_type (default undefined): content type ID to highlight in navigation.
    footer_mode (default "account"): Download plus Sign in/Log out based on g.user.
        "download_only": Download alone; "sign_in": always show Download and Sign in.
+   meta_description (default: the site description): the description and og:description.
+   noindex (default false): ask search engines not to index the page; drops canonical and og:url.
+   og_title (default: the title block): og:title.
+   og_type (default "website"): og:type, such as "article".
+   og_item (default undefined): the content item whose first screenshot or icon is og:image;
+       without it og:image is the store logo.
    Override blocks for page content; includes inherit these options automatically.
 -#}
 <!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
@@ -15,7 +21,23 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
         <meta name="navigation" content="cursor"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
         {% block metadata %}{% endblock %}
+        {%- set description = meta_description|default('', true) or "Apps, games and themes for Symbian S60 and Symbian^3 phones: a revival of the Nokia Ovi Store." %}
+        {%- set canonical = none if noindex|default(false) else canonical_url() %}
+        <meta name="description" content="{{ description }}"/>
+        {% if noindex|default(false) %}<meta name="robots" content="noindex, follow"/>
+        {% endif %}{% if canonical %}<link rel="canonical" href="{{ canonical }}"/>
+        {% endif %}<meta property="og:site_name" content="Wunderland Store"/>
+        <meta property="og:type" content="{{ og_type|default('website') }}"/>
+        <meta property="og:title" content="{{ og_title|default(self.title()|trim) }}"/>
+        <meta property="og:description" content="{{ description }}"/>
+        {% if canonical %}<meta property="og:url" content="{{ canonical }}"/>
+        {% endif %}<meta property="og:image" content="{{ og_image_for(og_item|default(none)) }}"/>
+        <meta name="twitter:card" content="summary"/>
+        <link rel="alternate" type="application/rss+xml" title="Wunderland Store news" href="{{ url_for('store.feed') }}"/>
+        {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}"/>
+        {% endif %}
         <title>{% block title %}Wunderland Store{% endblock %}</title>
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/global-min.css') }}"/>
         <link type="text/css" rel="stylesheet" media="all" charset="utf-8" href="{{ url_for('static', filename='css/style.css') }}"/>

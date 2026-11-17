@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% set selected_content_type = item['content_type']['id'] %}
+{% set meta_description = item['meta_description']|truncate(160) %}
+{% set og_item = item %}
 
 {% block title %}{{ item['title'] }} • Wunderland Store{% endblock %}
-
-{% block metadata %}<meta name="description" content="{{ item['meta_description']|truncate(160) }}"/>{% endblock %}
 
 {% block header_navigation %}
                 <div id="crumbNav">

@@ -36,6 +36,41 @@ def canonical_url_for(endpoint, **values):
                                        url_scheme=CANONICAL_URL.scheme)
     return adapter.build(endpoint, values, force_external=True)
 
+
+def _positive_arg(name):
+    value = request.args.get(name, type=int)
+    return value if value is not None and value > 0 else None
+
+
+def canonical_for_request():
+    """The canonical URL of the current page, or None outside a matched route.
+
+    Keeps the path and only the query args that pick a different listing: category_id,
+    and page past the first. sort, order, query and anything else are dropped, so every
+    ordering of a listing points at one URL.
+    """
+    if not has_request_context() or request.url_rule is None:
+        return None
+    values = dict(request.view_args or {})
+    category_id = _positive_arg('category_id')
+    if category_id:
+        values['category_id'] = category_id
+    page = _positive_arg('page')
+    if page and page > 1:
+        values['page'] = page
+    return canonical_url_for(request.endpoint, **values)
+
+
+def og_image_for(item=None):
+    """The canonical URL of a page's share image: the item's first screenshot, else its
+    icon, else the store logo."""
+    if item and item.get('screenshots'):
+        return canonical_url_for('content', filename='screenshots/' + item['screenshots'][0])
+    if item and item.get('icon'):
+        return canonical_url_for('content', filename='icons/' + item['icon'])
+    return canonical_url_for('static', filename='img/logo_wunderland.png')
+
+
 def nl2br(text):
     """Escape text and turn its newlines into <br/> tags."""
     if not text:
