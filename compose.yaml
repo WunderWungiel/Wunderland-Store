@@ -1,5 +1,6 @@
 services:
   app:
+    image: wunderland-store
     build: .
     user: "${APP_UID:-1000}:${APP_GID:-1000}"
     environment:
@@ -27,7 +28,9 @@ services:
 
   # Deletes expired unconfirmed users and sessions once a day.
   clean:
-    build: .
+    # The image is built by the app service.
+    image: wunderland-store
+    pull_policy: never
     user: "${APP_UID:-1000}:${APP_GID:-1000}"
     command: sh -c "while true; do flask --app wunderland.app clean; sleep 86400; done"
     init: true
@@ -41,6 +44,8 @@ services:
     volumes:
       - ./config.yaml:/srv/config.yaml:ro
     depends_on:
+      app:
+        condition: service_started
       db:
         condition: service_healthy
     restart: unless-stopped
