@@ -56,8 +56,15 @@ services:
       - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8080}:80"
     volumes:
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    # Probes through nginx to the app, so it also checks the proxying.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     depends_on:
-      - app
+      app:
+        condition: service_healthy
     restart: unless-stopped
 
   db:
