@@ -32,7 +32,7 @@ def item(prefix, legacy_id):
     if not content_id:
         abort(404)
 
-    return redirect(url_for('store.item', content_id=content_id, **request.args), code=307)
+    return redirect(url_for('store.item', content_id=content_id, **request.args), code=301)
 
 
 @legacy.route("/<prefix>/<int:legacy_id>/images")
@@ -47,4 +47,4 @@ def images(prefix, legacy_id):
     if not content_id:
         abort(404)
 
-    return redirect(url_for('store.images', content_id=content_id, **request.args), code=307)
+    return redirect(url_for('store.images', content_id=content_id, **request.args), code=301)

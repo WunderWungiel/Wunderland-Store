@@ -162,7 +162,7 @@ def run_checks(ids):
 
     # Logged-out web pages.
     with app.test_client() as client:
-        run.check(client, 'GET', '/', 302, location='/home')
+        run.check(client, 'GET', '/', 301, location='/home')
         run.check(client, 'GET', '/home', 200, contains=NEWS_TITLE)
         run.check(client, 'GET', '/home?page=0', 302)
         run.check(client, 'GET', '/home?page=99', 302)
@@ -172,7 +172,8 @@ def run_checks(ids):
         run.check(client, 'GET', '/content/apps?sort=title&order=1', 200, contains=TITLE)
         run.check(client, 'GET', '/content/apps?sort=bogus', 200, contains=TITLE)
         run.check(client, 'GET', '/content/games', 200)
-        run.check(client, 'GET', '/content/nonexistent', 302)
+        run.check(client, 'GET', '/content/nonexistent', 404)
+        run.check(client, 'GET', '/content/nonexistent/browse', 404)
         run.check(client, 'GET', '/content/apps/browse', 200, contains='Utilities')
         run.check(client, 'GET', f'/item/{content_id}', 200, contains=[
             TITLE, 'Line one<br/>Line two', f'<title>{TITLE} for Platform ', 'content="Line one Line two"'])
@@ -191,7 +192,7 @@ def run_checks(ids):
         run.check(client, 'GET', '/feed.xml', 200, contains=NEWS_TITLE, xml=True)
         run.check(client, 'GET', f'/news/{news_id}', 200,
                   contains=['Smoke test news body.', f'<title>{NEWS_TITLE} • ', 'content="Smoke test news body.'])
-        run.check(client, 'GET', '/news/999999', 302)
+        run.check(client, 'GET', '/news/999999', 404)
         run.check(client, 'GET', '/login', 200)
         run.check(client, 'GET', '/register', 200)
         run.check(client, 'GET', '/profile', 302, location='/login')
@@ -207,8 +208,8 @@ def run_checks(ids):
         run.check(client, 'HEAD', '/healthz', 200)
 
         # Old Ovi Store URLs.
-        run.check(client, 'GET', f'/{LEGACY_PREFIX}/{LEGACY_ID}', 307, location=f'/item/{content_id}')
-        run.check(client, 'GET', f'/{LEGACY_PREFIX}/{LEGACY_ID}/images', 307, location=f'/content/{content_id}/images')
+        run.check(client, 'GET', f'/{LEGACY_PREFIX}/{LEGACY_ID}', 301, location=f'/item/{content_id}')
+        run.check(client, 'GET', f'/{LEGACY_PREFIX}/{LEGACY_ID}/images', 301, location=f'/content/{content_id}/images')
         run.check(client, 'GET', f'/{LEGACY_PREFIX}/{LEGACY_ID}/rate', 307, location=f'/content/{content_id}/rate')
         run.check(client, 'GET', f'/{LEGACY_PREFIX}/1', 404)
         run.check(client, 'GET', f'/unknownprefix/{LEGACY_ID}', 404)

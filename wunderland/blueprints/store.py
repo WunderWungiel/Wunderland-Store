@@ -249,7 +249,7 @@ def browse_categories(content_type_id):
     content_type = db.get_content_type_by_id(content_type_id)
 
     if not content_type:
-        return redirect(url_for('.root'))
+        abort(404)
 
     categories = db.get_categories(
         content_type_id=content_type['id'],
@@ -320,7 +320,7 @@ def content(content_type_id):
     content_type = db.get_content_type_by_id(content_type_id)
 
     if not content_type:
-        return redirect(url_for('.root'))
+        abort(404)
 
     category_id = request.args.get('category_id', type=int)
     sort_by = request.args.get('sort')
@@ -407,7 +407,7 @@ def news(news_id):
     news = db.get_one_news(news_id=news_id)
 
     if not news:
-        return redirect(url_for('.root'))
+        abort(404)
 
     return render_template("news.html", news=news, title=news['title'], share=True)
 
@@ -415,7 +415,7 @@ def news(news_id):
 @store.route("/")
 def _root():
 
-    return redirect(url_for('.root'))
+    return redirect(url_for('.root'), code=301)
 
 
 @store.route("/home")
