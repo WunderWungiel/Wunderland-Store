@@ -178,8 +178,10 @@ def run_checks(ids):
         run.check(client, 'GET', '/content/nonexistent', 404)
         run.check(client, 'GET', '/content/nonexistent/browse', 404)
         run.check(client, 'GET', '/content/apps/browse', 200, contains='Utilities')
+        item_page_title = f'{TITLE} • Applications • Wunderland Store'
         run.check(client, 'GET', f'/item/{content_id}', 200, contains=[
-            TITLE, 'Line one<br/>Line two', f'<title>{TITLE} for Platform ', 'content="Line one Line two"'])
+            TITLE, 'Line one<br/>Line two', f'<title>{item_page_title}</title>',
+            f'<meta property="og:title" content="{item_page_title}"/>', 'content="Line one Line two"'])
         # Listing args on a page that isn't a listing stay out of its canonical URL.
         run.check(client, 'GET', f'/item/{content_id}?page=3&category_id=9', 200,
                   contains=['rel="canonical" href="https://', f'/item/{content_id}"/>'])
