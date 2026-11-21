@@ -200,41 +200,62 @@ def content_detail(item):
 
 
 class _TextExtractor(HTMLParser):
-    """Plain text from the HTML that Python-Markdown emits, with blocks split by blank lines."""
+    """Plain text from the HTML that Python-Markdown emits, with blocks split by blank lines.
+
+    Whitespace is collapsed everywhere but in <pre> blocks. Those are kept aside and put
+    back after the cleanup, so code keeps its indentation and blank lines.
+    """
 
     # Each list item goes on its own line, without a blank line between items.
     BLOCKS = {'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'pre', 'blockquote', 'hr', 'table', 'tr'}
+    # Stands for the pre block of the same number; NUL can't appear in the news text.
+    PLACEHOLDER = '\x00{}\x00'
 
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.parts = []
-        self.in_pre = 0
+        self.pre_blocks = []
+        self.pre_depth = 0
 
     def handle_starttag(self, tag, attrs):
-        if tag == 'br':
+        if tag == 'pre':
+            if not self.pre_depth:
+                self.parts.append('\n\n')
+                self.parts.append(self.PLACEHOLDER.format(len(self.pre_blocks)))
+                self.pre_blocks.append([])
+            self.pre_depth += 1
+        elif self.pre_depth:
+            return
+        elif tag == 'br':
             self.parts.append('\n')
         elif tag == 'li':
             self.parts.append('\n- ')
         elif tag in self.BLOCKS:
             self.parts.append('\n\n')
-        if tag == 'pre':
-            self.in_pre += 1
 
     def handle_endtag(self, tag):
-        # A closing li adds nothing: the next item's '\n- ' or the list's end breaks the line.
-        if tag in self.BLOCKS:
-            self.parts.append('\n\n')
         if tag == 'pre':
-            self.in_pre = max(0, self.in_pre - 1)
+            if self.pre_depth:
+                self.pre_depth -= 1
+                if not self.pre_depth:
+                    self.parts.append('\n\n')
+        # A closing li adds nothing: the next item's '\n- ' or the list's end breaks the line.
+        elif tag in self.BLOCKS and not self.pre_depth:
+            self.parts.append('\n\n')
 
     def handle_data(self, data):
-        self.parts.append(data if self.in_pre else re.sub(r'\s+', ' ', data))
+        if self.pre_depth:
+            self.pre_blocks[-1].append(data)
+        else:
+            self.parts.append(re.sub(r'\s+', ' ', data))
 
     def result(self):
         joined = ''.join(self.parts)
         # Trim spaces around line breaks, then keep at most one blank line between blocks.
         joined = re.sub(r' *\n *', '\n', joined)
-        return re.sub(r'\n{3,}', '\n\n', joined).strip()
+        joined = re.sub(r'\n{3,}', '\n\n', joined).strip()
+        # Markdown ends every code block with a newline; the blank line after it is enough.
+        return re.sub(r'\x00(\d+)\x00', lambda m: ''.join(self.pre_blocks[int(m.group(1))]).rstrip('\n'), joined)
 
 
 def html_to_text(html):
