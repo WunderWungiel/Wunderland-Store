@@ -35,6 +35,7 @@ TABLES = [
 ]
 
 TITLE = "Smoke Test App"
+HIDDEN_TITLE = "Smoke Hidden App"
 PREFIX = "smoke-test"
 LEGACY_PREFIX = "applications"
 LEGACY_ID = 4242
@@ -93,6 +94,12 @@ def seed():
         for platform_id in platforms:
             execute(cursor, "INSERT INTO content_platforms (content_id, platform_id) VALUES (%s, %s)",
                     (content_id, platform_id))
+        # Hidden items must not show up anywhere, nor reveal that they exist.
+        hidden_id = execute(cursor, """
+            INSERT INTO content (title, file, category_id, publisher, version, icon, screenshot_prefix,
+                                 screenshot_count, uid, visible)
+            VALUES (%s, %s, %s, 'Smoke Publisher', '1.0', %s, %s, 0, '0xE0000002', FALSE)
+            RETURNING id""", (HIDDEN_TITLE, f"{PREFIX}.sis", category_id, f"{PREFIX}.png", PREFIX))['id']
         execute(cursor, "INSERT INTO content_legacy (type_id, old_id, new_id) VALUES ('apps', %s, %s)",
                 (LEGACY_ID, content_id))
         news_id = execute(cursor, "INSERT INTO news (title, file) VALUES (%s, %s) RETURNING id",
@@ -102,7 +109,8 @@ def seed():
             VALUES (%s, %s, true, 'smokeadmin', 'admin') RETURNING id""",
                            (ADMIN_EMAIL, db.generate_password(ADMIN_PASSWORD)))['id']
 
-    return {'content_id': content_id, 'category_id': category_id, 'news_id': news_id, 'admin_id': admin_id}
+    return {'content_id': content_id, 'hidden_id': hidden_id, 'category_id': category_id, 'news_id': news_id,
+            'admin_id': admin_id}
 
 
 def cleanup():
@@ -300,6 +308,45 @@ def run_checks(ids):
         run.check(client, 'GET', '/api/v1/categories/999999', 404, api=True)
         run.check(client, 'GET', '/api/v1/categories/99999999999', 404, api=True)
         run.check(client, 'GET', '/api/v1/categories/abc', 404, api=True)
+        hidden_id = ids['hidden_id']
+        item = f'/api/v1/content/{content_id}'
+        run.check(client, 'GET', '/api/v1/content', 200, api=True, headers={'Cache-Control': 'no-cache'}, contains=[
+            TITLE, f'{item}/download', '"external":false', '"size":19', '"total":1', '"total_pages":1'],
+            lacks=HIDDEN_TITLE)
+        run.check(client, 'GET', '/api/v1/content?page=5&per_page=1', 200, api=True,
+                  contains=['"data":[]', '"page":5', '"total":1'])
+        run.check(client, 'GET', f'/api/v1/content?type=apps&category={category_id}&platform={platform_id}'
+                  '&q=%20smoke%20&uid=0xe0000001&sort=title&order=asc', 200, api=True, contains=TITLE)
+        run.check(client, 'GET', '/api/v1/content?q=50%25', 200, api=True, lacks=TITLE)
+        run.check(client, 'GET', '/api/v1/content?uid=0xE0000002', 200, api=True, contains='"total":0')
+        run.check(client, 'GET', '/api/v1/content?updated_since=2000-01-01T00:00:00Z', 200, api=True, contains=TITLE)
+        run.check(client, 'GET', '/api/v1/content?updated_since=2999-01-01T00:00:00%2B02:00', 200, api=True,
+                  lacks=TITLE)
+        bad_queries = [
+            ('updated_since=2000-01-01', 'updated_since'), (f'type=games&category={category_id}', 'category'),
+            ('category=999999', 'category'), ('q=%20', 'q'), ('uid=123', 'uid'), ('sort=bogus', 'sort'),
+            ('order=1', 'order'), ('page=0', 'page'), ('per_page=51', 'per_page'), ('ids=abc', 'ids'),
+            (f'ids={content_id}&type=apps', 'ids'),
+        ]
+        for query, parameter in bad_queries:
+            run.check(client, 'GET', f'/api/v1/content?{query}', 400, api=True,
+                      contains=['"invalid_parameter"', f'"parameter":"{parameter}"'])
+        run.check(client, 'GET', f'/api/v1/content?ids={content_id},{hidden_id},999999,{content_id}&sort=bogus', 200,
+                  api=True, contains=['"total":2', '"per_page":2'], lacks=HIDDEN_TITLE)
+        run.check(client, 'GET', item, 200, api=True, headers={'Cache-Control': 'no-cache'}, contains=[
+            '"description":"Line one\\nLine two"', '"uid":"0xE0000001"', f'{PREFIX}1.jpg', '"text":"Extra notes"',
+            '"url":null', f'{item}/related', f'{item}/rating', '"name":"Applications"'])
+        run.check(client, 'GET', f'/api/v1/content/{hidden_id}', 404, api=True, contains='"not_found"')
+        run.check(client, 'GET', '/api/v1/content/999999', 404, api=True)
+        run.check(client, 'GET', f'{item}/related', 200, api=True, contains=['"data":[]', '"total":0'],
+                  headers={'Cache-Control': 'no-store'})
+        run.check(client, 'GET', f'{item}/related?limit=21', 400, api=True, contains='"limit"')
+        run.check(client, 'GET', f'/api/v1/content/{hidden_id}/related', 404, api=True)
+        run.check(client, 'GET', f'{item}/download', 302, location=f'/static/content/files/{PREFIX}.sis',
+                  headers={'Cache-Control': 'no-store'})
+        run.check(client, 'GET', f'/api/v1/content/{hidden_id}/download', 404, api=True)
+        run.check(client, 'GET', f'{item}/rating', 200, api=True, contains=[
+            '"average":null', '"count":0', '"rounded":0', '"5":0'])
         run.check(client, 'POST', '/api/v1/platforms', 405, api=True, contains='"method_not_allowed"')
         run.check(client, 'GET', '/api/v1/no/such/endpoint', 404, api=True)
         run.check(client, 'GET', '/api/v2/', 404, api=True)
@@ -325,6 +372,8 @@ def run_checks(ids):
         run.check(client, 'POST', f'/content/{content_id}/rate', 302, location=f'/item/{content_id}', data={
             'rating': '4', 'csrf_token': csrf_token(client)})
         run.check(client, 'GET', f'/item/{content_id}', 200, contains=TITLE)
+        run.check(client, 'GET', f'/api/v1/content/{content_id}/rating', 200, api=True, contains=[
+            '"average":4.0', '"count":1', '"rounded":4', '"4":1'])
         # Logging out needs the CSRF token; without it the session stays.
         run.check(client, 'GET', '/logout', 302, location='/profile')
         run.check(client, 'GET', '/profile', 200, contains='smokeadmin')

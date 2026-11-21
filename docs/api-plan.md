@@ -3,7 +3,7 @@
 Status: in progress. Steps 1–4 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, and the
 `db.py` queries they need. Step 5 (endpoints) has started: the reference data (`/`, `/content-types`, `/platforms`,
-`/categories`) exists; `/content` is next.
+`/categories`) and the content endpoints (`/content`, detail, related, download, rating) exist; news is next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -622,6 +622,11 @@ Order matters only where noted.
      `/categories` takes several platforms like `/content` (`get_categories(platforms=[...])`), and an unknown
      `type` is `400 invalid_parameter`. Integer path IDs are capped at 2³¹−1, so bigger ones are `404`, not a
      Postgres error.
+   - Content endpoints done. `ids=` can't be combined with the other filters of `/content` (`400`); it still
+     ignores `page`, `per_page` and `sort`, and its `meta` says page 1 with `per_page` = the number returned.
+     An unknown `category` is `400`, and `uid=` must be `0x` plus 8 hex digits. `/download` checks that a local
+     file exists before redirecting; `latest_url` targets aren't checked. `HEAD` on the detail doesn't count a
+     view.
 6. **nginx**: add `application/json` to `gzip_types`.
 7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):

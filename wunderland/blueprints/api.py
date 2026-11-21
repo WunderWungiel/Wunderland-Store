@@ -1,13 +1,15 @@
+import math
+import os
 import re
 from datetime import datetime, timezone
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, redirect, request
 from werkzeug.exceptions import HTTPException
 
 from .. import api_format as fmt
 from .. import db
 from ..config import config
-from ..helpers import external_url_for
+from ..helpers import external_url_for, get_download_url, get_file_path
 
 # JSON API for native clients, registered under /api/v1. It is stateless: no
 # cookie session, no session token lookup and no CSRF check (see app.py).
@@ -23,6 +25,9 @@ STORE_NAME = 'Wunderland Store'
 
 PER_PAGE_MAX = 50
 IDS_MAX = 50
+SEARCH_MAX = 100
+RELATED_DEFAULT = 10
+RELATED_MAX = 20
 # Every integer the API takes or returns fits in 32 bits (device parsers), and a
 # bigger page would overflow OFFSET in Postgres.
 INT_MAX = 2**31 - 1
@@ -30,6 +35,8 @@ SORT_ORDERS = {'asc': 'ASC', 'desc': 'DESC'}
 BOOLEANS = {'true': True, 'false': False}
 # ASCII digits only: str.isdigit() also accepts characters like '²' that int() rejects.
 DIGITS = re.compile(r'[0-9]+')
+# Stored UIDs are always 0x plus 8 hex digits.
+UID = re.compile(r'0[xX][0-9a-fA-F]{8}')
 
 
 class ApiError(HTTPException):
@@ -237,6 +244,41 @@ def parse_content_type(name='type'):
     return value
 
 
+def parse_category(content_type_id):
+    """Return the category ID in ?category=, or None; it must exist and belong to the type, if given."""
+    value = request.args.get('category')
+    if value is None:
+        return None
+    category_id = _parse_int('category', value)
+    category = db.get_category(category_id)
+    if category is None:
+        raise api_error(400, 'invalid_parameter', f"unknown category: {category_id}", parameter='category')
+    if content_type_id is not None and category['type_id'] != content_type_id:
+        raise invalid_parameter('category', f"category {category_id} doesn't belong to type {content_type_id}")
+    return category_id
+
+
+def parse_search():
+    """Return the trimmed title search in ?q=, or None."""
+    value = request.args.get('q')
+    if value is None:
+        return None
+    value = value.strip()
+    if not value or len(value) > SEARCH_MAX:
+        raise invalid_parameter('q', f"q must be 1 to {SEARCH_MAX} characters after trimming")
+    return value
+
+
+def parse_uid():
+    """Return the Symbian UID in ?uid=, or None."""
+    value = request.args.get('uid')
+    if value is None:
+        return None
+    if not UID.fullmatch(value):
+        raise invalid_parameter('uid', "uid must be 0x plus 8 hex digits, e.g. 0x2001C3A2")
+    return value
+
+
 def not_found(what):
     return api_error(404, 'not_found', f"{what} not found")
 
@@ -250,6 +292,28 @@ ID = f'int(max={INT_MAX})'
 def envelope(data):
     """A single resource or an unpaginated collection (reference data with a handful of rows)."""
     return jsonify({'data': data})
+
+
+def page_envelope(data, page, per_page, total):
+    total_pages = max(1, math.ceil(total / per_page))
+    return jsonify({
+        'data': data,
+        'meta': {'page': page, 'per_page': per_page, 'total': total, 'total_pages': total_pages},
+    })
+
+
+def fetch_page(fetch):
+    """Fetch the page that ?page= and ?per_page= ask for, as (rows, page, per_page, total).
+
+    fetch(offset, limit) returns (rows, total). A page past the end comes back empty
+    with the real total, so clients can stop at the first empty page.
+    """
+    page, per_page, offset = parse_page()
+    rows, total = fetch(offset, per_page)
+    # Past the end the query returns no rows, so it can't report the total either.
+    if not rows and page > 1:
+        _, total = fetch(0, 1)
+    return rows, page, per_page, total
 
 
 @api.route('/')
@@ -267,6 +331,7 @@ def index():
             'content_types': external_url_for('api.content_types'),
             'platforms': external_url_for('api.platforms'),
             'categories': external_url_for('api.categories'),
+            'content': external_url_for('api.content'),
             'web': external_url_for('store.root'),
         },
     })
@@ -322,3 +387,87 @@ def category_item(category_id):
     if not rows:
         raise not_found("category")
     return envelope(fmt.category(rows[0]))
+
+
+def get_visible_item(content_id):
+    """The visible content item, or a 404 (hidden items don't reveal that they exist)."""
+    item = db.get_item(content_id)
+    if item is None:
+        raise not_found("content")
+    return item
+
+
+# Filters of /content that ?ids= can't be combined with (it ignores page and sort only).
+CONTENT_FILTERS = ('type', 'category', 'platform', 'q', 'uid', 'updated_since')
+
+
+@api.route('/content')
+def content():
+    ids = parse_ids()
+    if ids is not None:
+        combined = [name for name in CONTENT_FILTERS if name in request.args]
+        if combined:
+            raise invalid_parameter('ids', f"ids can't be combined with: {', '.join(combined)}")
+        # Unknown and hidden IDs are left out; order and duplicates are kept.
+        items = [fmt.content_summary(item) for item in db.get_items(ids)]
+        return page_envelope(items, 1, max(1, len(items)), len(items))
+
+    content_type_id = parse_content_type()
+    filters = {
+        'content_type_id': content_type_id,
+        'category_id': parse_category(content_type_id),
+        'platforms': parse_platforms(),
+        'search': parse_search(),
+        'uid': parse_uid(),
+        'updated_since': parse_timestamp('updated_since'),
+    }
+    sort_by, sort_order = parse_sort()
+    rows, page, per_page, total = fetch_page(lambda offset, limit: db.get_content(
+        **filters, sort_by=sort_by, sort_order=sort_order, offset=offset, limit=limit))
+    return page_envelope([fmt.content_summary(item) for item in rows], page, per_page, total)
+
+
+@api.route(f'/content/<{ID}:content_id>')
+def content_item(content_id):
+    item = get_visible_item(content_id)
+    data = fmt.content_detail(item)
+    # As on the web item page; the API has no admins to skip yet. A HEAD isn't a view.
+    if request.method == 'GET':
+        db.increment_counter(content_id)
+    return envelope(data)
+
+
+@api.route(f'/content/<{ID}:content_id>/related')
+@cache('no-store')
+def content_related(content_id):
+    item = get_visible_item(content_id)
+    limit = request.args.get('limit')
+    limit = RELATED_DEFAULT if limit is None else _parse_int('limit', limit, maximum=RELATED_MAX)
+    # As on the web item page: same category, random order, so it can't be paged.
+    rows, _ = db.get_content(
+        content_type_id=item['category']['type_id'],
+        category_id=item['category']['id'],
+        platforms=parse_platforms(),
+        exclude_content_id=content_id,
+        random_order=True,
+        limit=limit,
+    )
+    return jsonify({'data': [fmt.content_summary(row) for row in rows], 'meta': {'total': len(rows)}})
+
+
+@api.route(f'/content/<{ID}:content_id>/download')
+def content_download(content_id):
+    item = get_visible_item(content_id)
+    # latest_url takes priority; a local file must exist, or the client gets a 404 page as the download.
+    if not item['latest_url']:
+        path = get_file_path(item)
+        if not path or not os.path.isfile(path):
+            raise not_found("file")
+    # 302: Symbian download managers and Qt 4 clients follow it reliably.
+    return redirect(get_download_url(item, external=True), 302)
+
+
+@api.route(f'/content/<{ID}:content_id>/rating')
+def content_rating(content_id):
+    item = get_visible_item(content_id)
+    return envelope(fmt.rating_detail(item, db.get_rating_distribution(content_id)))
