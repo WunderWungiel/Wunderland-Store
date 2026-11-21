@@ -306,35 +306,39 @@ def increment_counter(content_id):
 
 
 def get_categories(category_id=None, content_type_id=None, platform_id=None, only_with_content=False,
-                   with_counts=False):
+                   with_counts=False, platforms=None):
     """Categories ordered by type and name, each with its content_type.
 
-    Without with_counts, a platform_id lists only categories with visible content for
-    that platform, as only_with_content does for any platform. With with_counts, each
-    row gets content_count (visible items, for platform_id if given), and only
-    only_with_content leaves out the empty ones.
+    platforms is a list of platform IDs, content on any of which counts; platform_id
+    is the same for one platform. Without with_counts, a platform filter lists only
+    categories with visible content for it, as only_with_content does for any
+    platform. With with_counts, each row gets content_count (visible items, on those
+    platforms if given), and only only_with_content leaves out the empty ones.
     """
     where_clauses = []
     params = []
 
-    # Visible content of the category, on platform_id if given (untagged content runs anywhere).
+    if platform_id is not None:
+        platforms = [platform_id]
+
+    # Visible content of the category, on the platforms if given (untagged content runs anywhere).
     content_clause = """
         content.category_id = category.id
         AND content.visible = TRUE
     """
     content_params = []
-    if platform_id is not None:
+    if platforms is not None:
         content_clause += """
             AND (EXISTS (
                 SELECT 1 FROM content_platforms cp2
                 WHERE cp2.content_id = content.id
-                AND cp2.platform_id = %s
+                AND cp2.platform_id = ANY(%s)
             ) OR NOT EXISTS (
                 SELECT 1 FROM content_platforms cp3
                 WHERE cp3.content_id = content.id
             ))
         """
-        content_params.append(platform_id)
+        content_params.append(platforms)
 
     query = """
         SELECT category.*,
@@ -364,7 +368,7 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None, onl
             FROM categories AS category
             JOIN content_types ON category.type_id = content_types.id
         """
-        if only_with_content or platform_id is not None:
+        if only_with_content or platforms is not None:
             where_clauses.append(f"EXISTS (SELECT 1 FROM content WHERE {content_clause})")
             params.extend(content_params)
 

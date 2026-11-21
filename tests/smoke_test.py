@@ -18,6 +18,7 @@ than the repo root's config.yaml.
 
 Exit status is 0 when every check passes and 1 otherwise.
 """
+import json
 import os
 import sys
 import traceback
@@ -121,7 +122,8 @@ class Runner:
         self.failures = 0
         self.count = 0
 
-    def check(self, client, method, path, status, contains=None, xml=False, location=None, data=None, lacks=None):
+    def check(self, client, method, path, status, contains=None, xml=False, location=None, data=None, lacks=None,
+              api=False, headers=None):
         self.count += 1
         label = f"{method} {path}"
         try:
@@ -141,6 +143,22 @@ class Runner:
                     ET.fromstring(body)
                 except ET.ParseError as error:
                     problems.append(f"invalid XML: {error}")
+            if api:
+                # The JSON API: an envelope in every response, and never a cookie.
+                try:
+                    envelope = json.loads(body)
+                    key = 'data' if response.status_code < 400 else 'error'
+                    if not isinstance(envelope, dict) or key not in envelope:
+                        problems.append(f"no {key!r} envelope")
+                except ValueError as error:
+                    problems.append(f"invalid JSON: {error}")
+                if response.mimetype != 'application/json':
+                    problems.append(f"Content-Type {response.content_type!r}")
+                if 'Set-Cookie' in response.headers:
+                    problems.append("sets a cookie")
+            for name, value in (headers or {}).items():
+                if response.headers.get(name) != value:
+                    problems.append(f"{name} {response.headers.get(name)!r}, expected {value!r}")
             if location and location not in response.headers.get('Location', ''):
                 problems.append(f"Location {response.headers.get('Location')!r} lacks {location!r}")
         except Exception:
@@ -252,6 +270,39 @@ def run_checks(ids):
         run.check(client, 'GET', f'{base}/preview.png', 200)
         run.check(client, 'GET', '/StoreData/Apps/No%20Such%20App/descr.txt', 404)
         run.check(client, 'GET', '/StoreData/Nope/Smoke%20Test%20App/descr.txt', 404)
+
+    # JSON API.
+    with app.test_client() as client:
+        category_id = ids['category_id']
+        platform_id = config['platforms']['client'][0]
+        cached = {'Cache-Control': 'public, max-age=3600'}
+        run.check(client, 'GET', '/api/v1/', 200, api=True, contains=['"api_version"', '/api/v1/platforms'],
+                  headers={'Cache-Control': 'no-cache'})
+        run.check(client, 'HEAD', '/api/v1/', 200)
+        run.check(client, 'GET', '/api/v1/content-types', 200, api=True, contains='"show_icons"', headers=cached)
+        run.check(client, 'GET', '/api/v1/content-types/apps', 200, api=True, contains='"Applications"')
+        run.check(client, 'GET', '/api/v1/content-types/Apps', 404, api=True, contains='"not_found"',
+                  headers={'Cache-Control': 'no-store'})
+        run.check(client, 'GET', '/api/v1/platforms', 200, api=True, contains=f'"{platform_id}"', headers=cached)
+        run.check(client, 'GET', f'/api/v1/platforms/{platform_id}', 200, api=True, contains='"parent_id"')
+        run.check(client, 'GET', '/api/v1/platforms/nope', 404, api=True)
+        run.check(client, 'GET', '/api/v1/categories', 200, api=True,
+                  contains=['"Utilities"', '"content_count":1'], headers=cached)
+        run.check(client, 'GET', f'/api/v1/categories?type=apps&platform={platform_id},{platform_id}', 200,
+                  api=True, contains='"Utilities"')
+        run.check(client, 'GET', '/api/v1/categories?type=games', 200, api=True, lacks='"Utilities"')
+        run.check(client, 'GET', '/api/v1/categories?type=apps&non_empty=false', 200, api=True, contains='"Utilities"')
+        run.check(client, 'GET', '/api/v1/categories?type=nope', 400, api=True, contains='"invalid_parameter"')
+        run.check(client, 'GET', '/api/v1/categories?platform=nope', 400, api=True, contains='"invalid_parameter"')
+        run.check(client, 'GET', '/api/v1/categories?non_empty=yes', 400, api=True, contains='"non_empty"')
+        run.check(client, 'GET', f'/api/v1/categories/{category_id}', 200, api=True, contains='"content_count":1')
+        run.check(client, 'GET', f'/api/v1/categories/{category_id}?platform={platform_id}', 200, api=True)
+        run.check(client, 'GET', '/api/v1/categories/999999', 404, api=True)
+        run.check(client, 'GET', '/api/v1/categories/99999999999', 404, api=True)
+        run.check(client, 'GET', '/api/v1/categories/abc', 404, api=True)
+        run.check(client, 'POST', '/api/v1/platforms', 405, api=True, contains='"method_not_allowed"')
+        run.check(client, 'GET', '/api/v1/no/such/endpoint', 404, api=True)
+        run.check(client, 'GET', '/api/v2/', 404, api=True)
 
     # Logging in through the form, then the logged-in pages.
     with app.test_client() as client:

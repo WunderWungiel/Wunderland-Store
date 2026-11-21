@@ -4,8 +4,10 @@ from datetime import datetime, timezone
 from flask import Blueprint, current_app, jsonify, request
 from werkzeug.exceptions import HTTPException
 
+from .. import api_format as fmt
 from .. import db
 from ..config import config
+from ..helpers import external_url_for
 
 # JSON API for native clients, registered under /api/v1. It is stateless: no
 # cookie session, no session token lookup and no CSRF check (see app.py).
@@ -15,6 +17,9 @@ api = Blueprint('api', __name__)
 # have no blueprint (or the legacy one, for /api/<number>) but must still get the
 # JSON treatment.
 API_PREFIX = '/api/'
+
+API_VERSION = '1.0'
+STORE_NAME = 'Wunderland Store'
 
 PER_PAGE_MAX = 50
 IDS_MAX = 50
@@ -220,3 +225,100 @@ def parse_timestamp(name):
     if timestamp.tzinfo is None:
         raise invalid_parameter(name, message)
     return timestamp.astimezone(timezone.utc)
+
+
+def parse_content_type(name='type'):
+    """Return the content type ID in ?<name>=, or None for no filtering."""
+    value = request.args.get(name)
+    if value is None:
+        return None
+    if db.get_content_type_by_id(value) is None:
+        raise api_error(400, 'invalid_parameter', f"unknown content type: {value}", parameter=name, values=[value])
+    return value
+
+
+def not_found(what):
+    return api_error(404, 'not_found', f"{what} not found")
+
+
+# Path IDs are 32-bit, like every integer the API takes (bigger ones would make Postgres fail).
+ID = f'int(max={INT_MAX})'
+
+
+# Endpoints.
+
+def envelope(data):
+    """A single resource or an unpaginated collection (reference data with a handful of rows)."""
+    return jsonify({'data': data})
+
+
+@api.route('/')
+def index():
+    # No DB access, so it doubles as a cheap reachability check for clients.
+    return envelope({
+        'name': STORE_NAME,
+        'api_version': API_VERSION,
+        'server_time': fmt.iso(datetime.now(timezone.utc)),
+        'per_page_default': min(config['per_page'], PER_PAGE_MAX),
+        'per_page_max': PER_PAGE_MAX,
+        'sort_fields': list(db.VALID_SORT_FIELDS),
+        # Links are added here as their endpoints are built.
+        'links': {
+            'content_types': external_url_for('api.content_types'),
+            'platforms': external_url_for('api.platforms'),
+            'categories': external_url_for('api.categories'),
+            'web': external_url_for('store.root'),
+        },
+    })
+
+
+@api.route('/content-types')
+@cache('public', max_age=3600)
+def content_types():
+    return envelope([fmt.content_type(row) for row in db.get_content_types()])
+
+
+@api.route('/content-types/<type_id>')
+@cache('public', max_age=3600)
+def content_type_item(type_id):
+    row = db.get_content_type_by_id(type_id)
+    if row is None:
+        raise not_found("content type")
+    return envelope(fmt.content_type(row))
+
+
+@api.route('/platforms')
+@cache('public', max_age=3600)
+def platforms():
+    return envelope([fmt.platform(row) for row in db.get_platforms()])
+
+
+@api.route('/platforms/<platform_id>')
+@cache('public', max_age=3600)
+def platform_item(platform_id):
+    row = db.get_platform(platform_id)
+    if row is None:
+        raise not_found("platform")
+    return envelope(fmt.platform(row))
+
+
+@api.route('/categories')
+@cache('public', max_age=3600)
+def categories():
+    rows = db.get_categories(
+        content_type_id=parse_content_type(),
+        platforms=parse_platforms(),
+        only_with_content=parse_bool('non_empty', True),
+        with_counts=True,
+    )
+    return envelope([fmt.category(row) for row in rows])
+
+
+@api.route(f'/categories/<{ID}:category_id>')
+@cache('public', max_age=3600)
+def category_item(category_id):
+    # content_count is over all platforms, or over ?platform= if given.
+    rows = db.get_categories(category_id=category_id, platforms=parse_platforms(), with_counts=True)
+    if not rows:
+        raise not_found("category")
+    return envelope(fmt.category(rows[0]))

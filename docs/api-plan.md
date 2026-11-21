@@ -2,7 +2,8 @@
 
 Status: in progress. Steps 1–4 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, and the
-`db.py` queries they need. No endpoints exist yet; step 5 (endpoints) is next.
+`db.py` queries they need. Step 5 (endpoints) has started: the reference data (`/`, `/content-types`, `/platforms`,
+`/categories`) exists; `/content` is next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -617,6 +618,10 @@ Order matters only where noted.
      - `get_news()` returns `created_at`. Pages may still come back short (4.11).
 5. **Endpoints** in the order of section 4. Reference data first (simplest, exercises the envelope and caching),
    then `/content`, detail, related, download, rating, news, clients, legacy, updates.
+   - Reference data done. `/` lists links only to endpoints that exist; add each one as it's built.
+     `/categories` takes several platforms like `/content` (`get_categories(platforms=[...])`), and an unknown
+     `type` is `400 invalid_parameter`. Integer path IDs are capped at 2³¹−1, so bigger ones are `404`, not a
+     Postgres error.
 6. **nginx**: add `application/json` to `gzip_types`.
 7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):
