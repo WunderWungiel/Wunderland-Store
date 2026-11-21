@@ -146,7 +146,8 @@ def upload(title, category_id, publisher, version, icon, screenshot_prefix, scre
     return result
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False, content_ids=None, uid=None, updated_since=None):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False, content_ids=None, uid=None, updated_since=None,
+                uids=None):
 
     sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
@@ -231,6 +232,11 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         # UIDs are stored as 0x plus 8 hex digits, in either case.
         where_clauses.append("lower(content.uid) = lower(%s)")
         params.append(uid)
+
+    if uids is not None:
+        # Several UIDs in one query, matched case-insensitively like uid.
+        where_clauses.append("lower(content.uid) = ANY(%s)")
+        params.append([value.lower() for value in uids])
 
     if updated_since is not None:
         where_clauses.append("content.updated_at > %s")

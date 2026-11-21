@@ -1,10 +1,9 @@
 # JSON API plan (v1)
 
-Status: in progress. Steps 1–4 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
-JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, and the
-`db.py` queries they need. Step 5 (endpoints) has started: the reference data (`/`, `/content-types`, `/platforms`,
-`/categories`), the content endpoints (`/content`, detail, related, download, rating), news, `/clients` and
-`/legacy` exist; `/updates` is next.
+Status: in progress. Steps 1–5 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
+JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, the
+`db.py` queries they need, and every phase 1 endpoint of section 4. Steps 6–9 (nginx gzip, MIME types, the remaining
+tests, `docs/api.md`) are next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -111,7 +110,7 @@ Error (every 4xx/5xx under `/api/`, including 404 for unknown paths and 405):
 
 `code` is a stable machine string the client can switch on; `message` is English text for logs, not for display.
 Codes: `bad_request`, `invalid_parameter`, `not_found`, `method_not_allowed`, `unauthorized` (reserved),
-`forbidden` (reserved), `conflict` (reserved), `payload_too_large` (reserved), `rate_limited` (reserved),
+`forbidden` (reserved), `conflict` (reserved), `payload_too_large` (`POST /updates`), `rate_limited` (reserved),
 `internal_error`, `service_unavailable`.
 
 ### 2.4 Representations
@@ -443,9 +442,11 @@ Response:
       "uid": "0x2001C3A2",
       "installed_version": "4.20(0)",
       "update_available": true,
+      "comparison": "numeric",
       "content": { "...": "summary item" }
     },
-    {"uid": "0xE0001234", "installed_version": "1.0.0", "update_available": false, "content": null}
+    {"uid": "0xE0001234", "installed_version": "1.0.0", "update_available": false, "comparison": null,
+     "content": null}
   ]
 }
 ```
@@ -459,6 +460,21 @@ Response:
 - If several visible items share a UID (nothing prevents it), pick the most recently updated one.
 - UIDs match case-insensitively (5.4); `uid` in the response is the one the client sent.
 - Needs a `uid` filter in `get_content()` and an index on `content.uid` (later; table is small).
+- As built:
+  - `platform` is optional, one platform ID string; an unknown one is `400 invalid_parameter` (`parameter:
+    "platform"`). Any `Content-Type` is accepted, since some device HTTP stacks can't set it. A body over 64 KiB is
+    `413 payload_too_large`.
+  - `400 bad_request`: the body isn't JSON, isn't an object, has no `installed` list, or lists more than 100
+    entries. `400 invalid_parameter`: one bad field, with `parameter` set to its path and 0-based indexes:
+    `installed[3]` (not an object), `installed[3].uid` (not `0x` plus 8 hex digits), `installed[3].version` (not a
+    string of 1 to 64 characters). Unknown keys are ignored.
+  - Versions: Symbian `a.b(c)` (through `to_version()`) or dotted `a[.b...]`, compared as integer tuples padded with
+    zeros, so `1.2` equals `1.2.0`. `update_available` is `true` only when the stored version is higher. With
+    `comparison: "string"`, both sides are compared after stripping whitespace.
+  - When `content` is `null`, `update_available` is `false` and `comparison` is `null` (nothing was compared).
+  - `Cache-Control: no-store` (the answer depends on the body). All UIDs are looked up in one query
+    (`get_content(uids=[...])`, `lower(uid) = ANY(...)`). The response is unpaginated `{"data": [...]}`, duplicates
+    kept.
 
 ### 4.11 `GET /news`, `GET /news/{news_id}`
 
@@ -637,6 +653,7 @@ Order matters only where noted.
    - Legacy done. `/legacy/{prefix}/{old_id}` is `no-cache` (the summary changes) and has no link in `/`, since it's
      a URL template. Unknown prefix, unknown or oversized old ID and hidden content are all the same `404`. The
      smoke test checks that `/api/42`, which the `legacy` blueprint matches (5.9), is still a JSON 404.
+   - Updates done (details at the end of 4.10). That completes step 5.
 6. **nginx**: add `application/json` to `gzip_types`.
 7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):

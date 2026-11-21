@@ -135,11 +135,11 @@ class Runner:
         self.count = 0
 
     def check(self, client, method, path, status, contains=None, xml=False, location=None, data=None, lacks=None,
-              api=False, headers=None):
+              api=False, headers=None, json_body=None):
         self.count += 1
         label = f"{method} {path}"
         try:
-            response = client.open(path, method=method, data=data)
+            response = client.open(path, method=method, data=data, json=json_body)
             body = response.get_data()
             problems = []
             if response.status_code != status:
@@ -374,6 +374,44 @@ def run_checks(ids):
             run.check(client, 'GET', path, 404, api=True, contains='"not_found"', lacks=HIDDEN_TITLE)
         # The legacy blueprint's /<prefix>/<id> also matches /api/<id>; it must still be a JSON 404.
         run.check(client, 'GET', '/api/42', 404, api=True)
+        # The fixture's UID is 0xE0000001 at version 1.02(3); 0xE0000002 is the hidden item's.
+        updates = '/api/v1/updates'
+
+        def installed(*entries, **body):
+            return {**body, 'installed': [{'uid': uid, 'version': version} for uid, version in entries]}
+
+        run.check(client, 'POST', updates, 200, api=True, headers={'Cache-Control': 'no-store'},
+                  json_body=installed(('0xE0000003', '1.0'), ('0xe0000001', '1.2.2'), ('0xE0000002', '1.0'),
+                                      platform=platform_id),
+                  contains=[
+                      # In request order, with the client's own UID spelling.
+                      '{"comparison":null,"content":null,"installed_version":"1.0","uid":"0xE0000003",'
+                      '"update_available":false},{"comparison":"numeric","content":{',
+                      '"installed_version":"1.2.2","uid":"0xe0000001","update_available":true}',
+                      '"uid":"0xE0000002","update_available":false}', TITLE],
+                  lacks=HIDDEN_TITLE)
+        for version, available, comparison in (('1.02(3)', 'false', 'numeric'), ('1.2.3.0', 'false', 'numeric'),
+                                               ('1.10(0)', 'false', 'numeric'), ('1.2', 'true', 'numeric'),
+                                               ('beta', 'true', 'string')):
+            run.check(client, 'POST', updates, 200, api=True, json_body=installed(('0xE0000001', version)),
+                      contains=[f'"comparison":"{comparison}"', f'"update_available":{available}'])
+        run.check(client, 'POST', updates, 200, api=True, json_body={'installed': []}, contains='{"data":[]}')
+        bad_bodies = [
+            ('nope', 'bad_request', None), ('[]', 'bad_request', None), ('{"installed": {}}', 'bad_request', None),
+            ({'platform': 'nope', 'installed': []}, 'invalid_parameter', 'platform'),
+            ({'installed': ['0xE0000001']}, 'invalid_parameter', 'installed[0]'),
+            (installed(('0xE0000001', '1.0'), ('123', '1.0')), 'invalid_parameter', 'installed[1].uid'),
+            ({'installed': [{'uid': '0xE0000001', 'version': 1}]}, 'invalid_parameter', 'installed[0].version'),
+            (installed(('0xE0000001', ' ')), 'invalid_parameter', 'installed[0].version'),
+            (installed(*[('0xE0000001', '1.0')] * 101), 'bad_request', None),
+        ]
+        for body, code, parameter in bad_bodies:
+            run.check(client, 'POST', updates, 400, api=True, contains=[f'"code":"{code}"'] + (
+                [f'"parameter":"{parameter}"'] if parameter else []), **(
+                {'data': body} if isinstance(body, str) else {'json_body': body}))
+        run.check(client, 'POST', updates, 413, api=True, data='{"installed": []}' + ' ' * 70000,
+                  contains='"payload_too_large"')
+        run.check(client, 'GET', updates, 405, api=True, contains='"method_not_allowed"')
         run.check(client, 'POST', '/api/v1/platforms', 405, api=True, contains='"method_not_allowed"')
         run.check(client, 'GET', '/api/v1/no/such/endpoint', 404, api=True)
         run.check(client, 'GET', '/api/v2/', 404, api=True)

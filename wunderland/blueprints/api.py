@@ -9,7 +9,7 @@ from werkzeug.exceptions import HTTPException
 from .. import api_format as fmt
 from .. import db
 from ..config import config
-from ..helpers import external_url_for, get_download_url, get_file_path
+from ..helpers import external_url_for, get_download_url, get_file_path, to_version
 
 # JSON API for native clients, registered under /api/v1. It is stateless: no
 # cookie session, no session token lookup and no CSRF check (see app.py).
@@ -506,3 +506,105 @@ def legacy(prefix, old_id):
         raise not_found("legacy content")
     item = get_visible_item(content_id)
     return envelope({'content_id': item['id'], 'content': fmt.content_summary(item)})
+
+
+UPDATES_MAX = 100
+VERSION_MAX = 64
+# Far above 100 entries of UID and version; nginx doesn't cap request bodies (uploads).
+UPDATES_BODY_MAX = 64 * 1024
+SYMBIAN_VERSION = re.compile(r'[0-9]+\.[0-9]+\([0-9]+\)')
+DOTTED_VERSION = re.compile(r'[0-9]+(\.[0-9]+)*')
+
+
+def parse_version(value):
+    """A Symbian (1.02(3)) or dotted (1.2.3) version as a tuple of integers, or None."""
+    value = value.strip()
+    if SYMBIAN_VERSION.fullmatch(value):
+        value = to_version(value)
+    elif not DOTTED_VERSION.fullmatch(value):
+        return None
+    return tuple(int(part) for part in value.split('.'))
+
+
+def compare_versions(stored, installed):
+    """Return (update_available, comparison) for a stored and an installed version string.
+
+    Numeric when both parse; trailing zeros don't count, so 1.2 equals 1.2.0. Otherwise
+    the strings are compared for inequality, so the client says "different", not "newer".
+    """
+    stored_parts, installed_parts = parse_version(stored), parse_version(installed)
+    if stored_parts is None or installed_parts is None:
+        return stored.strip() != installed.strip(), 'string'
+    length = max(len(stored_parts), len(installed_parts))
+    stored_parts += (0,) * (length - len(stored_parts))
+    installed_parts += (0,) * (length - len(installed_parts))
+    return stored_parts > installed_parts, 'numeric'
+
+
+def parse_updates_body():
+    """Return (platforms, entries) from the JSON body of POST /updates.
+
+    A body that isn't a JSON object with an "installed" list, or that lists too many
+    entries, is a bad_request; one bad field is an invalid_parameter named by its path,
+    e.g. installed[3].version, with 0-based indexes.
+    """
+    request.max_content_length = UPDATES_BODY_MAX
+    # Any Content-Type: some device HTTP stacks can't set it.
+    body = request.get_json(force=True, silent=True)
+    if not isinstance(body, dict) or not isinstance(body.get('installed'), list):
+        raise api_error(400, 'bad_request', 'the body must be a JSON object with an "installed" list')
+    installed = body['installed']
+    if len(installed) > UPDATES_MAX:
+        raise api_error(400, 'bad_request', f'"installed" takes at most {UPDATES_MAX} entries')
+
+    platforms = None
+    platform_id = body.get('platform')
+    if platform_id is not None:
+        if not isinstance(platform_id, str) or db.get_platform(platform_id) is None:
+            raise api_error(400, 'invalid_parameter', f"unknown platform: {platform_id}", parameter='platform')
+        platforms = [platform_id]
+
+    entries = []
+    for index, entry in enumerate(installed):
+        path = f'installed[{index}]'
+        if not isinstance(entry, dict):
+            raise invalid_parameter(path, f"{path} must be an object with uid and version")
+        uid, version = entry.get('uid'), entry.get('version')
+        if not isinstance(uid, str) or not UID.fullmatch(uid):
+            raise invalid_parameter(f'{path}.uid', f"{path}.uid must be 0x plus 8 hex digits, e.g. 0x2001C3A2")
+        if not isinstance(version, str) or not version.strip() or len(version) > VERSION_MAX:
+            raise invalid_parameter(f'{path}.version', f"{path}.version must be a string of 1 to {VERSION_MAX} "
+                                    "characters")
+        entries.append((uid, version))
+    return platforms, entries
+
+
+@api.route('/updates', methods=['POST'])
+@cache('no-store')
+def updates():
+    # The update check by UID, which is what an installed app knows. POST because the
+    # list can be long; it changes nothing.
+    platforms, entries = parse_updates_body()
+
+    latest = {}
+    if entries:
+        rows, _ = db.get_content(uids=sorted({uid for uid, _ in entries}), platforms=platforms)
+        # Newest first (the default sort), so the first row per UID is the most recently updated one.
+        for row in rows:
+            latest.setdefault(row['uid'].lower(), row)
+
+    data = []
+    for uid, version in entries:
+        item = latest.get(uid.lower())
+        if item is None:
+            update_available, comparison = False, None
+        else:
+            update_available, comparison = compare_versions(item['version'], version)
+        data.append({
+            'uid': uid,
+            'installed_version': version,
+            'update_available': update_available,
+            'comparison': comparison,
+            'content': fmt.content_summary(item) if item else None,
+        })
+    return envelope(data)
