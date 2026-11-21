@@ -762,6 +762,7 @@ matches sections 2–5. What it did find, most important first:
    compared as a string, so it reports `update_available: true`. Treat a stored version that `fmt.text()` turns into
    `None` like no comparison: `update_available: false`, `comparison: null`, with `content` still set. Document that
    case next to "With no matching item" in `docs/api.md`.
+   **Done:** `/updates` asks `fmt.text()`, so it skips exactly the versions the summary shows as `null`.
 7. **Very long integers.** `_parse_int()` calls `int()` on any run of digits, and Python refuses more than 4300
    digits, so the dev server answers `500`. gunicorn's 4094-byte request line limit keeps it out of production, but
    check the length first (more than 10 digits is out of range anyway) so the parser can't raise.

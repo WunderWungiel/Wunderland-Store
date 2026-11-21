@@ -610,7 +610,8 @@ def updates():
     data = []
     for uid, version in entries:
         item = latest.get(uid.lower())
-        if item is None:
+        # A blank stored version shows as null in content, so there is nothing to compare it with.
+        if item is None or fmt.text(item['version']) is None:
             update_available, comparison = False, None
         else:
             update_available, comparison = compare_versions(item['version'], version)

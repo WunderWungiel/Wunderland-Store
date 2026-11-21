@@ -120,6 +120,11 @@ def seed():
             'admin_id': admin_id}
 
 
+def set_version(content_id, version):
+    with db.pool.connection() as connection, connection.cursor() as cursor:
+        execute(cursor, "UPDATE content SET version = %s WHERE id = %s", (version, content_id))
+
+
 def cleanup():
     with db.pool.connection() as connection, connection.cursor() as cursor:
         # No CASCADE: a table outside TABLES that references these makes this fail
@@ -408,6 +413,13 @@ def run_checks(ids):
             run.check(client, 'POST', updates, 200, api=True, json_body=installed(('0xE0000001', version)),
                       contains=[f'"comparison":"{comparison}"', f'"update_available":{available}'])
         run.check(client, 'POST', updates, 200, api=True, json_body={'installed': []}, contains='{"data":[]}')
+        # A blank stored version is not compared: no update, no comparison, content still set.
+        set_version(content_id, '  ')
+        try:
+            run.check(client, 'POST', updates, 200, api=True, json_body=installed(('0xE0000001', '1.0')),
+                      contains=['"comparison":null', '"update_available":false', '"version":null', TITLE])
+        finally:
+            set_version(content_id, '1.02(3)')
         bad_bodies = [
             ('nope', 'bad_request', None), ('[]', 'bad_request', None), ('{"installed": {}}', 'bad_request', None),
             ({'platform': 'nope', 'installed': []}, 'invalid_parameter', 'platform'),

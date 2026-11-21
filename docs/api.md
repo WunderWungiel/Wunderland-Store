@@ -728,7 +728,7 @@ Response, one entry per `installed` entry, in the same order (duplicates kept):
 | `uid` | string | As you sent it. |
 | `installed_version` | string | As you sent it. |
 | `content` | [summary](#content-summary) or `null` | The store's item with that UID, or `null` if there's none (for the platform). If several items share a UID, the most recently updated one. |
-| `comparison` | string or `null` | How the versions were compared: `"numeric"`, `"string"`, or `null` when `content` is `null`. |
+| `comparison` | string or `null` | How the versions were compared: `"numeric"`, `"string"`, or `null` when `content` or its `version` is `null`. |
 | `update_available` | boolean | See below. |
 
 How versions are compared:
@@ -740,6 +740,8 @@ How versions are compared:
   `"comparison": "string"`, and `update_available` is `true` when they **differ**. The store's version may then be
   older, so word it as "a different version is available", not "update available".
 - With no matching item, `update_available` is `false`.
+- With a matching item that has no version (`content.version` is `null`), `update_available` is `false` and
+  `comparison` is `null`; `content` is still set.
 
 Errors:
 
