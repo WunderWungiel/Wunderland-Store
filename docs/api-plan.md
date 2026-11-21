@@ -1,9 +1,9 @@
 # JSON API plan (v1)
 
-Status: in progress. Steps 1–5 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
+Status: in progress. Steps 1–6 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, the
-`db.py` queries they need, and every phase 1 endpoint of section 4. Steps 6–9 (nginx gzip, MIME types, the remaining
-tests, `docs/api.md`) are next.
+`db.py` queries they need, every phase 1 endpoint of section 4, and gzip for JSON in nginx. Steps 7–9 (MIME types,
+the remaining tests, `docs/api.md`) are next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -62,7 +62,7 @@ These drive most of the quirks below:
   use the scheme of the request, through `helpers.external_url_for`, exactly like the XML clients.
 - **Slow, metered links (GPRS/EDGE/3G).** Keep list payloads small (summary vs detail representations, 2.4), support
   and support gzip.
-  - `docker/nginx.conf` `gzip_types` doesn't list `application/json` today; it must be added. Qt 4.7+'s
+  - `docker/nginx.conf` lists `application/json` in `gzip_types`. Qt 4.7+'s
     `QNetworkAccessManager` sends `Accept-Encoding: gzip` and decompresses on its own.
 - **JSON parsing on the device is weak.** Qt 4 has no `QJsonDocument` (that's Qt 5); the client will use
   `QScriptEngine` or a small C++ parser. So:
@@ -655,6 +655,7 @@ Order matters only where noted.
      smoke test checks that `/api/42`, which the `legacy` blueprint matches (5.9), is still a JSON 404.
    - Updates done (details at the end of 4.10). That completes step 5.
 6. **nginx**: add `application/json` to `gzip_types`.
+   - Done.
 7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):
    - every v1 endpoint returns 200 and valid JSON with the envelope;
