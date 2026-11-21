@@ -125,6 +125,18 @@ def set_version(content_id, version):
         execute(cursor, "UPDATE content SET version = %s WHERE id = %s", (version, content_id))
 
 
+def add_ratings(content_id, ratings):
+    """Rate content_id once per rating, each from a new confirmed user."""
+    with db.pool.connection() as connection, connection.cursor() as cursor:
+        for number, rating in enumerate(ratings, 1):
+            user_id = execute(cursor, """
+                INSERT INTO users (email, password, confirmed, username)
+                VALUES (%s, 'x', true, %s) RETURNING id""",
+                              (f"smoke-rater{number}@example.com", f"smokerater{number}"))['id']
+            execute(cursor, "INSERT INTO ratings (content_id, rating, user_id) VALUES (%s, %s, %s)",
+                    (content_id, rating, user_id))
+
+
 def cleanup():
     with db.pool.connection() as connection, connection.cursor() as cursor:
         # No CASCADE: a table outside TABLES that references these makes this fail
@@ -463,6 +475,10 @@ def run_checks(ids):
         run.check(client, 'GET', f'/item/{content_id}', 200, contains=TITLE)
         run.check(client, 'GET', f'/api/v1/content/{content_id}/rating', 200, api=True, contains=[
             '"average":4.0', '"count":1', '"rounded":4', '"4":1'])
+        # Ratings 4, 5, 4, 4 average 4.25, which rounds half up to 4.3 like Postgres ROUND.
+        add_ratings(content_id, (5, 4, 4))
+        run.check(client, 'GET', f'/api/v1/content/{content_id}/rating', 200, api=True, contains=[
+            '"average":4.3', '"count":4', '"rounded":4', '"4":3', '"5":1'])
         # Logging out needs the CSRF token; without it the session stays.
         run.check(client, 'GET', '/logout', 302, location='/profile')
         run.check(client, 'GET', '/profile', 200, contains='smokeadmin')

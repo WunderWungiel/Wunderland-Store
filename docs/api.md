@@ -312,7 +312,7 @@ What [`GET /content/{id}`](#get-contentid) returns: every summary field, plus:
 
 | Field | Type | Notes |
 |---|---|---|
-| `average` | number or `null` | Exact mean to one decimal (`4.2`). `null` when nobody has rated the item. |
+| `average` | number or `null` | Exact mean to one decimal, rounded half up (`4.25` gives `4.3`). `null` when nobody has rated the item. |
 | `count` | integer | Number of ratings. |
 | `rounded` | integer | 0–5: the stars the web store shows, and what `sort=rating` uses. `0` when unrated. |
 

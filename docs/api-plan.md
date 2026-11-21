@@ -753,6 +753,7 @@ matches sections 2–5. What it did find, most important first:
    ratings 5, 4, 4, 4 (mean 4.25) give `4.2`. Round the `Decimal` with `quantize(Decimal('0.1'), ROUND_HALF_UP)`
    instead, then convert to `float`, so 4.25 gives `4.3` like Postgres `ROUND`. Add a smoke test check with a 4.25
    mean.
+   **Done:** in `api_format.rating()`; the smoke test adds three ratings to the logged-in user's 4.
 5. **Repeated query parameters.** `request.args.get()` reads only the first value, so `?platform=s60v3&platform=bogus`
    ignores the second, against 2.6 ("not silently ignored"). Make the parsers reject a parameter given more than once
    (`len(request.args.getlist(name)) > 1` → `400 invalid_parameter`), in one helper every parser uses, and document

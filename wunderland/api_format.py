@@ -9,6 +9,7 @@ serializer that links to them runs, or Flask raises a BuildError.
 """
 import os
 from datetime import timezone
+from decimal import ROUND_HALF_UP, Decimal
 
 from .helpers import external_url_for, get_download_url, get_file_size
 
@@ -58,12 +59,15 @@ def rating(item):
     """The rating block of a content item.
 
     rounded is what the web UI's stars show and what sort=rating uses; average is the
-    exact mean to one decimal, None when nobody has rated the item.
+    exact mean to one decimal, None when nobody has rated the item. It rounds half up on
+    the Decimal Postgres returns, like Postgres ROUND, so 4.25 gives 4.3, not round()'s 4.2.
     """
     count = item['rating_count']
-    average = item['rating_average']
+    average = None
+    if count:
+        average = float(Decimal(item['rating_average']).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP))
     return {
-        'average': round(float(average), 1) if count else None,
+        'average': average,
         'count': count,
         'rounded': item['rating'],
     }
