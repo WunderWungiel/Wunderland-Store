@@ -3,8 +3,8 @@
 Status: in progress. Steps 1–4 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, and the
 `db.py` queries they need. Step 5 (endpoints) has started: the reference data (`/`, `/content-types`, `/platforms`,
-`/categories`), the content endpoints (`/content`, detail, related, download, rating), news and `/clients` exist;
-`/legacy` is next.
+`/categories`), the content endpoints (`/content`, detail, related, download, rating), news, `/clients` and
+`/legacy` exist; `/updates` is next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -634,6 +634,9 @@ Order matters only where noted.
      server still need that check once.
    - Clients done. `/clients` is an unpaginated `{"data": [...]}` like the reference data, but `no-cache`, since
      items change. Hidden and unknown IDs in `config['clients']` are left out; `/` links to it.
+   - Legacy done. `/legacy/{prefix}/{old_id}` is `no-cache` (the summary changes) and has no link in `/`, since it's
+     a URL template. Unknown prefix, unknown or oversized old ID and hidden content are all the same `404`. The
+     smoke test checks that `/api/42`, which the `legacy` blueprint matches (5.9), is still a JSON 404.
 6. **nginx**: add `application/json` to `gzip_types`.
 7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):

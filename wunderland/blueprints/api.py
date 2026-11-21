@@ -494,3 +494,15 @@ def news_item(news_id):
 def clients():
     # The web /download page: in config order, hidden and unknown IDs left out.
     return envelope([fmt.content_summary(item) for item in db.get_items(config['clients'])])
+
+
+@api.route(f'/legacy/<prefix>/<{ID}:old_id>')
+def legacy(prefix, old_id):
+    # An old Ovi Store link (/applications/4242) as data, not a redirect: Qt 4 clients
+    # don't follow redirects to JSON reliably.
+    content_type = db.get_content_type_by_prefix(prefix)
+    content_id = content_type and db.get_legacy_content_id(old_id, content_type['id'])
+    if not content_id:
+        raise not_found("legacy content")
+    item = get_visible_item(content_id)
+    return envelope({'content_id': item['id'], 'content': fmt.content_summary(item)})

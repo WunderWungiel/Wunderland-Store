@@ -40,6 +40,7 @@ HIDDEN_TITLE = "Smoke Hidden App"
 PREFIX = "smoke-test"
 LEGACY_PREFIX = "applications"
 LEGACY_ID = 4242
+LEGACY_HIDDEN_ID = 4243
 CLIENT_CATEGORY_ID = 7
 NEWS_TITLE = "Smoke test news"
 ADMIN_EMAIL = "smoke-admin@example.com"
@@ -103,6 +104,8 @@ def seed():
             RETURNING id""", (HIDDEN_TITLE, f"{PREFIX}.sis", category_id, f"{PREFIX}.png", PREFIX))['id']
         execute(cursor, "INSERT INTO content_legacy (type_id, old_id, new_id) VALUES ('apps', %s, %s)",
                 (LEGACY_ID, content_id))
+        execute(cursor, "INSERT INTO content_legacy (type_id, old_id, new_id) VALUES ('apps', %s, %s)",
+                (LEGACY_HIDDEN_ID, hidden_id))
         news_id = execute(cursor, "INSERT INTO news (title, file) VALUES (%s, %s) RETURNING id",
                           (NEWS_TITLE, f"{PREFIX}.md"))['id']
         admin_id = execute(cursor, """
@@ -363,6 +366,14 @@ def run_checks(ids):
         for empty in (None, []):
             with mock.patch.dict(config, {'clients': empty}):
                 run.check(client, 'GET', '/api/v1/clients', 200, api=True, contains='{"data":[]}')
+        legacy = f'/api/v1/legacy/{LEGACY_PREFIX}'
+        run.check(client, 'GET', f'{legacy}/{LEGACY_ID}', 200, api=True, headers={'Cache-Control': 'no-cache'},
+                  contains=[f'"content_id":{content_id}', f'"id":{content_id}', TITLE])
+        for path in (f'{legacy}/{LEGACY_HIDDEN_ID}', f'{legacy}/1', f'{legacy}/99999999999', f'{legacy}/abc',
+                     f'/api/v1/legacy/unknownprefix/{LEGACY_ID}'):
+            run.check(client, 'GET', path, 404, api=True, contains='"not_found"', lacks=HIDDEN_TITLE)
+        # The legacy blueprint's /<prefix>/<id> also matches /api/<id>; it must still be a JSON 404.
+        run.check(client, 'GET', '/api/42', 404, api=True)
         run.check(client, 'POST', '/api/v1/platforms', 405, api=True, contains='"method_not_allowed"')
         run.check(client, 'GET', '/api/v1/no/such/endpoint', 404, api=True)
         run.check(client, 'GET', '/api/v2/', 404, api=True)
