@@ -1,9 +1,10 @@
 # JSON API plan (v1)
 
-Status: in progress. Steps 1–6 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
+Status: v1 done. Every step of the implementation outline (section 6) is built: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, the
-`db.py` queries they need, every phase 1 endpoint of section 4, gzip for JSON in nginx, and the download MIME
-types (step 7). Step 8's tests were written with each endpoint. Step 9 (`docs/api.md`) is next.
+`db.py` queries they need, every phase 1 endpoint of section 4, gzip for JSON in nginx, the download MIME types and
+the smoke tests. The reference for client authors is `docs/api.md` (step 9). Still to do on a real device: install a
+`.sis`/`.sisx` and a JAD/JAR (5.7) and settle open question 2.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -674,6 +675,8 @@ Order matters only where noted.
    - the existing web/XML checks still pass (regression guard for the `app.py` hook changes).
 9. **Reference doc** for client authors: turn sections 2–4 into `docs/api.md` once the endpoints exist, with the
    examples taken from real responses.
+   - Done. The examples come from a throwaway database seeded with example data. `docs/api.md` describes the API as
+     built; where this plan and the code differ, the code and `docs/api.md` are right.
 
 ---
 
