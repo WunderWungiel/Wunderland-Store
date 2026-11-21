@@ -87,16 +87,12 @@ def error_response(e):
 
 
 # Cache-Control per endpoint, set with @cache(...) under @api.route(...). Endpoints
-# without it revalidate every time (lists, detail, news).
+# without it are fetched again every time (lists, detail, news).
 DEFAULT_CACHE = 'no-cache'
 
 
 def cache(*directives, max_age=None):
-    """Set the Cache-Control of a view's 200 responses, e.g. @cache('public', max_age=3600).
-
-    Responses that may be stored get an ETag and answer If-None-Match with 304;
-    @cache('no-store') responses (random order, for instance) get neither.
-    """
+    """Set the Cache-Control of a view's 200 responses, e.g. @cache('public', max_age=3600)."""
     value = ', '.join(directives + ((f'max-age={max_age}',) if max_age is not None else ()))
 
     def decorator(view):
@@ -116,19 +112,10 @@ def finalize_response(response):
 
     if response.status_code == 200:
         view = current_app.view_functions.get(request.endpoint)
-        cache_control = getattr(view, 'cache_control', DEFAULT_CACHE)
-        response.headers['Cache-Control'] = cache_control
-        if request.method in ('GET', 'HEAD') and 'no-store' not in cache_control:
-            response.add_etag()
-            response = response.make_conditional(request)
+        response.headers['Cache-Control'] = getattr(view, 'cache_control', DEFAULT_CACHE)
     else:
         # Errors and redirects (downloads) may change at any time.
         response.headers['Cache-Control'] = 'no-store'
-
-    # For HTTP stacks and proxies that hide error bodies: the envelope already holds the
-    # real status in error.status. Redirects are left alone so downloads still work.
-    if request.args.get('suppress_response_codes') in ('1', 'true') and response.status_code >= 400:
-        response.status_code = 200
 
     return response
 

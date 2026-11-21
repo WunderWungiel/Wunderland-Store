@@ -7,14 +7,10 @@ Every URL is absolute (external_url_for), so clients never build paths. Links to
 views use the endpoint names in API_ENDPOINTS; those views must exist before a
 serializer that links to them runs, or Flask raises a BuildError.
 """
-import mimetypes
 import os
-import re
 from datetime import timezone
-from html.parser import HTMLParser
-from urllib.parse import urlsplit
 
-from .helpers import external_url_for, get_download_url, get_file_size, to_version
+from .helpers import external_url_for, get_download_url, get_file_size
 
 API_ENDPOINTS = {
     'content': 'api.content_item',
@@ -23,11 +19,6 @@ API_ENDPOINTS = {
     'download': 'api.content_download',
     'news': 'api.news_item',
 }
-
-# Symbian UIDs are 32-bit hex, stored as free text: 2001c3a2, 0x2001C3A2, [2001c3a2].
-# Without 0x, only all 8 digits count as hex; a shorter bare number could be decimal.
-UID_PATTERN = re.compile(r'\[?(?:0x([0-9a-f]{1,8})|([0-9a-f]{8}))\]?', re.IGNORECASE)
-
 
 def iso(value):
     """Format a timestamptz as ISO 8601 in UTC with a Z and no fractional seconds."""
@@ -44,53 +35,21 @@ def text(value):
     return value or None
 
 
-def normalize_uid(value):
-    """Return a UID as lowercase 0x plus 8 hex digits, or the stripped value if it isn't one."""
-    value = text(value)
-    if value is None:
-        return None
-    match = UID_PATTERN.fullmatch(value)
-    if not match:
-        return value
-    return '0x' + (match.group(1) or match.group(2)).lower().zfill(8)
-
-
-def normalized_version(version):
-    """The dotted form of a Symbian version (1.02(3) -> 1.2.3), or None for free-form versions."""
-    try:
-        return to_version(version)
-    except (TypeError, ValueError):
-        return None
-
-
 def _content_file_url(folder, filename):
     return external_url_for('content', filename=os.path.join(folder, filename))
-
-
-def _extension(path):
-    extension = os.path.splitext(path)[1].lstrip('.').lower()
-    return extension or None
 
 
 def download(item):
     """The download block of a content item; latest_url takes priority over the local file."""
     external = bool(item['latest_url'])
-    if external:
-        extension = _extension(urlsplit(item['latest_url']).path)
-        # The size of a local file says nothing about what latest_url serves.
-        size = None
-    else:
-        extension = _extension(item['file'])
-        # get_file_size() returns 0 for a missing file; a client would show "0 B".
-        size = get_file_size(item) or None
+    # The size of a local file says nothing about what latest_url serves, and
+    # get_file_size() returns 0 for a missing file, which a client would show as "0 B".
+    size = None if external else get_file_size(item) or None
 
     return {
         'url': external_url_for(API_ENDPOINTS['download'], content_id=item['id']),
         'direct_url': get_download_url(item, external=True),
         'size': size,
-        'extension': extension,
-        # From the mimetypes table, so it matches what the content endpoint sends for local files.
-        'mime_type': mimetypes.guess_type(f'file.{extension}')[0] if extension else None,
         'external': external,
     }
 
@@ -156,7 +115,6 @@ def content_summary(item):
         'category': {'id': item['category']['id'], 'name': item['category']['name']},
         'publisher': text(item['publisher']),
         'version': text(item['version']),
-        'version_normalized': normalized_version(item['version']),
         # icon defaults to Store.png, a real file, so this is never None.
         'icon_url': _content_file_url('icons', item['icon']),
         'rating': rating(item),
@@ -186,7 +144,7 @@ def content_detail(item):
 
     data.update({
         'description': text(item['description']),
-        'uid': normalize_uid(item['uid']),
+        'uid': text(item['uid']),
         # Objects rather than strings, so width and height can be added later.
         'screenshots': [{'url': _content_file_url('screenshots', name)} for name in item['screenshots']],
         'addon': addon,
@@ -198,95 +156,13 @@ def content_detail(item):
     return data
 
 
-class _TextExtractor(HTMLParser):
-    """Plain text from the HTML that Python-Markdown emits, with blocks split by blank lines.
-
-    Whitespace is collapsed everywhere but in <pre> blocks. Those are kept aside and put
-    back after the cleanup, so code keeps its indentation and blank lines.
-    """
-
-    # Each list item goes on its own line, without a blank line between items.
-    BLOCKS = {'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'pre', 'blockquote', 'hr', 'table', 'tr'}
-    # Stands for the pre block of the same number; NUL can't appear in the news text.
-    PLACEHOLDER = '\x00{}\x00'
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.parts = []
-        self.pre_blocks = []
-        self.pre_depth = 0
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'pre':
-            if not self.pre_depth:
-                self.parts.append('\n\n')
-                self.parts.append(self.PLACEHOLDER.format(len(self.pre_blocks)))
-                self.pre_blocks.append([])
-            self.pre_depth += 1
-        elif self.pre_depth:
-            return
-        elif tag == 'br':
-            self.parts.append('\n')
-        elif tag == 'li':
-            self.parts.append('\n- ')
-        elif tag in self.BLOCKS:
-            self.parts.append('\n\n')
-
-    def handle_endtag(self, tag):
-        if tag == 'pre':
-            if self.pre_depth:
-                self.pre_depth -= 1
-                if not self.pre_depth:
-                    self.parts.append('\n\n')
-        # A closing li adds nothing: the next item's '\n- ' or the list's end breaks the line.
-        elif tag in self.BLOCKS and not self.pre_depth:
-            self.parts.append('\n\n')
-
-    def handle_data(self, data):
-        if self.pre_depth:
-            self.pre_blocks[-1].append(data)
-        else:
-            self.parts.append(re.sub(r'\s+', ' ', data))
-
-    def result(self):
-        joined = ''.join(self.parts)
-        # Trim spaces around line breaks, then keep at most one blank line between blocks.
-        joined = re.sub(r' *\n *', '\n', joined)
-        joined = re.sub(r'\n{3,}', '\n\n', joined).strip()
-        # Markdown ends every code block with a newline; the blank line after it is enough.
-        return re.sub(r'\x00(\d+)\x00', lambda m: ''.join(self.pre_blocks[int(m.group(1))]).rstrip('\n'), joined)
-
-
-def html_to_text(html):
-    parser = _TextExtractor()
-    parser.feed(html)
-    parser.close()
-    return parser.result()
-
-
-NEWS_FORMATS = ('html', 'markdown', 'text')
-
-
-def news(row, fmt='html'):
-    """A news item from db.get_news(), with its body in fmt (one of NEWS_FORMATS).
-
-    fmt='markdown' needs the row from db.get_news(with_markdown=True).
-    """
-    if fmt == 'html':
-        body = row['content']
-    elif fmt == 'markdown':
-        body = row['markdown']
-    elif fmt == 'text':
-        body = html_to_text(row['content'])
-    else:
-        raise ValueError(f"Unknown news format: {fmt!r}")
-
+def news(row):
+    """A news item from db.get_news(); body is the HTML the web UI shows."""
     return {
         'id': row['id'],
         'title': text(row['title']),
         'created_at': iso(row['created_at']),
-        'body': body,
-        'body_format': fmt,
+        'body': row['content'],
         'links': {
             'self': external_url_for(API_ENDPOINTS['news'], news_id=row['id']),
             'web': external_url_for('store.news', news_id=row['id']),

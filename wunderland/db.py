@@ -20,20 +20,6 @@ pool = ConnectionPool(min_size=1, max_size=4, kwargs={
     "row_factory": dict_row,
 })
 
-# content.uid normalised in SQL as api_format.normalize_uid() does in Python: 0x plus 8
-# lowercase hex digits when it parses (8 bare digits, or 1-8 after 0x, either one
-# optionally in brackets), otherwise the value without surrounding whitespace. Keep
-# the two in sync.
-UID_NORMALIZED = r"""
-    CASE
-        WHEN btrim(content.uid, E' \t\r\n') ~* '^\[?0x[0-9a-f]{1,8}\]?$'
-            THEN '0x' || lpad(lower(substring(btrim(content.uid, E' \t\r\n') FROM '(?i)0x([0-9a-f]{1,8})')), 8, '0')
-        WHEN btrim(content.uid, E' \t\r\n') ~* '^\[?[0-9a-f]{8}\]?$'
-            THEN '0x' || lower(substring(btrim(content.uid, E' \t\r\n') FROM '(?i)([0-9a-f]{8})'))
-        ELSE NULLIF(btrim(content.uid, E' \t\r\n'), '')
-    END
-"""
-
 VALID_SORT_FIELDS = {
     "updated_at": {"column": "content.updated_at", "label": "Updated"},
     "created_at": {"column": "content.created_at", "label": "Created"},
@@ -242,8 +228,8 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         params.append(start)
 
     if uid is not None:
-        # Pass the UID through api_format.normalize_uid(); the stored side is normalised the same way.
-        where_clauses.append(f"{UID_NORMALIZED} = %s")
+        # UIDs are stored as 0x plus 8 hex digits, in either case.
+        where_clauses.append("lower(content.uid) = lower(%s)")
         params.append(uid)
 
     if updated_since is not None:
@@ -426,19 +412,14 @@ def get_content_types():
 
 
 @lru_cache(maxsize=128)
-def _read_news(file_path, mtime_ns):
-    # The timestamp is part of the cache key, so edits invalidate the cached text.
-    with open(file_path, "r") as source:
-        return source.read()
-
-
-@lru_cache(maxsize=128)
 def _render_news(file_path, mtime_ns):
-    return markdown(_read_news(file_path, mtime_ns))
+    # The timestamp is part of the cache key, so edits invalidate rendered HTML.
+    with open(file_path, "r") as source:
+        return markdown(source.read())
 
 
-def get_news(news_id=None, limit=None, offset=None, with_markdown=False):
-    """News, newest first, as (rows, total); with_markdown adds each row's Markdown source.
+def get_news(news_id=None, limit=None, offset=None):
+    """News, newest first, as (rows, total).
 
     Rows whose Markdown file is missing are left out, but total still counts them, so a
     page can come back short.
@@ -484,17 +465,14 @@ def get_news(news_id=None, limit=None, offset=None, with_markdown=False):
 
         html_content = _render_news(file_path, file_stat.st_mtime_ns)
 
-        result = {
+        results.append({
             'id': row['id'],
             'title': row['title'],
             'content': html_content,
             'created_at': row['created_at'],
             # RFC 1123, for the RSS feed and the templates.
             'date': row['created_at'].astimezone(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
-        }
-        if with_markdown:
-            result['markdown'] = _read_news(file_path, file_stat.st_mtime_ns)
-        results.append(result)
+        })
 
     return results, total
 

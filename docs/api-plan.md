@@ -60,7 +60,7 @@ These drive most of the quirks below:
   request's scheme. Every API URL and every URL the API returns must work over `http://`. Absolute URLs in responses
   use the scheme of the request, through `helpers.external_url_for`, exactly like the XML clients.
 - **Slow, metered links (GPRS/EDGE/3G).** Keep list payloads small (summary vs detail representations, 2.4), support
-  gzip, and support conditional requests (ETag / `If-None-Match` → `304`).
+  and support gzip.
   - `docker/nginx.conf` `gzip_types` doesn't list `application/json` today; it must be added. Qt 4.7+'s
     `QNetworkAccessManager` sends `Accept-Encoding: gzip` and decompresses on its own.
 - **JSON parsing on the device is weak.** Qt 4 has no `QJsonDocument` (that's Qt 5); the client will use
@@ -73,9 +73,8 @@ These drive most of the quirks below:
     or keep Flask's default `\uXXXX` escapes if the device parser turns out to mishandle raw UTF-8 (to test on a
     device; see open questions).
 - **Some HTTP stacks and operator proxies drop `PUT`/`PATCH`/`DELETE`** or rewrite error bodies. For the later write
-  endpoints, accept `POST` with `X-HTTP-Method-Override: PATCH|PUT|DELETE` (only on POST). Optional
-  `?suppress_response_codes=1` makes every response `200` with the real status in the body (`"status": 404`), for
-  stacks that hide error bodies. Both are cheap to add in a `before_request` / `after_request` of the blueprint.
+  endpoints, accept `POST` with `X-HTTP-Method-Override: PATCH|PUT|DELETE` (only on POST), added in a
+  `before_request` of the blueprint.
 - **No `204 No Content`.** Some clients treat an empty body as a failure. Return `200` with a small JSON body instead.
 
 ### 2.3 Response envelope
@@ -159,12 +158,11 @@ The web UI keeps the chosen platform in the cookie session. The API is stateless
 
 ### 2.8 Caching headers
 
-- Reference data (`/content-types`, `/platforms`, `/categories`): `Cache-Control: public, max-age=3600` plus ETag.
+- Reference data (`/content-types`, `/platforms`, `/categories`): `Cache-Control: public, max-age=3600`.
   `content_types` and `platforms` are cached per worker until restart anyway.
-- Content lists, detail, news: `Cache-Control: no-cache` plus ETag (revalidate every time, `304` when unchanged).
-  Use `response.add_etag()` and `response.make_conditional(request)` in an `after_request` of the blueprint for
-  `GET` responses with status 200.
-- `/content/{id}/related` (random order): `Cache-Control: no-store`, no ETag.
+- Content lists, detail, news: `Cache-Control: no-cache`.
+- `/content/{id}/related` (random order): `Cache-Control: no-store`.
+- No ETags or `304`s: the old clients wouldn't send `If-None-Match`.
 - The API never sets cookies (2.9), so there's no `Vary: Cookie`.
 
 ### 2.9 No cookie session, no CSRF
@@ -319,7 +317,6 @@ Response: collection of **summary** items.
       "category": {"id": 3, "name": "Internet"},
       "publisher": "Opera Software",
       "version": "4.21(0)",
-      "version_normalized": "4.21.0",
       "icon_url": "http://ovi.wunderwungiel.pl/static/content/icons/operamini.png",
       "rating": {"average": 4.3, "count": 12, "rounded": 4},
       "platforms": [{"id": "s60v3", "name": "S60 3rd Edition"}],
@@ -327,8 +324,6 @@ Response: collection of **summary** items.
         "url": "http://ovi.wunderwungiel.pl/api/v1/content/128/download",
         "direct_url": "http://ovi.wunderwungiel.pl/static/content/files/operamini.sis",
         "size": 1048576,
-        "extension": "sis",
-        "mime_type": "application/vnd.symbian.install",
         "external": false
       },
       "created_at": "2024-03-02T18:11:00Z",
@@ -349,8 +344,6 @@ Notes:
 - `platforms` is sorted by name; an empty list means "all platforms" (2.6). The client should show that as "All".
 - `rating`: see 4.8. Rating sort today sorts by the **rounded** average; keep that in v1 for parity with the web UI,
   or switch both to the exact average (open question 4).
-- `version_normalized` comes from `helpers.to_version()`; it's `null` when the stored version isn't in the Symbian
-  `1.02(3)` form (free-form versions exist; `to_version` raises `ValueError` for them).
 - For `ids=`: unknown or hidden IDs are left out (no error); `meta.total` is the number returned. Duplicates are kept,
   as in `get_items()`. More than 50 IDs or a non-integer → `400`.
 - Combining `q` with `type`/`category` is allowed. (The web search page can't, but `get_content` supports it.)
@@ -364,7 +357,7 @@ Notes:
   "data": {
     "...": "all summary fields",
     "description": "Fast web browser.\nWorks on S60v3.",
-    "uid": "0x2001c3a2",
+    "uid": "0x2001C3A2",
     "screenshots": [
       {"url": "http://ovi.wunderwungiel.pl/static/content/screenshots/operamini1.jpg"}
     ],
@@ -389,7 +382,7 @@ Notes:
   The list comes from `screenshot_prefix` + `screenshot_count`; files aren't checked on disk (same as the web UI).
 - Unknown or hidden ID → `404 not_found`. A non-integer ID → `404` (Flask's `<int:>` converter).
 - **View counting:** the web item page calls `db.increment_counter()` for non-admins. The API counts too, on this
-  endpoint only (not on lists, not on `304` revalidations: count only when the response status is 200). That keeps
+  endpoint only (not on lists), and only when the response status is 200. That keeps
   `content_stats.visited` comparable across web and app. It's a side effect on a `GET`, which is a deliberate
   exception (like page-view counters elsewhere). The counter isn't exposed in v1 (the web UI doesn't show it either;
   open question 5).
@@ -445,12 +438,12 @@ Response:
 {
   "data": [
     {
-      "uid": "0x2001c3a2",
+      "uid": "0x2001C3A2",
       "installed_version": "4.20(0)",
       "update_available": true,
       "content": { "...": "summary item" }
     },
-    {"uid": "0xe0001234", "installed_version": "1.0.0", "update_available": false, "content": null}
+    {"uid": "0xE0001234", "installed_version": "1.0.0", "update_available": false, "content": null}
   ]
 }
 ```
@@ -462,11 +455,12 @@ Response:
   `stored != installed` (string inequality), and the entry gets `"comparison": "string"` instead of `"numeric"`, so
   the client can word it as "different version" instead of "newer". `comparison` is always present.
 - If several visible items share a UID (nothing prevents it), pick the most recently updated one.
+- UIDs match case-insensitively (5.4); `uid` in the response is the one the client sent.
 - Needs a `uid` filter in `get_content()` and an index on `content.uid` (later; table is small).
 
 ### 4.11 `GET /news`, `GET /news/{news_id}`
 
-Query: `page`, `per_page`, `format` = `html` (default) | `markdown` | `text`.
+Query: `page`, `per_page`.
 
 ```json
 {
@@ -476,7 +470,6 @@ Query: `page`, `per_page`, `format` = `html` (default) | `markdown` | `text`.
       "title": "New games added",
       "created_at": "2026-11-01T12:00:00Z",
       "body": "<p>...</p>",
-      "body_format": "html",
       "links": {"self": "...", "web": "http://ovi.wunderwungiel.pl/news/7"}
     }
   ],
@@ -484,9 +477,8 @@ Query: `page`, `per_page`, `format` = `html` (default) | `markdown` | `text`.
 }
 ```
 
-- `html` is the cached Markdown render from `_render_news()`. Qt 4's rich text (QLabel/QTextBrowser) understands a
-  subset of HTML 4, which covers what Python-Markdown emits. `markdown` returns the source file. `text` strips tags
-  from the HTML (keep paragraphs as `\n\n`).
+- `body` is the HTML the web UI shows, the cached Markdown render from `_render_news()`. Qt 4's rich text
+  (QLabel/QTextBrowser) understands a subset of HTML 4, which covers what Python-Markdown emits.
 - **Quirk to fix:** `db.get_news()` silently drops rows whose Markdown file is missing, but `total` still counts them
   (and a page can come back short). For the API, either filter missing files before counting or accept the
   mismatch; the client must not assume `len(data) == per_page` on full pages anyway. Recommended: leave
@@ -530,8 +522,6 @@ legacy lookups. Hidden items are `404`, never `403` or `410`, so their existence
   file is missing on disk**. In the API, both become `null`; `0` would make a client show "0 B" or refuse to download.
 - `download.external`: `true` when the URL is `latest_url` (another host). The client can warn that it may need
   HTTPS.
-- `download.extension`: from `file`, or from the path of `latest_url` (as `qtstore.generate_content` does). Lowercase,
-  no dot; `null` if there is none.
 
 ### 5.3 File naming convention
 
@@ -541,10 +531,8 @@ Files live under `content_dir` by convention (`files/<prefix>.<ext>`, `icons/<pr
 
 ### 5.4 UIDs
 
-`content.uid` is free text. Symbian UIDs are 32-bit hex (`0x2001C3A2`), but stored values may vary (`2001c3a2`,
-`0x2001C3A2`, `[2001c3a2]`). The API normalises to lowercase `0x` + 8 hex digits for output and for matching in
-`uid=` and `/updates`; values that don't parse are returned as stored and match only exactly. Better long term: a
-one-off cleanup of the column. Check the real data before choosing.
+`content.uid` is either `NULL` or `0x` plus 8 hex digits (`0x2001C3A2`), set by hand in the DB (the upload form has
+no UID field). The API returns it as stored and matches `uid=` and `/updates` case-insensitively.
 
 ### 5.5 HTTPS-only download targets
 
@@ -567,7 +555,7 @@ treat a newer `updated_at` as "new version"; `/updates` compares versions.
 `.jad`, so they go out as `application/octet-stream`, and the Symbian download manager may then save instead of
 installing. Register them at startup (`mimetypes.add_type`): `.sis` → `application/vnd.symbian.install`,
 `.sisx` → `x-epoc/x-sisx-app`, `.jar` → `application/java-archive`, `.jad` → `text/vnd.sun.j2me.app-descriptor`.
-The same table fills `download.mime_type`. This also changes what the existing web and XML downloads send, which is
+This also changes what the existing web and XML downloads send, which is
 a fix, but should be tested on a device.
 
 ### 5.8 Text fields
@@ -594,8 +582,8 @@ Order matters only where noted.
    - JSON error handlers: the app-level 404/500 handlers check `request.path.startswith('/api/')` and return the error
      envelope (keep the XML-blueprint branch as is). Add 400 and 405. A helper `api_error(status, code, message,
      **details)` raises an `HTTPException` subclass carrying the JSON response, so views can `raise` it.
-   - `after_request` for the blueprint: `Content-Type` charset, ETag/conditional, `Cache-Control` per endpoint
-     (a small decorator `@cache('public', 3600)` / `@cache('no-store')`), optional `suppress_response_codes`.
+   - `after_request` for the blueprint: `Content-Type` charset, `Cache-Control` per endpoint
+     (a small decorator `@cache('public', 3600)` / `@cache('no-store')`).
    - Done. The decorator is `@cache('public', max_age=3600)`; unknown `/api/` URLs get the JSON treatment by path
      (`is_api_request()`), not by blueprint.
 2. **Parameter parsing helpers** in the blueprint: `parse_page()`, `parse_platforms()`, `parse_sort()`,
@@ -603,37 +591,30 @@ Order matters only where noted.
    Werkzeug's `type=int` silently returns the default on bad input; the API must not, so parse manually.
    - Done.
 3. **Serializers** in a new `wunderland/api_format.py` (keep the blueprint thin): `content_summary(item)`,
-   `content_detail(item)`, `category(row)`, `news(row, fmt)`, `rating(...)`, `iso(dt)`. They take the dicts
+   `content_detail(item)`, `category(row)`, `news(row)`, `rating(...)`, `iso(dt)`. They take the dicts
    `_format_content()` already produces, so `db.py` stays the single place for SQL.
    - Done. Also there: `content_type()`, `platform()`, `download()`, `rating_detail(item, distribution)` (4.8),
-     `text()` (5.8; also turns `\r\n` into `\n`), `normalize_uid()` (5.4), `normalized_version()` and
-     `html_to_text()` for `format=text` news.
+     `text()` (5.8; also turns `\r\n` into `\n`).
    - Links to API views use the endpoint names in `API_ENDPOINTS` (`api.content_item`, `api.content_related`,
      `api.content_rating`, `api.content_download`, `api.news_item`). Step 5 must name its views that way; until
      they exist, serializers that link to them raise `BuildError`.
-   - `category.content_count` is `null` unless the rows come from `get_categories(with_counts=True)`, and
-     `format=markdown` news needs `get_news(with_markdown=True)`.
+   - `category.content_count` is `null` unless the rows come from `get_categories(with_counts=True)`.
    - `download.size` is `null` for external downloads (the local file's size says nothing about `latest_url`) and
-     for missing files. `mime_type` comes from `mimetypes`, so step 7's registrations fill it on every host; it is
-     `null` for unknown extensions.
-   - `normalize_uid()` reads a bare value as hex only when it has all 8 digits (`2001c3a2`); shorter ones need the
-     `0x`, because a short bare number may be decimal. The real data still hasn't been checked (5.4).
+     for missing files.
 4. **`db.py` changes**:
    - `get_content()`: return `rating_average` and `rating_count` next to `rating`; add `uid`, `updated_since`
      filters. No change to existing callers' results except the extra keys.
    - `get_categories()`: optional `with_counts=True`.
-   - `get_news()`: add raw `created_at`, and the source path or Markdown text when `format=markdown` is asked for.
+   - `get_news()`: add raw `created_at`.
    - New `get_rating_distribution(content_id)`.
    - Done. Details:
-     - `get_content(uid=...)` takes a UID already passed through `api_format.normalize_uid()` and compares it with
-       `UID_NORMALIZED`, the same normalisation written in SQL. The two must be kept in sync.
-       `updated_since` matches `updated_at` strictly later than the timestamp.
+     - `get_content(uid=...)` compares case-insensitively (5.4). `updated_since` matches `updated_at` strictly
+       later than the timestamp.
      - `rating_average` is the exact `AVG()` (a `Decimal`, `None` when unrated); `rating_count` is an `int`.
      - `get_categories(with_counts=True)` adds `content_count` (visible items, on `platform_id` if given), and only
        `only_with_content` drops empty categories. Without counts, `platform_id` still implies "non-empty", as the
        web UI expects. So `/categories?non_empty=false&platform=...` lists every category with that platform's counts.
-     - `get_news()` always returns `created_at`; `with_markdown=True` adds `markdown`, the file's source (cached by
-       mtime like the HTML). Pages may still come back short (4.11).
+     - `get_news()` returns `created_at`. Pages may still come back short (4.11).
 5. **Endpoints** in the order of section 4. Reference data first (simplest, exercises the envelope and caching),
    then `/content`, detail, related, download, rating, news, clients, legacy, updates.
 6. **nginx**: add `application/json` to `gzip_types`.
@@ -643,7 +624,6 @@ Order matters only where noted.
    - unknown path under `/api/v1/` → JSON 404; wrong method → JSON 405;
    - bad `page`/`sort`/`platform` → 400 with `invalid_parameter`;
    - no `Set-Cookie` on API responses;
-   - `If-None-Match` with the returned ETag → 304;
    - `/content/{id}/download` → 302 to the file URL;
    - `/updates` with the fixture's UID and an older version → `update_available: true`;
    - the existing web/XML checks still pass (regression guard for the `app.py` hook changes).
