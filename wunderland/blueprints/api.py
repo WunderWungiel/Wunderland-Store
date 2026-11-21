@@ -147,9 +147,12 @@ def _arg(name, default=None):
 
 
 def _parse_int(name, value, minimum=1, maximum=INT_MAX):
-    if not DIGITS.fullmatch(value) or not minimum <= int(value) <= maximum:
+    # int() refuses more than 4300 digits (leading zeros included), so the length is
+    # checked first, without leading zeros so 007 stays valid.
+    digits = value.lstrip('0') or '0'
+    if not DIGITS.fullmatch(value) or len(digits) > len(str(maximum)) or not minimum <= int(digits) <= maximum:
         raise invalid_parameter(name, f"{name} must be an integer from {minimum} to {maximum}")
-    return int(value)
+    return int(digits)
 
 
 def _split_list(name, value):

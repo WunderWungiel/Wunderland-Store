@@ -765,6 +765,7 @@ matches sections 2–5. What it did find, most important first:
 7. **Very long integers.** `_parse_int()` calls `int()` on any run of digits, and Python refuses more than 4300
    digits, so the dev server answers `500`. gunicorn's 4094-byte request line limit keeps it out of production, but
    check the length first (more than 10 digits is out of range anyway) so the parser can't raise.
+   **Done:** the length is checked without leading zeros, which `int()` counts too, so `007` stays valid.
 8. **Cosmetic.** Section 2.2 of this plan reads "support and support gzip." (left over from the ETag cut); make it
    "support gzip.". `wunderland/api_format.py` needs a second blank line before `def iso`.
 

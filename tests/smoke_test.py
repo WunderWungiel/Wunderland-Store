@@ -340,8 +340,10 @@ def run_checks(ids):
             ('category=999999', 'category'), ('q=%20', 'q'), ('uid=123', 'uid'), ('sort=bogus', 'sort'),
             ('order=1', 'order'), ('page=0', 'page'), ('per_page=51', 'per_page'), ('ids=abc', 'ids'),
             (f'ids={content_id}&type=apps', 'ids'), (f'platform={platform_id}&platform=nope', 'platform'),
-            ('sort=title&sort=title', 'sort'),
+            ('sort=title&sort=title', 'sort'), ('page=1' + '0' * 5000, 'page'),
         ]
+        # Leading zeros don't count towards the length limit of integers.
+        run.check(client, 'GET', '/api/v1/content?page=' + '0' * 5000 + '1', 200, api=True, contains=TITLE)
         for query, parameter in bad_queries:
             run.check(client, 'GET', f'/api/v1/content?{query}', 400, api=True,
                       contains=['"invalid_parameter"', f'"parameter":"{parameter}"'])
