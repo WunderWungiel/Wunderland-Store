@@ -1,5 +1,6 @@
 import atexit
 import logging
+import mimetypes
 from datetime import datetime
 
 from flask import Flask, Response, g, render_template, request, session, send_from_directory
@@ -13,6 +14,17 @@ from . import cli, csrf, db, helpers
 from .blueprints import api, auth, client, legacy, qtstore, store
 from .blueprints.api import error_response as api_error_response, is_api_request
 from .config import CONTENT_DIR, GOOGLE_SITE_VERIFICATION, config
+
+# Symbian's browser picks the installer by Content-Type. Python knows these types only from the
+# host's /etc/mime.types, which the Alpine image lacks, so without this they go out as
+# application/octet-stream and the phone may save the file instead of installing it.
+for extension, mime_type in {
+    '.sis': 'application/vnd.symbian.install',
+    '.sisx': 'x-epoc/x-sisx-app',
+    '.jar': 'application/java-archive',
+    '.jad': 'text/vnd.sun.j2me.app-descriptor',
+}.items():
+    mimetypes.add_type(mime_type, extension)
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False

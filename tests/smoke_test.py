@@ -48,6 +48,9 @@ ADMIN_PASSWORD = "smoke-password"
 
 FIXTURE_FILES = {
     os.path.join(CONTENT_DIR, "files", f"{PREFIX}.sis"): b"not a real sis file",
+    os.path.join(CONTENT_DIR, "files", f"{PREFIX}.sisx"): b"not a real sisx file",
+    os.path.join(CONTENT_DIR, "files", f"{PREFIX}.jar"): b"not a real jar file",
+    os.path.join(CONTENT_DIR, "files", f"{PREFIX}.jad"): b"not a real jad file",
     os.path.join(CONTENT_DIR, "icons", f"{PREFIX}.png"): b"\x89PNG\r\n\x1a\n",
     os.path.join(CONTENT_DIR, "screenshots", f"{PREFIX}1.jpg"): b"\xff\xd8\xff",
     os.path.join(CONTENT_DIR, "news", f"{PREFIX}.md"): b"Smoke test news body.\n",
@@ -245,7 +248,12 @@ def run_checks(ids):
             '<lastmod>'], lacks='/content/games</loc>')  # the seed data has no games
         run.check(client, 'GET', '/static/css/style.css', 200)
         run.check(client, 'GET', f'/static/content/icons/{PREFIX}.png', 200, contains='PNG')
-        run.check(client, 'GET', f'/static/content/files/{PREFIX}.sis', 200, contains='not a real sis file')
+        # Phones choose the installer by Content-Type, so these must not depend on the host's /etc/mime.types.
+        for extension, mime_type in [('sis', 'application/vnd.symbian.install'), ('sisx', 'x-epoc/x-sisx-app'),
+                                     ('jar', 'application/java-archive'),
+                                     ('jad', 'text/vnd.sun.j2me.app-descriptor; charset=utf-8')]:
+            run.check(client, 'GET', f'/static/content/files/{PREFIX}.{extension}', 200,
+                      contains=f'not a real {extension} file', headers={'Content-Type': mime_type})
         run.check(client, 'GET', '/static/content/icons/missing.png', 404)
         run.check(client, 'GET', '/no/such/page', 404)
         run.check(client, 'GET', '/healthz', 200, contains='ok')
@@ -278,7 +286,8 @@ def run_checks(ids):
             '/StoreData/Apps/Smoke%20Test%20App/', '[descr.txt]', '[file.sis]', '[preview.png]'])
         base = '/StoreData/Apps/Smoke%20Test%20App'
         run.check(client, 'GET', f'{base}/descr.txt', 200, contains=['Line one', f'{PREFIX}1.jpg', 'Extra notes'])
-        run.check(client, 'GET', f'{base}/file.sis', 200, contains='not a real sis file')
+        run.check(client, 'GET', f'{base}/file.sis', 200, contains='not a real sis file',
+                  headers={'Content-Type': 'application/vnd.symbian.install'})
         run.check(client, 'GET', f'{base}/preview.png', 200)
         run.check(client, 'GET', '/StoreData/Apps/No%20Such%20App/descr.txt', 404)
         run.check(client, 'GET', '/StoreData/Nope/Smoke%20Test%20App/descr.txt', 404)

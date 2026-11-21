@@ -2,8 +2,8 @@
 
 Status: in progress. Steps 1–6 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, the
-`db.py` queries they need, every phase 1 endpoint of section 4, and gzip for JSON in nginx. Steps 7–9 (MIME types,
-the remaining tests, `docs/api.md`) are next.
+`db.py` queries they need, every phase 1 endpoint of section 4, gzip for JSON in nginx, and the download MIME
+types (step 7). Step 8's tests were written with each endpoint. Step 9 (`docs/api.md`) is next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -569,12 +569,19 @@ treat a newer `updated_at` as "new version"; `/updates` compares versions.
 
 ### 5.7 MIME types of downloads
 
-`send_from_directory` guesses the MIME type from the extension. Python's `mimetypes` doesn't know `.sis`, `.sisx`,
-`.jad`, so they go out as `application/octet-stream`, and the Symbian download manager may then save instead of
-installing. Register them at startup (`mimetypes.add_type`): `.sis` → `application/vnd.symbian.install`,
-`.sisx` → `x-epoc/x-sisx-app`, `.jar` → `application/java-archive`, `.jad` → `text/vnd.sun.j2me.app-descriptor`.
-This also changes what the existing web and XML downloads send, which is
+`send_from_directory` and `send_file` guess the MIME type from the extension. Python's built-in table doesn't know
+`.sis`, `.sisx`, `.jar` or `.jad`; it learns them only from the host's `/etc/mime.types`. A desktop Linux usually has
+that file, but the `python:*-alpine` image doesn't, so in Docker they went out as `application/octet-stream`, and
+the Symbian download manager may then save instead of installing. Register them at startup (`mimetypes.add_type`):
+`.sis` → `application/vnd.symbian.install`, `.sisx` → `x-epoc/x-sisx-app`, `.jar` → `application/java-archive`,
+`.jad` → `text/vnd.sun.j2me.app-descriptor`. This also changes what the existing web and XML downloads send, which is
 a fix, but should be tested on a device.
+
+As built: the `add_type` calls are at the top of `wunderland/app.py`. Werkzeug adds `; charset=utf-8` to the JAD
+type, as to every `text/*` type, which matches MIDP 2 (JAD files are UTF-8). The smoke test checks the exact
+`Content-Type` of all four through `/static/content/files/` and of `file.sis` through `/StoreData/`; it fails with
+the registration removed and `mimetypes.knownfiles` emptied, so it doesn't depend on the host. Still to do: install
+a `.sis`/`.sisx` and a JAD/JAR from a real device once deployed.
 
 ### 5.8 Text fields
 
@@ -656,7 +663,7 @@ Order matters only where noted.
    - Updates done (details at the end of 4.10). That completes step 5.
 6. **nginx**: add `application/json` to `gzip_types`.
    - Done.
-7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
+7. **MIME types** (5.7), separately, since it affects the existing endpoints too. Done; see "As built" in 5.7.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):
    - every v1 endpoint returns 200 and valid JSON with the envelope;
    - unknown path under `/api/v1/` → JSON 404; wrong method → JSON 405;
