@@ -98,14 +98,13 @@ def download(item):
 def rating(item):
     """The rating block of a content item.
 
-    rounded is what the web UI's stars show and what sort=rating uses. average and
-    count need rating_average and rating_count from db.get_content(); they are None
-    until it returns them.
+    rounded is what the web UI's stars show and what sort=rating uses; average is the
+    exact mean to one decimal, None when nobody has rated the item.
     """
-    count = item.get('rating_count')
-    average = item.get('rating_average')
+    count = item['rating_count']
+    average = item['rating_average']
     return {
-        'average': round(float(average), 1) if count and average is not None else None,
+        'average': round(float(average), 1) if count else None,
         'count': count,
         'rounded': item['rating'],
     }
@@ -138,7 +137,7 @@ def platform(row):
 
 
 def category(row):
-    """A category from db.get_categories(); content_count is None unless it was asked for counts."""
+    """A category from db.get_categories(); content_count is None unless with_counts was passed."""
     return {
         'id': row['id'],
         'name': row['name'],
@@ -271,13 +270,12 @@ NEWS_FORMATS = ('html', 'markdown', 'text')
 def news(row, fmt='html'):
     """A news item from db.get_news(), with its body in fmt (one of NEWS_FORMATS).
 
-    created_at and, for fmt='markdown', the Markdown source (markdown) need db.get_news()
-    to return them; until it does they are None.
+    fmt='markdown' needs the row from db.get_news(with_markdown=True).
     """
     if fmt == 'html':
         body = row['content']
     elif fmt == 'markdown':
-        body = row.get('markdown')
+        body = row['markdown']
     elif fmt == 'text':
         body = html_to_text(row['content'])
     else:
@@ -286,7 +284,7 @@ def news(row, fmt='html'):
     return {
         'id': row['id'],
         'title': text(row['title']),
-        'created_at': iso(row.get('created_at')),
+        'created_at': iso(row['created_at']),
         'body': body,
         'body_format': fmt,
         'links': {

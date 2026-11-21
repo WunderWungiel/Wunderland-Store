@@ -1,8 +1,8 @@
 # JSON API plan (v1)
 
-Status: in progress. Steps 1–3 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
-JSON errors and caching headers, the query parameter parsers, and the serializers in `wunderland/api_format.py`. No
-endpoints exist yet; step 4 (`db.py` changes) is next.
+Status: in progress. Steps 1–4 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
+JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, and the
+`db.py` queries they need. No endpoints exist yet; step 5 (endpoints) is next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -611,8 +611,8 @@ Order matters only where noted.
    - Links to API views use the endpoint names in `API_ENDPOINTS` (`api.content_item`, `api.content_related`,
      `api.content_rating`, `api.content_download`, `api.news_item`). Step 5 must name its views that way; until
      they exist, serializers that link to them raise `BuildError`.
-   - Fields that wait for step 4 read with `.get()` and are `null` until then: `rating.average` / `rating.count`
-     (`rating_average`, `rating_count`), `category.content_count`, news `created_at`, and the `markdown` body.
+   - `category.content_count` is `null` unless the rows come from `get_categories(with_counts=True)`, and
+     `format=markdown` news needs `get_news(with_markdown=True)`.
    - `download.size` is `null` for external downloads (the local file's size says nothing about `latest_url`) and
      for missing files. `mime_type` comes from `mimetypes`, so step 7's registrations fill it on every host; it is
      `null` for unknown extensions.
@@ -624,6 +624,16 @@ Order matters only where noted.
    - `get_categories()`: optional `with_counts=True`.
    - `get_news()`: add raw `created_at`, and the source path or Markdown text when `format=markdown` is asked for.
    - New `get_rating_distribution(content_id)`.
+   - Done. Details:
+     - `get_content(uid=...)` takes a UID already passed through `api_format.normalize_uid()` and compares it with
+       `UID_NORMALIZED`, the same normalisation written in SQL. The two must be kept in sync.
+       `updated_since` matches `updated_at` strictly later than the timestamp.
+     - `rating_average` is the exact `AVG()` (a `Decimal`, `None` when unrated); `rating_count` is an `int`.
+     - `get_categories(with_counts=True)` adds `content_count` (visible items, on `platform_id` if given), and only
+       `only_with_content` drops empty categories. Without counts, `platform_id` still implies "non-empty", as the
+       web UI expects. So `/categories?non_empty=false&platform=...` lists every category with that platform's counts.
+     - `get_news()` always returns `created_at`; `with_markdown=True` adds `markdown`, the file's source (cached by
+       mtime like the HTML). Pages may still come back short (4.11).
 5. **Endpoints** in the order of section 4. Reference data first (simplest, exercises the envelope and caching),
    then `/content`, detail, related, download, rating, news, clients, legacy, updates.
 6. **nginx**: add `application/json` to `gzip_types`.

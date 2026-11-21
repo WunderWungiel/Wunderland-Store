@@ -20,6 +20,20 @@ pool = ConnectionPool(min_size=1, max_size=4, kwargs={
     "row_factory": dict_row,
 })
 
+# content.uid normalised in SQL as api_format.normalize_uid() does in Python: 0x plus 8
+# lowercase hex digits when it parses (8 bare digits, or 1-8 after 0x, either one
+# optionally in brackets), otherwise the value without surrounding whitespace. Keep
+# the two in sync.
+UID_NORMALIZED = r"""
+    CASE
+        WHEN btrim(content.uid, E' \t\r\n') ~* '^\[?0x[0-9a-f]{1,8}\]?$'
+            THEN '0x' || lpad(lower(substring(btrim(content.uid, E' \t\r\n') FROM '(?i)0x([0-9a-f]{1,8})')), 8, '0')
+        WHEN btrim(content.uid, E' \t\r\n') ~* '^\[?[0-9a-f]{8}\]?$'
+            THEN '0x' || lower(substring(btrim(content.uid, E' \t\r\n') FROM '(?i)([0-9a-f]{8})'))
+        ELSE NULLIF(btrim(content.uid, E' \t\r\n'), '')
+    END
+"""
+
 VALID_SORT_FIELDS = {
     "updated_at": {"column": "content.updated_at", "label": "Updated"},
     "created_at": {"column": "content.created_at", "label": "Created"},
@@ -146,7 +160,7 @@ def upload(title, category_id, publisher, version, icon, screenshot_prefix, scre
     return result
 
 
-def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False, content_ids=None):
+def get_content(content_id=None, content_type_id=None, category_id=None, platforms=None, search=None, title=None, limit=None, offset=None, start=None, sort_by="updated_at", sort_order="DESC", exclude_content_id=None, random_order=False, content_ids=None, uid=None, updated_since=None):
 
     sort_fields = {key: value["column"] for key, value in VALID_SORT_FIELDS.items()}
 
@@ -157,6 +171,8 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             category.type_id AS category_type_id,
             content_platform_data.platforms,
             COALESCE(content_rating.rating, 0) AS rating,
+            content_rating.rating_average,
+            content_rating.rating_count,
             COUNT(*) OVER() AS total
         FROM content
         LEFT JOIN categories AS category ON content.category_id = category.id
@@ -167,7 +183,9 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
             WHERE content_platforms.content_id = content.id
         ) AS content_platform_data ON TRUE
         LEFT JOIN LATERAL (
-            SELECT ROUND(AVG(ratings.rating)) AS rating
+            SELECT ROUND(AVG(ratings.rating)) AS rating,
+                   AVG(ratings.rating) AS rating_average,
+                   COUNT(*) AS rating_count
             FROM ratings
             WHERE ratings.content_id = content.id
         ) AS content_rating ON TRUE
@@ -223,6 +241,15 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         where_clauses.append("content.id >= %s")
         params.append(start)
 
+    if uid is not None:
+        # Pass the UID through api_format.normalize_uid(); the stored side is normalised the same way.
+        where_clauses.append(f"{UID_NORMALIZED} = %s")
+        params.append(uid)
+
+    if updated_since is not None:
+        where_clauses.append("content.updated_at > %s")
+        params.append(updated_since)
+
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
 
@@ -247,6 +274,17 @@ def get_content(content_id=None, content_type_id=None, category_id=None, platfor
         with connection.cursor() as cursor:
             cursor.execute(query, params)
             return _format_content(cursor.fetchall())
+
+
+def get_rating_distribution(content_id):
+    """The number of ratings per star value (1-5) of a content item; stars nobody gave are left out."""
+    with pool.connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT rating, COUNT(*) AS count FROM ratings WHERE content_id = %s GROUP BY rating",
+                (content_id,)
+            )
+            return {row['rating']: row['count'] for row in cursor.fetchall()}
 
 
 def get_legacy_content_id(old_id, content_type_id):
@@ -281,9 +319,36 @@ def increment_counter(content_id):
             """, (content_id,))
 
 
-def get_categories(category_id=None, content_type_id=None, platform_id=None, only_with_content=False):
+def get_categories(category_id=None, content_type_id=None, platform_id=None, only_with_content=False,
+                   with_counts=False):
+    """Categories ordered by type and name, each with its content_type.
+
+    Without with_counts, a platform_id lists only categories with visible content for
+    that platform, as only_with_content does for any platform. With with_counts, each
+    row gets content_count (visible items, for platform_id if given), and only
+    only_with_content leaves out the empty ones.
+    """
     where_clauses = []
     params = []
+
+    # Visible content of the category, on platform_id if given (untagged content runs anywhere).
+    content_clause = """
+        content.category_id = category.id
+        AND content.visible = TRUE
+    """
+    content_params = []
+    if platform_id is not None:
+        content_clause += """
+            AND (EXISTS (
+                SELECT 1 FROM content_platforms cp2
+                WHERE cp2.content_id = content.id
+                AND cp2.platform_id = %s
+            ) OR NOT EXISTS (
+                SELECT 1 FROM content_platforms cp3
+                WHERE cp3.content_id = content.id
+            ))
+        """
+        content_params.append(platform_id)
 
     query = """
         SELECT category.*,
@@ -294,33 +359,28 @@ def get_categories(category_id=None, content_type_id=None, platform_id=None, onl
                    'show_categories', content_types.show_categories,
                    'show_icons', content_types.show_icons
                ) AS content_type
-        FROM categories AS category
-        JOIN content_types ON category.type_id = content_types.id
     """
 
-    if only_with_content or platform_id is not None:
-        platform_clause = ""
-        if platform_id is not None:
-            platform_clause = """
-                AND (EXISTS (
-                    SELECT 1 FROM content_platforms cp2
-                    WHERE cp2.content_id = content.id
-                    AND cp2.platform_id = %s
-                ) OR NOT EXISTS (
-                    SELECT 1 FROM content_platforms cp3
-                    WHERE cp3.content_id = content.id
-                ))
-            """
-            params.append(platform_id)
-
-        where_clauses.append(f"""
-            EXISTS (
-                SELECT 1 FROM content
-                WHERE content.category_id = category.id
-                AND content.visible = TRUE
-                {platform_clause}
-            )
-        """)
+    if with_counts:
+        query += f"""
+               , category_counts.content_count
+            FROM categories AS category
+            JOIN content_types ON category.type_id = content_types.id
+            CROSS JOIN LATERAL (
+                SELECT COUNT(*) AS content_count FROM content WHERE {content_clause}
+            ) AS category_counts
+        """
+        params.extend(content_params)
+        if only_with_content:
+            where_clauses.append("category_counts.content_count > 0")
+    else:
+        query += """
+            FROM categories AS category
+            JOIN content_types ON category.type_id = content_types.id
+        """
+        if only_with_content or platform_id is not None:
+            where_clauses.append(f"EXISTS (SELECT 1 FROM content WHERE {content_clause})")
+            params.extend(content_params)
 
     if category_id is not None:
         where_clauses.append("category.id = %s")
@@ -366,13 +426,23 @@ def get_content_types():
 
 
 @lru_cache(maxsize=128)
-def _render_news(file_path, mtime_ns):
-    # The timestamp is part of the cache key, so edits invalidate rendered HTML.
+def _read_news(file_path, mtime_ns):
+    # The timestamp is part of the cache key, so edits invalidate the cached text.
     with open(file_path, "r") as source:
-        return markdown(source.read())
+        return source.read()
 
 
-def get_news(news_id=None, limit=None, offset=None):
+@lru_cache(maxsize=128)
+def _render_news(file_path, mtime_ns):
+    return markdown(_read_news(file_path, mtime_ns))
+
+
+def get_news(news_id=None, limit=None, offset=None, with_markdown=False):
+    """News, newest first, as (rows, total); with_markdown adds each row's Markdown source.
+
+    Rows whose Markdown file is missing are left out, but total still counts them, so a
+    page can come back short.
+    """
     query = "SELECT *, COUNT(*) OVER() AS total FROM news"
     where_clauses = []
     params = []
@@ -414,12 +484,17 @@ def get_news(news_id=None, limit=None, offset=None):
 
         html_content = _render_news(file_path, file_stat.st_mtime_ns)
 
-        results.append({
+        result = {
             'id': row['id'],
             'title': row['title'],
             'content': html_content,
+            'created_at': row['created_at'],
+            # RFC 1123, for the RSS feed and the templates.
             'date': row['created_at'].astimezone(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
-        })
+        }
+        if with_markdown:
+            result['markdown'] = _read_news(file_path, file_stat.st_mtime_ns)
+        results.append(result)
 
     return results, total
 
