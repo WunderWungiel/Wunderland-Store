@@ -188,8 +188,8 @@ to the HTTP status.
 
 Values in the query string are case-sensitive: `apps`, not `Apps`; `true`, not `True`.
 
-Give each parameter at most once. A repeated one (`?platform=s60v3&platform=s60v5`) is a `400 invalid_parameter`;
-for several platforms or IDs, use one comma-separated value (`?platform=s60v3,s60v5`).
+Give each parameter the endpoint reads at most once. A repeated one (`?platform=s60v3&platform=s60v5`) is a
+`400 invalid_parameter`; for several platforms or IDs, use one comma-separated value (`?platform=s60v3,s60v5`).
 
 ### Pagination
 
@@ -316,7 +316,7 @@ What [`GET /content/{id}`](#get-contentid) returns: every summary field, plus:
 |---|---|---|
 | `average` | number or `null` | Exact mean to one decimal, rounded half up (`4.25` gives `4.3`). `null` when nobody has rated the item. |
 | `count` | integer | Number of ratings. |
-| `rounded` | integer | 0–5: the stars the web store shows (the mean rounded to the nearest whole star, half up: `4.2` gives `4`, `4.5` and `4.9` give `5`), and what `sort=rating` uses. `0` when unrated. To show half stars, round `average` to the nearest 0.5 on the client. |
+| `rounded` | integer | 0–5: the stars the web store shows (the exact mean, not `average`, rounded to the nearest whole star, half up: `4.2` gives `4`, `4.5` and `4.9` give `5`, so a mean of 4.45 gives `average: 4.5` but `rounded: 4`), and what `sort=rating` uses. `0` when unrated. To show half stars, round `average` to the nearest 0.5 on the client. |
 
 ```json
 {"average": 4.2, "count": 12, "rounded": 4}
