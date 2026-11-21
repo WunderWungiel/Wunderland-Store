@@ -333,6 +333,7 @@ def index():
             'categories': external_url_for('api.categories'),
             'content': external_url_for('api.content'),
             'news': external_url_for('api.news'),
+            'clients': external_url_for('api.clients'),
             'web': external_url_for('store.root'),
         },
     })
@@ -487,3 +488,9 @@ def news_item(news_id):
     if row is None:
         raise not_found("news")
     return envelope(fmt.news(row))
+
+
+@api.route('/clients')
+def clients():
+    # The web /download page: in config order, hidden and unknown IDs left out.
+    return envelope([fmt.content_summary(item) for item in db.get_items(config['clients'])])

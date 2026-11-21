@@ -22,6 +22,7 @@ import json
 import os
 import sys
 import traceback
+from unittest import mock
 from xml.etree import ElementTree as ET
 
 from wunderland import db
@@ -284,8 +285,8 @@ def run_checks(ids):
         category_id = ids['category_id']
         platform_id = config['platforms']['client'][0]
         cached = {'Cache-Control': 'public, max-age=3600'}
-        run.check(client, 'GET', '/api/v1/', 200, api=True, contains=[
-            '"api_version"', '/api/v1/platforms', '/api/v1/news"'], headers={'Cache-Control': 'no-cache'})
+        run.check(client, 'GET', '/api/v1/', 200, api=True, headers={'Cache-Control': 'no-cache'}, contains=[
+            '"api_version"', '/api/v1/platforms', '/api/v1/news"', '/api/v1/clients"'])
         run.check(client, 'HEAD', '/api/v1/', 200)
         run.check(client, 'GET', '/api/v1/content-types', 200, api=True, contains='"show_icons"', headers=cached)
         run.check(client, 'GET', '/api/v1/content-types/apps', 200, api=True, contains='"Applications"')
@@ -356,6 +357,12 @@ def run_checks(ids):
             f'"id":{news_id}', '"created_at":"20'])
         run.check(client, 'GET', '/api/v1/news/999999', 404, api=True, contains='"not_found"')
         run.check(client, 'GET', '/api/v1/news/99999999999', 404, api=True)
+        with mock.patch.dict(config, {'clients': [hidden_id, 999999, content_id]}):
+            run.check(client, 'GET', '/api/v1/clients', 200, api=True, headers={'Cache-Control': 'no-cache'},
+                      contains=[TITLE, f'/api/v1/content/{content_id}"'], lacks=[HIDDEN_TITLE, '"meta"'])
+        for empty in (None, []):
+            with mock.patch.dict(config, {'clients': empty}):
+                run.check(client, 'GET', '/api/v1/clients', 200, api=True, contains='{"data":[]}')
         run.check(client, 'POST', '/api/v1/platforms', 405, api=True, contains='"method_not_allowed"')
         run.check(client, 'GET', '/api/v1/no/such/endpoint', 404, api=True)
         run.check(client, 'GET', '/api/v2/', 404, api=True)
