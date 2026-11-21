@@ -4,7 +4,8 @@ Status: v1 done. Every step of the implementation outline (section 6) is built: 
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, the
 `db.py` queries they need, every phase 1 endpoint of section 4, gzip for JSON in nginx, the download MIME types and
 the smoke tests. The reference for client authors is `docs/api.md` (step 9). Still to do on a real device: install a
-`.sis`/`.sisx` and a JAD/JAR (5.7) and settle open question 2.
+`.sis`/`.sisx` and a JAD/JAR (5.7) and settle open question 2. The fixes from the review before pushing are in
+section 10.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -732,3 +733,40 @@ Constraints worked out now so v1 doesn't block it:
    download URL. Recommendation: `/updates` with its own UID, no special endpoint.
 7. **Rate limiting** for the public read API: none today on the web either. Leave to nginx (`limit_req`) if needed.
 8. **`categories_legacy`**: needed by anything, or dead data?
+
+---
+
+## 10. Review follow-ups
+
+A review of v1 before pushing found no functional bugs: every commit passes the smoke test on its own, and the code
+matches sections 2–5. What it did find, most important first:
+
+1. **`docs/api.md`: `+` in timestamps.** The example `2026-11-17T12:04:00+02:00` (section 4, "Booleans, lists and
+   timestamps") fails as written: in a query string `+` decodes to a space, so the server answers
+   `400 invalid_parameter`; `%2B02:00` works. Say that `+` must be sent as `%2B`, and recommend the `Z` form. The
+   server stays strict (no guessing a space back into `+`).
+2. **`docs/api.md`: the escape examples aren't escaped.** Under "Encoding", `"Gra żółw"` and the emoji are raw UTF-8,
+   while the text says the wire carries `\uXXXX`. Write them as `"Gra żółw"` and `😀`.
+3. **`docs/api.md`: addon keys.** The content detail table says `text` and `url` "can each be missing", against the
+   "every key is always present" rule; the code always sets both. Change it to "can each be `null`".
+4. **Rating average rounding.** `api_format.rating()` uses `round(float(average), 1)`, which rounds half to even:
+   ratings 5, 4, 4, 4 (mean 4.25) give `4.2`. Round the `Decimal` with `quantize(Decimal('0.1'), ROUND_HALF_UP)`
+   instead, then convert to `float`, so 4.25 gives `4.3` like Postgres `ROUND`. Add a smoke test check with a 4.25
+   mean.
+5. **Repeated query parameters.** `request.args.get()` reads only the first value, so `?platform=s60v3&platform=bogus`
+   ignores the second, against 2.6 ("not silently ignored"). Make the parsers reject a parameter given more than once
+   (`len(request.args.getlist(name)) > 1` → `400 invalid_parameter`), in one helper every parser uses, and document
+   it in `docs/api.md` ("Common parameters"). Add a smoke test check.
+   **Done:** `_arg()` in `wunderland/blueprints/api.py`. A repeated parameter the API doesn't read is still ignored.
+6. **Blank stored version in `/updates`.** A `version` of only whitespace shows as `null` in the summary but is still
+   compared as a string, so it reports `update_available: true`. Treat a stored version that `fmt.text()` turns into
+   `None` like no comparison: `update_available: false`, `comparison: null`, with `content` still set. Document that
+   case next to "With no matching item" in `docs/api.md`.
+7. **Very long integers.** `_parse_int()` calls `int()` on any run of digits, and Python refuses more than 4300
+   digits, so the dev server answers `500`. gunicorn's 4094-byte request line limit keeps it out of production, but
+   check the length first (more than 10 digits is out of range anyway) so the parser can't raise.
+8. **Cosmetic.** Section 2.2 of this plan reads "support and support gzip." (left over from the ETag cut); make it
+   "support gzip.". `wunderland/api_format.py` needs a second blank line before `def iso`.
+
+Not code, still open: install a `.sis`/`.sisx` and a JAD/JAR on a device (5.7), open question 2, and check the
+production news files for relative links (step 5).

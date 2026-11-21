@@ -188,6 +188,9 @@ to the HTTP status.
 
 Values in the query string are case-sensitive: `apps`, not `Apps`; `true`, not `True`.
 
+Give each parameter at most once. A repeated one (`?platform=s60v3&platform=s60v5`) is a `400 invalid_parameter`;
+for several platforms or IDs, use one comma-separated value (`?platform=s60v3,s60v5`).
+
 ### Pagination
 
 `/content` and `/news` are paginated.

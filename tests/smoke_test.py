@@ -339,7 +339,8 @@ def run_checks(ids):
             ('updated_since=2000-01-01', 'updated_since'), (f'type=games&category={category_id}', 'category'),
             ('category=999999', 'category'), ('q=%20', 'q'), ('uid=123', 'uid'), ('sort=bogus', 'sort'),
             ('order=1', 'order'), ('page=0', 'page'), ('per_page=51', 'per_page'), ('ids=abc', 'ids'),
-            (f'ids={content_id}&type=apps', 'ids'),
+            (f'ids={content_id}&type=apps', 'ids'), (f'platform={platform_id}&platform=nope', 'platform'),
+            ('sort=title&sort=title', 'sort'),
         ]
         for query, parameter in bad_queries:
             run.check(client, 'GET', f'/api/v1/content?{query}', 400, api=True,

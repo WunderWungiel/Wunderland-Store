@@ -135,6 +135,17 @@ def finalize_response(response):
 # Werkzeug's request.args.get(type=int) falls back to the default on bad input. The
 # API reports bad input instead, so every parser below reads the raw string.
 
+def _arg(name, default=None):
+    """Return the raw value of ?<name>=, or default; a parameter given more than once is an error.
+
+    request.args.get() reads only the first value, which would silently ignore the others.
+    """
+    values = request.args.getlist(name)
+    if len(values) > 1:
+        raise invalid_parameter(name, f"{name} must be given only once")
+    return values[0] if values else default
+
+
 def _parse_int(name, value, minimum=1, maximum=INT_MAX):
     if not DIGITS.fullmatch(value) or not minimum <= int(value) <= maximum:
         raise invalid_parameter(name, f"{name} must be an integer from {minimum} to {maximum}")
@@ -150,10 +161,10 @@ def _split_list(name, value):
 
 def parse_page():
     """Return (page, per_page, offset) from ?page= and ?per_page=."""
-    page = request.args.get('page')
+    page = _arg('page')
     page = 1 if page is None else _parse_int('page', page)
 
-    per_page = request.args.get('per_page')
+    per_page = _arg('per_page')
     if per_page is None:
         per_page = min(config['per_page'], PER_PAGE_MAX)
     else:
@@ -165,7 +176,7 @@ def parse_page():
 
 def parse_platforms(name='platform'):
     """Return the list of platform IDs in ?platform=, or None for no filtering."""
-    value = request.args.get(name)
+    value = _arg(name)
     if value is None:
         return None
 
@@ -182,11 +193,11 @@ def parse_platforms(name='platform'):
 
 def parse_sort():
     """Return (sort_by, sort_order) for db.get_content() from ?sort= and ?order=."""
-    sort_by = request.args.get('sort', 'updated_at')
+    sort_by = _arg('sort', 'updated_at')
     if sort_by not in db.VALID_SORT_FIELDS:
         raise invalid_parameter('sort', f"sort must be one of: {', '.join(db.VALID_SORT_FIELDS)}")
 
-    order = request.args.get('order', 'desc')
+    order = _arg('order', 'desc')
     if order not in SORT_ORDERS:
         raise invalid_parameter('order', f"order must be one of: {', '.join(SORT_ORDERS)}")
 
@@ -194,7 +205,7 @@ def parse_sort():
 
 
 def parse_bool(name, default):
-    value = request.args.get(name)
+    value = _arg(name)
     if value is None:
         return default
     if value not in BOOLEANS:
@@ -204,7 +215,7 @@ def parse_bool(name, default):
 
 def parse_ids(name='ids', maximum=IDS_MAX):
     """Return the list of IDs in ?ids=, in the given order with duplicates kept, or None."""
-    value = request.args.get(name)
+    value = _arg(name)
     if value is None:
         return None
 
@@ -220,7 +231,7 @@ def parse_timestamp(name):
     The timestamp must carry a zone (Z or an offset): device clocks and zones are often
     wrong, and guessing one would silently shift the result.
     """
-    value = request.args.get(name)
+    value = _arg(name)
     if value is None:
         return None
 
@@ -236,7 +247,7 @@ def parse_timestamp(name):
 
 def parse_content_type(name='type'):
     """Return the content type ID in ?<name>=, or None for no filtering."""
-    value = request.args.get(name)
+    value = _arg(name)
     if value is None:
         return None
     if db.get_content_type_by_id(value) is None:
@@ -246,7 +257,7 @@ def parse_content_type(name='type'):
 
 def parse_category(content_type_id):
     """Return the category ID in ?category=, or None; it must exist and belong to the type, if given."""
-    value = request.args.get('category')
+    value = _arg('category')
     if value is None:
         return None
     category_id = _parse_int('category', value)
@@ -260,7 +271,7 @@ def parse_category(content_type_id):
 
 def parse_search():
     """Return the trimmed title search in ?q=, or None."""
-    value = request.args.get('q')
+    value = _arg('q')
     if value is None:
         return None
     value = value.strip()
@@ -271,7 +282,7 @@ def parse_search():
 
 def parse_uid():
     """Return the Symbian UID in ?uid=, or None."""
-    value = request.args.get('uid')
+    value = _arg('uid')
     if value is None:
         return None
     if not UID.fullmatch(value):
@@ -443,7 +454,7 @@ def content_item(content_id):
 @cache('no-store')
 def content_related(content_id):
     item = get_visible_item(content_id)
-    limit = request.args.get('limit')
+    limit = _arg('limit')
     limit = RELATED_DEFAULT if limit is None else _parse_int('limit', limit, maximum=RELATED_MAX)
     # As on the web item page: same category, random order, so it can't be paged.
     rows, _ = db.get_content(
