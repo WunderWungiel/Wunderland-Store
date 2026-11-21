@@ -3,7 +3,8 @@
 Status: in progress. Steps 1–4 of the implementation outline (section 6) are done: the blueprint at `/api/v1` with
 JSON errors and caching headers, the query parameter parsers, the serializers in `wunderland/api_format.py`, and the
 `db.py` queries they need. Step 5 (endpoints) has started: the reference data (`/`, `/content-types`, `/platforms`,
-`/categories`) and the content endpoints (`/content`, detail, related, download, rating) exist; news is next.
+`/categories`), the content endpoints (`/content`, detail, related, download, rating) and news exist; `/clients` is
+next.
 
 Goal: a REST/JSON API that covers every store feature, for a new native Symbian client (Qt 4.x / Symbian C++).
 Login, ratings by users and admin uploads come in a later phase; this plan reserves their shape so v1 doesn't have
@@ -627,6 +628,10 @@ Order matters only where noted.
      An unknown `category` is `400`, and `uid=` must be `0x` plus 8 hex digits. `/download` checks that a local
      file exists before redirecting; `latest_url` targets aren't checked. `HEAD` on the detail doesn't count a
      view.
+   - News done. Pages may be short (4.11), and `/` links to `/news`. There were no news files in the local
+     `content/news/` to check for relative links, so the rule for authors is: news Markdown uses absolute URLs
+     only (links and images), because the API passes the HTML through unchanged. The files on the production
+     server still need that check once.
 6. **nginx**: add `application/json` to `gzip_types`.
 7. **MIME types** (5.7), separately, since it affects the existing endpoints too.
 8. **Tests**: extend `tests/smoke_test.py` (it already seeds a content row, category, platform, legacy row and news):

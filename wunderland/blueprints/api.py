@@ -332,6 +332,7 @@ def index():
             'platforms': external_url_for('api.platforms'),
             'categories': external_url_for('api.categories'),
             'content': external_url_for('api.content'),
+            'news': external_url_for('api.news'),
             'web': external_url_for('store.root'),
         },
     })
@@ -471,3 +472,18 @@ def content_download(content_id):
 def content_rating(content_id):
     item = get_visible_item(content_id)
     return envelope(fmt.rating_detail(item, db.get_rating_distribution(content_id)))
+
+
+@api.route('/news')
+def news():
+    # Rows whose Markdown file is missing are left out but still counted, so a page may be short.
+    rows, page, per_page, total = fetch_page(lambda offset, limit: db.get_news(offset=offset, limit=limit))
+    return page_envelope([fmt.news(row) for row in rows], page, per_page, total)
+
+
+@api.route(f'/news/<{ID}:news_id>')
+def news_item(news_id):
+    row = db.get_one_news(news_id)
+    if row is None:
+        raise not_found("news")
+    return envelope(fmt.news(row))
