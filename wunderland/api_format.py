@@ -21,6 +21,7 @@ API_ENDPOINTS = {
     'news': 'api.news_item',
 }
 
+
 def iso(value):
     """Format a timestamptz as ISO 8601 in UTC with a Z and no fractional seconds."""
     if value is None:

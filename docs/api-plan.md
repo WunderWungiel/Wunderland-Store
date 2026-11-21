@@ -63,7 +63,7 @@ These drive most of the quirks below:
   request's scheme. Every API URL and every URL the API returns must work over `http://`. Absolute URLs in responses
   use the scheme of the request, through `helpers.external_url_for`, exactly like the XML clients.
 - **Slow, metered links (GPRS/EDGE/3G).** Keep list payloads small (summary vs detail representations, 2.4), support
-  and support gzip.
+  gzip.
   - `docker/nginx.conf` lists `application/json` in `gzip_types`. Qt 4.7+'s
     `QNetworkAccessManager` sends `Accept-Encoding: gzip` and decompresses on its own.
 - **JSON parsing on the device is weak.** Qt 4 has no `QJsonDocument` (that's Qt 5); the client will use
@@ -745,10 +745,13 @@ matches sections 2–5. What it did find, most important first:
    timestamps") fails as written: in a query string `+` decodes to a space, so the server answers
    `400 invalid_parameter`; `%2B02:00` works. Say that `+` must be sent as `%2B`, and recommend the `Z` form. The
    server stays strict (no guessing a space back into `+`).
+   **Done:** under "Booleans, lists and timestamps".
 2. **`docs/api.md`: the escape examples aren't escaped.** Under "Encoding", `"Gra żółw"` and the emoji are raw UTF-8,
-   while the text says the wire carries `\uXXXX`. Write them as `"Gra żółw"` and `😀`.
+   while the text says the wire carries `\uXXXX`. Write them as `"Gra \u017c\u00f3\u0142w"` and `\ud83d\ude00`.
+   **Done.**
 3. **`docs/api.md`: addon keys.** The content detail table says `text` and `url` "can each be missing", against the
    "every key is always present" rule; the code always sets both. Change it to "can each be `null`".
+   **Done.**
 4. **Rating average rounding.** `api_format.rating()` uses `round(float(average), 1)`, which rounds half to even:
    ratings 5, 4, 4, 4 (mean 4.25) give `4.2`. Round the `Decimal` with `quantize(Decimal('0.1'), ROUND_HALF_UP)`
    instead, then convert to `float`, so 4.25 gives `4.3` like Postgres `ROUND`. Add a smoke test check with a 4.25
@@ -770,6 +773,7 @@ matches sections 2–5. What it did find, most important first:
    **Done:** the length is checked without leading zeros, which `int()` counts too, so `007` stays valid.
 8. **Cosmetic.** Section 2.2 of this plan reads "support and support gzip." (left over from the ETag cut); make it
    "support gzip.". `wunderland/api_format.py` needs a second blank line before `def iso`.
+   **Done.**
 
 Not code, still open: install a `.sis`/`.sisx` and a JAD/JAR on a device (5.7), open question 2, and check the
 production news files for relative links (step 5).

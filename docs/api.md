@@ -108,9 +108,9 @@ These hold for every object in every response, so a simple parser can rely on th
 ### Encoding
 
 The body is UTF-8 with `Content-Type: application/json; charset=utf-8`. Today every non-ASCII character is escaped
-as `\uXXXX` (`"Gra żółw"`), so the bytes on the wire are plain ASCII. This may switch to raw UTF-8
-later. Both are valid JSON, so **decode `\uXXXX` escapes, including surrogate pairs (`😀`), and accept raw
-UTF-8 too**.
+as `\uXXXX` (`"Gra \u017c\u00f3\u0142w"`), so the bytes on the wire are plain ASCII. This may switch to raw UTF-8
+later. Both are valid JSON, so **decode `\uXXXX` escapes, including surrogate pairs (`\ud83d\ude00` for 😀), and
+accept raw UTF-8 too**.
 
 ### Caching
 
@@ -240,8 +240,10 @@ The store doesn't remember the device's platform: send `?platform=` on every req
 
 - Booleans are `true` or `false`, nothing else.
 - Lists are comma-separated, without spaces or empty items: `1,2,3` (`1,,3` and `1,` are a `400`).
-- Timestamps are ISO 8601 **with a zone**: `2026-11-17T10:04:00Z` or `2026-11-17T12:04:00+02:00`. A timestamp without
+- Timestamps are ISO 8601 **with a zone**: `2026-11-17T10:04:00Z` or `2026-11-17T12:04:00%2B02:00`. A timestamp without
   a zone, or a bare date, is a `400`: device clocks and zones are often wrong, so the server won't guess.
+- In a query string `+` decodes to a space, so a `+` offset must be sent as `%2B`: a raw `+02:00` is a
+  `400 invalid_parameter`, and the server won't turn the space back into `+`. Prefer the `Z` form.
 
 ---
 
@@ -305,7 +307,7 @@ What [`GET /content/{id}`](#get-contentid) returns: every summary field, plus:
 | `description` | string or `null` | Plain text with `\n` line breaks, not HTML. |
 | `uid` | string or `null` | The Symbian UID of the installed app, as `0x` plus 8 hex digits (`0x2001C3A2`). Compare case-insensitively. |
 | `screenshots` | list | `[{"url": string}]`, JPEG, in display order. Objects so that more fields (size) can be added. |
-| `addon` | object or `null` | Extra notes and/or an extra file. `null` when there's neither. Inside it, `text` (string or `null`) and `url` (string or `null`) can each be missing. |
+| `addon` | object or `null` | Extra notes and/or an extra file. `null` when there's neither. Inside it, `text` (string or `null`) and `url` (string or `null`) can each be `null`. |
 | `links` | object | The summary's `self` and `web`, plus `related` and `rating` (the item's sub-resources). |
 
 ### Rating
@@ -314,7 +316,7 @@ What [`GET /content/{id}`](#get-contentid) returns: every summary field, plus:
 |---|---|---|
 | `average` | number or `null` | Exact mean to one decimal, rounded half up (`4.25` gives `4.3`). `null` when nobody has rated the item. |
 | `count` | integer | Number of ratings. |
-| `rounded` | integer | 0–5: the stars the web store shows, and what `sort=rating` uses. `0` when unrated. |
+| `rounded` | integer | 0–5: the stars the web store shows (the mean rounded to the nearest whole star, half up: `4.2` gives `4`, `4.5` and `4.9` give `5`), and what `sort=rating` uses. `0` when unrated. To show half stars, round `average` to the nearest 0.5 on the client. |
 
 ```json
 {"average": 4.2, "count": 12, "rounded": 4}
